@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quality CCI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap');
+:root{
+  --bg:#0e0a1c;--card:#1a1430;--border:#2f2450;--text:#ede9fb;--sub:#8577a8;
+  --accent:#a78bfa;--fail:#f87171;--ok-bg:#2c2150;--warn:#fbbf24;--warn-bg:#3a2508;--ok:#34d399;
+  --header-bg:#0e0a1c;--header-text:#f1edfb;--sidebar-border:#251c40;
+  --purple-dark:#4c1d95;--purple-light:#c4b5fd;--purple-mid:#8b5cf6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+#app-shell{display:flex;min-height:100vh}
+#sidebar{width:210px;flex-shrink:0;background:var(--header-bg);color:var(--header-text);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;border-right:1px solid var(--sidebar-border)}
+.sb-brand{display:flex;align-items:center;gap:9px;padding:16px 16px 13px;font-size:13px;font-weight:700;border-bottom:1px solid var(--sidebar-border)}
+.sb-nav{flex:1;padding:8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
+.sb-btn{display:flex;align-items:center;gap:9px;padding:8px 10px 8px 9px;border-radius:0 6px 6px 0;border:none;border-left:2px solid transparent;background:transparent;color:var(--sub);font-family:'Syne',sans-serif;font-size:11px;font-weight:600;cursor:pointer;text-align:left}
+.sb-btn:hover{background:rgba(167,139,250,0.06);color:var(--header-text)}
+.sb-btn.on{border-left-color:var(--accent);color:var(--header-text);background:rgba(167,139,250,0.05)}
+.sb-footer{padding:12px 14px;border-top:1px solid var(--sidebar-border);display:flex;flex-direction:column;gap:9px}
+.sb-perfil{display:flex;align-items:center;gap:9px}
+.sb-avatar{width:34px;height:34px;border-radius:50%;background:var(--purple-dark);color:#ddd0fb;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-perfil-user{font-size:11px;font-weight:700}
+.sb-perfil-rol{opacity:.5;font-size:9px;font-family:'DM Mono',monospace;margin-top:1px;text-transform:uppercase;letter-spacing:.04em}
+.sb-link{background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px;color:var(--header-text);opacity:.75;cursor:pointer;font-family:'Syne',sans-serif;font-size:11px;font-weight:600}
+.sb-link:hover{opacity:1;background:rgba(255,255,255,0.06)}
+#content-wrap{flex:1;min-width:0}
+main{max-width:1100px;margin:0 auto;padding:1rem}
+@media(max-width:700px){
+  #app-shell{flex-direction:column}
+  #sidebar{width:100%;height:auto;position:relative;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between}
+  .sb-brand{border-bottom:none;padding:12px 14px}
+  .sb-footer{flex-direction:row;border-top:none;padding:8px}
+  .sb-nav{order:3;width:100%;flex:none;flex-direction:row;padding:0 8px 8px;overflow-x:auto;border-top:1px solid var(--sidebar-border)}
+  .sb-btn{border-left:none;border-bottom:2px solid transparent;border-radius:0;white-space:nowrap;padding:10px}
+  .sb-btn.on{border-bottom-color:var(--accent)}
+  .sb-perfil{display:none}
+}
+.pane{display:none}.pane.on{display:block}
+.pane-title{font-size:18px;font-weight:700;margin-bottom:1rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.card+.card{margin-top:1rem}
+.card-title{padding:8px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
+.card-body{padding:11px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
+@media(max-width:760px){.grid-2{grid-template-columns:1fr}}
+.lbl{font-size:9.5px;color:var(--sub);margin-bottom:3px;display:block}
+.field-in{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-family:'Syne',sans-serif;font-size:12px;background:var(--bg);color:var(--text);outline:none;margin-bottom:8px}
+.field-in:focus{border-color:var(--purple-mid)}
+.btn-add{width:100%;padding:9px;background:transparent;color:var(--purple-light);border:1px solid var(--purple-mid);border-radius:7px;font-family:'Syne',sans-serif;font-size:11.5px;font-weight:700;cursor:pointer;transition:transform .15s,background .15s}
+.btn-add:hover{transform:translateY(-2px);background:rgba(139,92,246,0.1);color:#fff}
+.btn-add:disabled{opacity:.35;cursor:default;transform:none}
+.btn-sm{padding:5px 10px;background:transparent;border:1px solid var(--border);border-radius:7px;font-family:'Syne',sans-serif;font-size:10.5px;color:var(--sub);cursor:pointer;white-space:nowrap}
+.btn-sm:hover{border-color:var(--purple-mid);color:var(--purple-mid)}
+.btn-sm.danger:hover{border-color:var(--fail);color:var(--fail)}
+.btn-sm:disabled{opacity:.4;cursor:default}
+.hint{font-size:9.5px;color:var(--sub);text-align:center;margin-top:6px;line-height:1.5}
+.aviso{font-size:11px;line-height:1.5;padding:8px 10px;border-radius:7px;margin-bottom:10px}
+.aviso.warn{background:var(--warn-bg);color:var(--warn)}
+.aviso.info{background:var(--ok-bg);color:var(--purple-light)}
+.imagen-dia-wrap{display:flex;align-items:center;justify-content:center;background:var(--bg);border-radius:10px;min-height:240px;overflow:hidden;margin-bottom:12px}
+.imagen-dia-wrap img{max-width:100%;max-height:420px;display:block;cursor:zoom-in}
+.imagen-vacia{padding:2.5rem;text-align:center;color:var(--sub);font-size:12px}
+.imgs-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:560px){.imgs-row{grid-template-columns:1fr}}
+.slot-num{font-family:'DM Mono',monospace;font-size:9.5px;color:var(--accent);letter-spacing:.06em;display:block;margin-bottom:6px}
+.fuente-line{font-family:'DM Mono',monospace;font-size:9.5px;font-weight:400;color:var(--sub)}
+.lightbox-overlay{position:fixed;inset:0;background:rgba(6,4,14,0.92);z-index:99999;display:none;align-items:center;justify-content:center}
+.lightbox-overlay.on{display:flex}
+.lightbox-overlay img{max-width:92vw;max-height:88vh;border-radius:10px}
+.lightbox-close{position:absolute;top:18px;right:22px;color:#fff;font-family:'DM Mono',monospace;font-size:11px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);padding:6px 12px;border-radius:20px;cursor:pointer}
+.modal-overlay{position:fixed;inset:0;background:rgba(6,4,14,0.85);z-index:99998;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.on{display:flex}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:760px;max-height:90vh;overflow:auto}
+.modal-box.sm{max-width:380px}
+.modal-min-btn{background:transparent;border:1px solid var(--border);color:var(--sub);width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:13px;line-height:1}
+.minibar{position:fixed;bottom:16px;right:16px;z-index:99997;display:none;align-items:center;gap:10px;background:var(--card);border:1px solid var(--purple-mid);border-radius:30px;padding:8px 16px 8px 10px;cursor:pointer}
+.minibar.on{display:flex}
+.minibar .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.minibar span{font-family:'DM Mono',monospace;font-size:10.5px}
+.lock-box{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:20px 10px}
+.lock-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.lock-icon.ok{background:rgba(52,211,153,0.14);border:1px solid var(--ok)}
+.lock-icon.fail{background:rgba(248,113,113,0.14);border:1px solid var(--fail)}
+.lock-title{font-size:14.5px;font-weight:700}
+.lock-sub{font-size:11.5px;color:var(--sub);line-height:1.6;max-width:34ch}
+.lock-meta{font-family:'DM Mono',monospace;font-size:9.5px;color:var(--sub);opacity:.75}
+.badge{font-size:9.5px;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+.b-pend{background:var(--warn-bg);color:var(--warn)}
+.b-ok{background:var(--ok-bg);color:var(--accent)}
+.b-fail{background:#4a1414;color:var(--fail)}
+.b-none{background:var(--border);color:var(--sub)}
+.tabla-wrap{overflow-x:auto}
+.tabla{width:100%;border-collapse:collapse;font-size:11.5px}
+.tabla th{background:var(--purple-dark);color:#ddd0fb;padding:6px 10px;text-align:left;font-size:9.5px;font-weight:600;white-space:nowrap}
+.tabla td{padding:6px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tabla .sep td{background:rgba(76,29,149,0.35);color:#ddd0fb;padding:4px 10px;font-size:9.5px;font-weight:700;letter-spacing:.05em}
+.tabla .correcta{color:var(--sub);font-size:10px}
+.vacio{padding:2rem;text-align:center;color:var(--sub);font-size:12px}
+.paginacion{display:flex;gap:4px;padding:10px 12px;flex-wrap:wrap;align-items:center}
+.paginacion span{font-size:10px;color:var(--sub);margin-right:4px}
+.paginacion .btn-sm.on{background:var(--purple-dark);color:#fff;border-color:var(--purple-dark)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kpi{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px}
+.kpi-val{font-size:22px;font-weight:700}
+.kpi-lbl{font-size:9.5px;color:var(--sub);margin-top:2px}
+.upload-zone{border:2px dashed var(--border);border-radius:10px;padding:1.25rem;text-align:center;cursor:pointer;background:var(--bg);position:relative;margin-bottom:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:110px;gap:6px}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--purple-mid);background:var(--ok-bg)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-zone-txt{font-size:11px;color:var(--sub);line-height:1.6;pointer-events:none}
+.upload-zone-txt strong{color:var(--text);display:block;font-size:12px}
+.upload-preview{max-width:100%;max-height:120px;border-radius:8px}
+.banco-item{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border)}
+.banco-item:last-child{border-bottom:none}
+.banco-thumb{width:40px;height:40px;border-radius:6px;object-fit:cover;background:var(--bg);flex-shrink:0}
+.banco-info{flex:1;min-width:0}
+.banco-parasito{font-size:11.5px;font-weight:700}
+.banco-fuente{font-size:9.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.banco-sub{font-size:10.5px;font-weight:700;color:var(--sub);display:flex;justify-content:space-between;padding:0 2px 6px}
+.dots{display:flex;gap:6px;justify-content:center;margin-top:9px}
+.dots button{width:7px;height:7px;padding:0;border:none;border-radius:50%;background:var(--border);cursor:pointer}
+.dots button.on{background:var(--accent);width:16px;border-radius:4px}
+.cred{font-family:'DM Mono',monospace;font-size:15px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;margin:6px 0 12px;user-select:all}
+.spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--purple-mid);border-radius:50%;animation:spin .7s linear infinite;margin:.5rem auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:1.2rem;right:1.2rem;border-radius:10px;padding:.65rem 1rem;font-size:.83rem;z-index:100000;display:none;max-width:300px;color:#fff;background:#6366f1}
+.toast.ok{background:#5b21b6}.toast.err{background:var(--fail)}
+/* ---- login ---- */
+.screen{position:fixed;inset:0;z-index:9999;display:none}
+.screen.on{display:block}
+.login-split{display:flex;width:100%;height:100%}
+.login-visual{flex:1;position:relative;overflow:hidden;background:radial-gradient(circle at 60% 40%,#2e1a5c 0%,#0a0614 70%)}
+.login-visual svg{position:absolute;inset:0;width:100%;height:100%}
+.login-brand{position:absolute;bottom:28px;left:28px;display:flex;align-items:center;gap:8px;color:#f1edfb;font-size:13px;font-weight:700}
+.login-form-col{flex:1;background:#120c1f;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-form-inner{width:290px;text-align:center}
+.login-form-title{color:#e9e3f8;font-size:15px;font-weight:700;margin-bottom:4px}
+.login-form-sub{color:#8577a8;font-size:11px;margin-bottom:22px;line-height:1.5}
+.login-input{width:100%;padding:10px 12px;border:1px solid #362a55;border-radius:8px;background:#1d1730;color:#e9e3f8;font-family:'DM Mono',monospace;font-size:14px;text-align:center;outline:none;margin-bottom:8px}
+.login-input:focus{border-color:#8b5cf6}
+.login-err{color:#f87171;font-size:10.5px;margin-bottom:8px;min-height:14px}
+.login-btn{width:100%;padding:10px;background:transparent;border:1px solid #8b5cf6;color:#ddd0fb;border-radius:8px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
+.login-btn:hover{background:rgba(139,92,246,0.12)}
+.login-btn:disabled{opacity:.5;cursor:default}
+.link-btn{background:none;border:none;color:#8577a8;font-family:'Syne',sans-serif;font-size:10.5px;margin-top:12px;cursor:pointer;text-decoration:underline}
+@media(max-width:640px){.login-visual{display:none}}
+</style>
+</head>
+<body>
+
+<!-- ======================= LOGIN ======================= -->
+<div id="login-screen" class="screen on">
+  <div class="login-split">
+    <div class="login-visual">
+      <svg viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice">
+        <circle cx="150" cy="150" r="46" fill="none" stroke="#8b5cf6" stroke-width="1.4" opacity="0.45"></circle>
+        <circle cx="150" cy="150" r="30" fill="none" stroke="#8b5cf6" stroke-width="1.4" opacity="0.55"></circle>
+        <circle cx="150" cy="150" r="6" fill="#a78bfa"></circle>
+        <line x1="150" y1="60" x2="150" y2="104" stroke="#8b5cf6" stroke-width="1.4" opacity="0.4"></line>
+        <line x1="150" y1="196" x2="150" y2="240" stroke="#8b5cf6" stroke-width="1.4" opacity="0.4"></line>
+        <line x1="60" y1="150" x2="104" y2="150" stroke="#8b5cf6" stroke-width="1.4" opacity="0.4"></line>
+        <line x1="196" y1="150" x2="240" y2="150" stroke="#8b5cf6" stroke-width="1.4" opacity="0.4"></line>
+        <circle cx="45" cy="70" r="2" fill="#a78bfa" opacity="0.8"></circle>
+        <circle cx="235" cy="90" r="2" fill="#a78bfa" opacity="0.7"></circle>
+        <circle cx="255" cy="300" r="1.5" fill="#a78bfa" opacity="0.5"></circle>
+      </svg>
+      <div class="login-brand">Quality CCI</div>
+    </div>
+    <div class="login-form-col">
+      <div class="login-form-inner">
+        <div class="login-form-title">Registro de CCI</div>
+        <div class="login-form-sub">Control de Calidad Interno · Parasitología</div>
+        <input id="login-usuario" class="login-input" type="text" placeholder="Usuario (ej. LST-01)" autocomplete="username"
+          oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter') document.getElementById('login-pass').focus()">
+        <input id="login-pass" class="login-input" type="password" placeholder="Contraseña" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter') doLogin()">
+        <div id="login-err" class="login-err"></div>
+        <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
+        <div class="login-form-sub" style="margin:14px 0 0">¿Olvidaste tu contraseña? Pide a tu supervisor que la restablezca.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== CAMBIO DE CONTRASEÑA ================== -->
+<div id="password-screen" class="screen">
+  <div class="login-split">
+    <div class="login-form-col">
+      <div class="login-form-inner">
+        <div class="login-form-title" id="pw-title">Crea tu contraseña personal</div>
+        <div class="login-form-sub" id="pw-sub">Tu contraseña actual es temporal. Crea una propia: nadie más podrá verla, ni siquiera tu supervisor.</div>
+        <input id="pw-actual" class="login-input" type="password" placeholder="Contraseña actual" autocomplete="current-password">
+        <input id="pw-nueva" class="login-input" type="password" placeholder="Nueva contraseña (mín. 6)" autocomplete="new-password">
+        <input id="pw-confirma" class="login-input" type="password" placeholder="Confirma la nueva contraseña" autocomplete="new-password"
+          onkeydown="if(event.key==='Enter') doCambiarPassword()">
+        <div id="pw-err" class="login-err"></div>
+        <button class="login-btn" id="pw-btn" onclick="doCambiarPassword()">Guardar contraseña</button>
+        <button class="link-btn" id="pw-cancelar" onclick="cancelarCambioPassword()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= APP ======================= -->
+<div id="app-shell" style="display:none">
+  <aside id="sidebar">
+    <div class="sb-brand">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle></svg>
+      <div>
+        <div style="line-height:1.2">Quality CCI</div>
+        <div style="font-size:9.5px;font-weight:500;opacity:.5;font-family:'DM Mono',monospace;margin-top:1px" id="sb-marca">—</div>
+      </div>
+    </div>
+    <nav class="sb-nav" id="sb-nav"></nav>
+    <div class="sb-footer">
+      <div class="sb-perfil">
+        <div class="sb-avatar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+        <div>
+          <div class="sb-perfil-user" id="sb-usuario">—</div>
+          <div class="sb-perfil-rol" id="sb-rol">—</div>
+        </div>
+      </div>
+      <button class="sb-link" onclick="abrirCambioPassword()">Cambiar contraseña</button>
+      <button class="sb-link" onclick="cerrarSesionApp()">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <div id="content-wrap"><main>
+
+    <!-- ===== Control diario (analista) ===== -->
+    <div class="pane" id="pane-control">
+      <div class="card">
+        <div class="card-title"><span>Control diario de hoy</span><span class="fuente-line" id="control-fecha"></span></div>
+        <div class="card-body" id="control-estado"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- ===== Control de hoy (supervisor) ===== -->
+    <div class="pane" id="pane-hoy">
+      <div class="card">
+        <div class="card-title"><span>Control de hoy · vista de supervisor</span><span class="fuente-line" id="sup-fuente"></span></div>
+        <div class="card-body">
+          <div id="sup-estado"></div>
+          <div class="imgs-row">
+            <div><span class="slot-num">Imagen 1</span><div class="imagen-dia-wrap" id="sup-img-0"><div class="spinner"></div></div><div class="field-in" id="sup-resp-0" style="margin-bottom:0">—</div></div>
+            <div><span class="slot-num">Imagen 2</span><div class="imagen-dia-wrap" id="sup-img-1"><div class="spinner"></div></div><div class="field-in" id="sup-resp-1" style="margin-bottom:0">—</div></div>
+          </div>
+          <div class="hint">El supervisor solo visualiza. El control lo responde un analista.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>Indicadores</span><span class="fuente-line" id="kpi-periodo"></span></div>
+        <div class="card-body"><div class="kpis" id="kpis"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ===== Historial ===== -->
+    <div class="pane" id="pane-historial">
+      <div class="card">
+        <div class="card-title"><span>Historial</span><span style="font-weight:400;color:var(--sub)" id="hist-total"></span></div>
+        <div class="tabla-wrap"><table class="tabla"><thead id="hist-head"></thead><tbody id="hist-body"></tbody></table></div>
+        <div class="vacio" id="hist-vacio" style="display:none">Sin registros.</div>
+        <div class="paginacion" id="hist-pag"></div>
+      </div>
+    </div>
+
+    <!-- ===== Banco (supervisor) ===== -->
+    <div class="pane" id="pane-banco">
+      <div class="pane-title" id="banco-titulo">Banco de imágenes</div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><span>Agregar imagen</span></div>
+          <div class="card-body">
+            <div class="aviso info" id="banco-aviso-origen"></div>
+            <label class="upload-zone" id="upload-zone" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="onImgDrop(event)">
+              <input type="file" accept="image/*" id="input-img" onchange="onImgFile(event)">
+              <div class="upload-zone-txt" id="upload-txt"><strong>Click o arrastra la imagen</strong><span>JPG o PNG</span></div>
+            </label>
+            <label class="lbl">Tipo de imagen</label>
+            <select class="field-in" id="inp-tipo" onchange="onTipoChange()">
+              <option value="Positiva">Positiva a parásitos</option>
+              <option value="Negativa">Negativa a parásitos</option>
+            </select>
+            <div id="wrap-parasito">
+              <label class="lbl">Parásito</label>
+              <select class="field-in sel-resp" id="inp-parasito" onchange="actualizarBtnBanco()"><option value="" disabled selected>Respuesta 1</option></select>
+              <select class="field-in sel-resp" id="inp-parasito2"><option value="">Respuesta 2 (opcional)</option></select>
+              <label class="lbl">Fuente bibliográfica</label>
+              <input class="field-in" id="inp-fuente" placeholder="Ej. Manual Bailey & Scott, 13a ed.">
+            </div>
+            <button class="btn-add" id="btn-subir" onclick="subirImagen()" disabled>Agregar imagen</button>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title"><span>Rotación</span></div>
+            <div class="card-body" id="banco-resumen"><div class="spinner"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span id="banco-lista-titulo">Imágenes en rotación</span></div>
+            <div class="card-body">
+              <div class="banco-sub"><span>Positivas</span><span id="banco-count-Positiva"></span></div>
+              <div id="banco-lista-Positiva"></div>
+              <div class="dots" id="banco-dots-Positiva"></div>
+              <div class="banco-sub" style="margin-top:14px"><span>Negativas</span><span id="banco-count-Negativa"></span></div>
+              <div id="banco-lista-Negativa"></div>
+              <div class="dots" id="banco-dots-Negativa"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Usuarios (supervisor) ===== -->
+    <div class="pane" id="pane-usuarios">
+      <div class="pane-title">Usuarios</div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><span>Nuevo usuario</span></div>
+          <div class="card-body">
+            <label class="lbl">Nombre completo</label>
+            <input class="field-in" id="nu-nombre" placeholder="Ej. María Pérez">
+            <div id="nu-admin" style="display:none">
+              <label class="lbl">Rol</label>
+              <select class="field-in" id="nu-rol"><option value="analista">Analista</option><option value="supervisor">Supervisor</option></select>
+              <label class="lbl">Laboratorio</label>
+              <select class="field-in" id="nu-marca"></select>
+            </div>
+            <button class="btn-add" onclick="crearUsuarioApp()">Crear usuario</button>
+            <div class="hint">Se genera una contraseña temporal. La persona deberá cambiarla al entrar por primera vez.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span>Cuentas</span></div>
+          <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Estado</th><th></th></tr></thead><tbody id="usuarios-body"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Marcas (admin) ===== -->
+    <div class="pane" id="pane-marcas">
+      <div class="pane-title">Laboratorios</div>
+      <div class="card">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Código</th><th>Laboratorio</th><th>Supervisor</th><th>Usuarios activos</th><th>Estado</th><th></th></tr></thead><tbody id="marcas-body"></tbody></table></div>
+      </div>
+      <div class="hint" style="text-align:left;margin-top:8px">Para dar de alta al supervisor de un laboratorio, usa “Nuevo usuario” con rol Supervisor.</div>
+    </div>
+
+  </main></div>
+</div>
+
+<!-- Modal del control (analista) -->
+<div class="modal-overlay" id="cci-modal">
+  <div class="modal-box">
+    <div class="card-title">
+      <span>Control diario · CCI</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="fuente-line" id="modal-fuente"></span>
+        <button class="modal-min-btn" onclick="minimizarModal()" title="Minimizar">─</button>
+      </div>
+    </div>
+    <div class="card-body" id="modal-body"></div>
+  </div>
+</div>
+<div class="minibar" id="minibar" onclick="abrirModal()"><span class="dot"></span><span>CCI de hoy pendiente — click para continuar</span></div>
+
+<!-- Modal de credenciales -->
+<div class="modal-overlay" id="cred-modal">
+  <div class="modal-box sm"><div class="card-body" style="padding:18px">
+    <div class="lock-title" style="margin-bottom:6px">Credenciales generadas</div>
+    <div class="lock-sub" style="max-width:none">Compártelas con la persona. La contraseña es temporal y <b>no se volverá a mostrar</b>; deberá cambiarla al entrar.</div>
+    <label class="lbl" style="margin-top:12px">Usuario</label><div class="cred" id="cred-usuario"></div>
+    <label class="lbl">Contraseña temporal</label><div class="cred" id="cred-pass"></div>
+    <button class="btn-add" onclick="document.getElementById('cred-modal').classList.remove('on')">Listo</button>
+  </div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="lightbox-overlay" id="lightbox" onclick="if(event.target===this) cerrarLightbox()">
+  <button class="lightbox-close" onclick="cerrarLightbox()">Cerrar ✕</button>
+  <img id="lightbox-img" src="" alt="Imagen ampliada">
+</div>
+
+<script>
+var RESPUESTAS = [
+  'Negativo a parásitos',
+  'Blastocystis hominis quiste',
+  'Entamoeba histolytica/dispar quiste',
+  'Entamoeba histolytica/dispar trofozoíto',
+  'Entamoeba coli quiste',
+  'Entamoeba coli trofozoíto',
+  'Endolimax nana quiste',
+  'Endolimax nana trofozoíto',
+  'Iodamoeba bütschlii quiste',
+  'Iodamoeba bütschlii trofozoíto',
+  'Giardia spp quiste',
+  'Giardia spp trofozoíto',
+  'Chilomastix mesnili quiste',
+  'Chilomastix mesnili trofozoíto',
+  'Trichomonas hominis trofozoíto',
+  'Dientamoeba fragilis quiste',
+  'Dientamoeba fragilis trofozoíto',
+  'Cryptosporidium spp. ooquistes',
+  'Cyclospora cayetanensis ooquistes',
+  'Cystoisospora belli ooquistes',
+  'Sarcocystis spp. ooquistes',
+  'Balantidium coli quiste',
+  'Balantidium coli trofozoíto',
+  'Ascaris lumbricoides huevo embrionado',
+  'Trichuris trichiura huevo',
+  'Enterobius vermicularis huevo',
+  'Ancylostoma spp huevo',
+  'Necator americanus huevo',
+  'Strongyloides stercoralis larva',
+  'Trichinella spiralis larva enquistada',
+  'Toxocara spp. huevo',
+  'Taenia saginata huevo',
+  'Taenia solium huevo',
+  'Taenia spp huevo',
+  'Proglótide de Taenia spp.',
+  'Hymenolepis nana huevo',
+  'Hymenolepis diminuta huevo',
+  'Diphyllobothrium latum huevo',
+  'Fasciola hepatica huevo',
+  'Schistosoma spp. huevo',
+  'Clonorchis sinensis huevo',
+  'Paragonimus spp. huevo'
+];
+var NEGATIVO = 'Negativo a parásitos';
+var MAX_INTENTOS = 3;
+var MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+var TOKEN = '';
+var PERFIL = null;
+
+/* ----------------------------- utilidades ----------------------------- */
+
+function $(id) { return document.getElementById(id); }
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function toast(msg, tipo) {
+  var t = $('toast');
+  t.textContent = msg; t.className = 'toast' + (tipo ? ' ' + tipo : ''); t.style.display = 'block';
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(function () { t.style.display = 'none'; }, 3500);
+}
+
+function guardar(k, v) { try { if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) {} }
+function recuperar(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+// Llama al servidor agregando el token como primer argumento.
+function api(fn, args, ok, fallo) {
+  google.script.run
+    .withSuccessHandler(function (res) { ok && ok(res); })
+    .withFailureHandler(function (e) {
+      var msg = (e && e.message) || String(e);
+      if (msg.indexOf('SESION_EXPIRADA') !== -1) { toast('Tu sesión expiró. Vuelve a entrar.', 'err'); salir(); return; }
+      if (msg.indexOf('contraseña temporal') !== -1) { mostrarPantalla('password-screen', true); return; }
+      toast(msg, 'err');
+      fallo && fallo(e);
+    })[fn].apply(null, [TOKEN].concat(args || []));
+}
+
+function opcionesRespuesta(placeholder, deshabilitado) {
+  return '<option value="" ' + (deshabilitado ? 'disabled ' : '') + 'selected>' + placeholder + '</option>' +
+    RESPUESTAS.map(function (r) { return '<option value="' + esc(r) + '">' + esc(r) + '</option>'; }).join('');
+}
+
+function combinar(a, b) {
+  return [a, b].filter(function (v) { return v; }).sort().join(' + ');
+}
+
+function fechaLarga(f) {
+  var p = String(f).split('-');
+  return p.length === 3 ? p[2] + ' de ' + MESES[parseInt(p[1], 10) - 1] + ' ' + p[0] : f;
+}
+
+function abrirLightbox(src) { $('lightbox-img').src = src; $('lightbox').classList.add('on'); }
+function cerrarLightbox() { $('lightbox').classList.remove('on'); }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') cerrarLightbox(); });
+
+function htmlImagen(url) {
+  if (!url) return '<div class="imagen-vacia">No hay imagen disponible.</div>';
+  return '<img src="' + esc(url) + '" alt="Imagen del control" onclick="abrirLightbox(this.src)" onerror="this.outerHTML=\'<div class=imagen-vacia>No se pudo mostrar la imagen.</div>\'">';
+}
+
+/* ------------------------------- sesión ------------------------------- */
+
+function mostrarPantalla(id, obligatorio) {
+  ['login-screen', 'password-screen'].forEach(function (s) { $(s).classList.toggle('on', s === id); });
+  $('app-shell').style.display = id ? 'none' : 'flex';
+  if (id === 'password-screen') {
+    ['pw-actual', 'pw-nueva', 'pw-confirma'].forEach(function (i) { $(i).value = ''; });
+    $('pw-err').textContent = '';
+    $('pw-title').textContent = obligatorio ? 'Crea tu contraseña personal' : 'Cambiar contraseña';
+    $('pw-sub').style.display = obligatorio ? '' : 'none';
+    $('pw-cancelar').textContent = obligatorio ? 'Cerrar sesión' : 'Cancelar';
+    $('pw-cancelar').dataset.obligatorio = obligatorio ? '1' : '';
+  }
+}
+
+function doLogin() {
+  var usuario = $('login-usuario').value.trim();
+  var pass = $('login-pass').value;
+  $('login-err').textContent = '';
+  $('login-btn').disabled = true;
+  google.script.run
+    .withSuccessHandler(function (res) {
+      $('login-btn').disabled = false;
+      if (!res || !res.success) { $('login-err').textContent = (res && res.error) || 'No se pudo entrar'; return; }
+      TOKEN = res.token; PERFIL = res.perfil;
+      guardar('cci_token', TOKEN);
+      $('login-pass').value = '';
+      if (PERFIL.temporal) mostrarPantalla('password-screen', true);
+      else entrarApp();
+    })
+    .withFailureHandler(function (e) { $('login-btn').disabled = false; $('login-err').textContent = e.message; })
+    .login(usuario, pass);
+}
+
+function abrirCambioPassword() { mostrarPantalla('password-screen', false); }
+
+function cancelarCambioPassword() {
+  if ($('pw-cancelar').dataset.obligatorio) salir();
+  else mostrarPantalla(null);
+}
+
+function doCambiarPassword() {
+  var actual = $('pw-actual').value, nueva = $('pw-nueva').value, confirma = $('pw-confirma').value;
+  if (nueva !== confirma) { $('pw-err').textContent = 'Las contraseñas nuevas no coinciden'; return; }
+  $('pw-btn').disabled = true;
+  api('cambiarPassword', [actual, nueva], function (res) {
+    $('pw-btn').disabled = false;
+    if (!res.success) { $('pw-err').textContent = res.error; return; }
+    PERFIL = res.perfil;
+    toast('Contraseña guardada', 'ok');
+    if (!$('sb-nav').innerHTML) entrarApp();
+    else mostrarPantalla(null);
+  }, function () { $('pw-btn').disabled = false; });
+}
+
+function salir() {
+  TOKEN = ''; PERFIL = null;
+  guardar('cci_token', null);
+  $('sb-nav').innerHTML = '';
+  $('cci-modal').classList.remove('on');
+  $('minibar').classList.remove('on');
+  mostrarPantalla('login-screen');
+}
+
+function cerrarSesionApp() {
+  var t = TOKEN;
+  salir();
+  if (t) google.script.run.cerrarSesion(t);
+}
+
+window.onload = function () {
+  document.querySelectorAll('.sel-resp').forEach(function (s, i) { s.innerHTML = opcionesRespuesta(i === 0 ? 'Respuesta 1' : 'Respuesta 2 (opcional)', i === 0); });
+  var guardado = recuperar('cci_token');
+  if (!guardado) { mostrarPantalla('login-screen'); return; }
+  TOKEN = guardado;
+  google.script.run
+    .withSuccessHandler(function (res) {
+      PERFIL = res.perfil;
+      if (PERFIL.temporal) mostrarPantalla('password-screen', true); else entrarApp();
+    })
+    .withFailureHandler(function () { salir(); })
+    .getPerfil(TOKEN);
+};
+
+/* ------------------------------ navegación ------------------------------ */
+
+var MENU = {
+  analista: [['control', 'Control diario'], ['historial', 'Historial']],
+  supervisor: [['hoy', 'Control de hoy'], ['historial', 'Historial'], ['banco', 'Banco de imágenes'], ['usuarios', 'Usuarios']]
+};
+
+function entrarApp() {
+  mostrarPantalla(null);
+  $('sb-usuario').textContent = PERFIL.usuario;
+  $('sb-rol').textContent = (PERFIL.rol === 'supervisor' ? 'Supervisor' : 'Analista') + (PERFIL.admin ? ' · Admin' : '');
+  $('sb-marca').textContent = PERFIL.marca + ' · Lab ' + PERFIL.numero;
+  var menu = MENU[PERFIL.rol].slice();
+  if (PERFIL.admin) menu.push(['marcas', 'Laboratorios']);
+  $('sb-nav').innerHTML = menu.map(function (m) {
+    return '<button class="sb-btn" data-tab="' + m[0] + '" onclick="irA(\'' + m[0] + '\')">' + m[1] + '</button>';
+  }).join('');
+  irA(menu[0][0]);
+}
+
+function irA(tab) {
+  document.querySelectorAll('.pane').forEach(function (p) { p.classList.toggle('on', p.id === 'pane-' + tab); });
+  document.querySelectorAll('.sb-btn').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === tab); });
+  if (tab === 'control') cargarControl();
+  if (tab === 'hoy') { cargarVistaSupervisor(); cargarIndicadores(); }
+  if (tab === 'historial') cargarHistorial(1);
+  if (tab === 'banco') cargarBanco();
+  if (tab === 'usuarios') cargarUsuarios();
+  if (tab === 'marcas') cargarMarcas();
+}
+
+/* -------------------------- control (analista) -------------------------- */
+
+var CONTROL = null;
+
+function abrirModal() { $('minibar').classList.remove('on'); $('cci-modal').classList.add('on'); }
+function minimizarModal() { $('cci-modal').classList.remove('on'); $('minibar').classList.add('on'); }
+function cerrarModal() { $('cci-modal').classList.remove('on'); $('minibar').classList.remove('on'); }
+
+function cargarControl() {
+  $('control-estado').innerHTML = '<div class="spinner"></div>';
+  api('getControlHoy', [], function (res) {
+    CONTROL = res;
+    $('control-fecha').textContent = fechaLarga(res.fecha);
+    pintarControl();
+  });
+}
+
+function htmlBloqueo(estado) {
+  if (estado.aprobado) {
+    return '<div class="lock-box"><div class="lock-icon ok"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5"><path d="M20 6L9 17l-5-5"></path></svg></div>' +
+      '<div class="lock-title">CCI de hoy aprobado</div><div class="lock-sub">Se identificaron correctamente las dos muestras. Mañana habrá un nuevo par de imágenes.</div>' +
+      '<div class="lock-meta">' + esc(estado.usuario) + ' · ' + esc(estado.hora) + ' · intento ' + estado.intentosUsados + ' de ' + MAX_INTENTOS + '</div></div>';
+  }
+  return '<div class="lock-box"><div class="lock-icon fail"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>' +
+    '<div class="lock-title">Se agotaron los intentos de hoy</div><div class="lock-sub">No se identificaron ambas muestras en ' + MAX_INTENTOS + ' intentos. Mañana habrá un nuevo par de imágenes.</div>' +
+    '<div class="lock-meta">Último intento: ' + esc(estado.usuario) + ' · ' + esc(estado.hora) + '</div></div>';
+}
+
+function pintarControl() {
+  var res = CONTROL;
+  var e = res.estado;
+  if (e.aprobado || e.agotado) {
+    $('control-estado').innerHTML = htmlBloqueo(e);
+    $('modal-body').innerHTML = htmlBloqueo(e) + '<button class="btn-add" style="margin-top:6px" onclick="cerrarModal()">Cerrar</button>';
+    return;
+  }
+  if (!res.hay) {
+    $('control-estado').innerHTML = '<div class="vacio">Hoy no hay imágenes disponibles. Avisa a tu supervisor para que agregue imágenes al banco.</div>';
+    cerrarModal();
+    return;
+  }
+  $('control-estado').innerHTML = '<div class="vacio">El control de hoy está pendiente.<br><br><button class="btn-sm" onclick="abrirModal()">Responder ahora</button></div>';
+  $('modal-fuente').textContent = res.fuente ? 'Fuente: ' + res.fuente : '';
+  $('modal-body').innerHTML =
+    '<div class="imgs-row">' + [0, 1].map(function (i) {
+      return '<div><span class="slot-num">Imagen ' + (i + 1) + '</span>' +
+        '<div class="imagen-dia-wrap">' + htmlImagen(res.imagenes[i].url) + '</div>' +
+        '<select class="field-in" id="resp-' + i + '-a">' + opcionesRespuesta('Respuesta 1', true) + '</select>' +
+        '<select class="field-in" id="resp-' + i + '-b" style="margin-bottom:0">' + opcionesRespuesta('Respuesta 2 (opcional)', false) + '</select></div>';
+    }).join('') + '</div>' +
+    '<button class="btn-add" id="btn-enviar" onclick="enviarRespuestaApp()">Enviar</button>' +
+    '<div class="hint" id="intentos-hint">' + textoIntentos(e) + '</div>';
+  [0, 1].forEach(function (i) {
+    $('resp-' + i + '-a').addEventListener('change', function () {
+      var b = $('resp-' + i + '-b');
+      b.style.display = this.value === NEGATIVO ? 'none' : '';
+      if (this.value === NEGATIVO) b.value = '';
+    });
+  });
+  abrirModal();
+}
+
+function textoIntentos(e) {
+  if (!e.intentosUsados) return 'Tienes hasta ' + MAX_INTENTOS + ' intentos por día';
+  return '<b style="color:var(--fail)">La respuesta anterior fue incorrecta.</b><br>Quedan ' + e.intentosRestantes + ' de ' + MAX_INTENTOS + ' intentos.';
+}
+
+function enviarRespuestaApp() {
+  var r = [0, 1].map(function (i) { return combinar($('resp-' + i + '-a').value, $('resp-' + i + '-b').value); });
+  if (!r[0] || !r[1]) { toast('Responde ambas imágenes', 'err'); return; }
+  $('btn-enviar').disabled = true;
+  $('btn-enviar').textContent = 'Enviando…';
+  api('enviarRespuesta', [r[0], r[1]], function (res) {
+    if (!res.success) { toast(res.error, 'err'); cargarControl(); return; }
+    var e = CONTROL.estado;
+    e.intentosUsados = res.intento;
+    e.intentosRestantes = res.intentosRestantes;
+    e.usuario = res.usuario; e.hora = res.hora;
+    if (res.estado === 'Aprobado') { e.aprobado = true; toast('Respuesta correcta ✓', 'ok'); pintarControl(); return; }
+    if (res.intentosRestantes <= 0) { e.agotado = true; toast('Respuesta incorrecta. Sin intentos restantes', 'err'); pintarControl(); return; }
+    toast('Respuesta incorrecta, vuelve a intentarlo', 'err');
+    $('btn-enviar').disabled = false;
+    $('btn-enviar').textContent = 'Enviar';
+    $('intentos-hint').innerHTML = textoIntentos(e);
+  }, function () { $('btn-enviar').disabled = false; $('btn-enviar').textContent = 'Enviar'; });
+}
+
+/* ------------------------- vista supervisor ------------------------- */
+
+function cargarVistaSupervisor() {
+  [0, 1].forEach(function (i) { $('sup-img-' + i).innerHTML = '<div class="spinner"></div>'; $('sup-resp-' + i).textContent = '—'; });
+  $('sup-estado').innerHTML = '';
+  api('getControlHoy', [], function (res) {
+    var e = res.estado;
+    var aviso;
+    if (e.aprobado) aviso = '<div class="aviso info">✓ Aprobado por ' + esc(e.usuario) + ' a las ' + esc(e.hora) + ' (intento ' + e.intentosUsados + ' de ' + MAX_INTENTOS + ').</div>';
+    else if (e.agotado) aviso = '<div class="aviso warn">No aprobado: se agotaron los ' + MAX_INTENTOS + ' intentos (último: ' + esc(e.usuario) + ' · ' + esc(e.hora) + ').</div>';
+    else aviso = '<div class="aviso warn">Pendiente de responder' + (e.intentosUsados ? ' · ' + e.intentosUsados + ' intento(s) incorrecto(s)' : '') + '.</div>';
+    $('sup-estado').innerHTML = aviso;
+    if (!res.hay) {
+      [0, 1].forEach(function (i) { $('sup-img-' + i).innerHTML = htmlImagen(''); });
+      $('sup-estado').innerHTML += '<div class="aviso warn">No hay imágenes suficientes en el banco para hoy.</div>';
+      return;
+    }
+    $('sup-fuente').textContent = res.fuente ? 'Fuente: ' + res.fuente : '';
+    res.imagenes.forEach(function (img, i) {
+      $('sup-img-' + i).innerHTML = htmlImagen(img.url);
+      $('sup-resp-' + i).textContent = img.parasito + ' (' + img.tipo + ')';
+    });
+  });
+}
+
+function cargarIndicadores() {
+  $('kpis').innerHTML = '<div class="spinner"></div>';
+  api('getIndicadores', [], function (res) {
+    var k = res.indicadores;
+    $('kpi-periodo').textContent = 'Desde ' + fechaLarga(k.desde);
+    var item = function (v, l) { return '<div class="kpi"><div class="kpi-val">' + v + '</div><div class="kpi-lbl">' + l + '</div></div>'; };
+    $('kpis').innerHTML =
+      item(k.porcentajePrimerIntento + '%', 'Aprobado al primer intento') +
+      item(k.primerIntento, 'Días aprobados al 1er intento') +
+      item(k.aprobadoReintento, 'Aprobados con reintento') +
+      item(k.noAprobado, 'No aprobados') +
+      item(k.sinRespuesta, 'Días sin respuesta');
+  });
+}
+
+/* ------------------------------ historial ------------------------------ */
+
+function badge(estado) {
+  var cls = estado === 'Aprobado' ? 'b-ok' : estado === 'Rechazado' ? 'b-fail' : estado === 'Sin respuesta' ? 'b-none' : 'b-pend';
+  return '<span class="badge ' + cls + '">' + esc(estado) + '</span>';
+}
+
+function cargarHistorial(pagina) {
+  var esSup = PERFIL.rol === 'supervisor';
+  var cols = esSup ? 8 : 7;
+  $('hist-head').innerHTML = '<tr><th>Fecha</th><th>Usuario</th><th>Imagen 1</th><th>Imagen 2</th>' + (esSup ? '<th>Correctas</th>' : '') + '<th>Intento</th><th>Hora</th><th>Estado</th></tr>';
+  $('hist-body').innerHTML = '<tr><td colspan="' + cols + '"><div class="spinner"></div></td></tr>';
+  api('getHistorial', [pagina], function (res) {
+    $('hist-total').textContent = res.total + ' registros';
+    $('hist-vacio').style.display = res.registros.length ? 'none' : 'block';
+    var ultima = '';
+    $('hist-body').innerHTML = res.registros.map(function (r) {
+      var sep = '';
+      if (r.fecha !== ultima) { ultima = r.fecha; sep = '<tr class="sep"><td colspan="' + cols + '">' + fechaLarga(r.fecha) + '</td></tr>'; }
+      return sep + '<tr><td>' + esc(r.fecha) + '</td><td>' + esc(r.usuario) + '</td><td>' + esc(r.respuesta1 || '—') + '</td><td>' + esc(r.respuesta2 || '—') + '</td>' +
+        (esSup ? '<td class="correcta">' + esc(r.correcta1 || '—') + '<br>' + esc(r.correcta2 || '—') + '</td>' : '') +
+        '<td>' + (r.intento ? esc(r.intento) + ' de ' + MAX_INTENTOS : '—') + '</td><td>' + esc(r.hora || '—') + '</td><td>' + badge(r.estado) + '</td></tr>';
+    }).join('');
+    paginacion('hist-pag', res.pagina, res.totalPaginas, cargarHistorial);
+  });
+}
+
+function paginacion(id, pagina, total, fn) {
+  var el = $(id);
+  if (total <= 1) { el.innerHTML = ''; return; }
+  var html = '<span>Página ' + pagina + ' de ' + total + '</span>';
+  for (var i = 1; i <= total; i++) html += '<button class="btn-sm' + (i === pagina ? ' on' : '') + '" data-p="' + i + '">' + i + '</button>';
+  el.innerHTML = html;
+  el.querySelectorAll('button').forEach(function (b) { b.onclick = function () { fn(parseInt(this.dataset.p, 10)); }; });
+}
+
+/* ------------------------------- banco ------------------------------- */
+
+var IMG = null; // { base64, thumb }
+var BANCO_PAG = { Positiva: 1, Negativa: 1 };
+
+function cargarBanco() {
+  $('banco-aviso-origen').innerHTML = PERFIL.esOrigen
+    ? 'Las imágenes que subes forman el <b>banco general</b> y se distribuyen a todos los laboratorios.'
+    : 'Las imágenes que subes son <b>solo para tu laboratorio</b>. Además recibes las del banco general.';
+  $('banco-lista-titulo').textContent = PERFIL.esOrigen ? 'Banco general (tus imágenes)' : 'Imágenes propias';
+  cargarBancoTipo('Positiva');
+  cargarBancoTipo('Negativa');
+}
+
+function cargarBancoTipo(tipo) {
+  $('banco-lista-' + tipo).innerHTML = '<div class="spinner"></div>';
+  api('getBanco', [tipo, BANCO_PAG[tipo]], function (res) {
+    BANCO_PAG[tipo] = res.pagina;
+    pintarResumen(tipo, res.resumen);
+    $('banco-count-' + tipo).textContent = res.resumen.propias + (PERFIL.esOrigen ? '' : ' propias');
+    $('banco-lista-' + tipo).innerHTML = res.banco.length ? res.banco.map(function (b) {
+      return '<div class="banco-item"><img class="banco-thumb" src="' + esc(b.url) + '" alt="">' +
+        '<div class="banco-info"><div class="banco-parasito">' + esc(b.parasito) + '</div>' +
+        '<div class="banco-fuente">' + esc(b.fuente || 'Sin fuente') + ' · subida ' + esc(b.fechaSubida) + ' · ' + b.diasEnRotacion + ' días más en rotación</div></div>' +
+        '<button class="btn-sm danger" onclick="eliminarImagen(\'' + esc(b.id) + '\',\'' + tipo + '\')">Quitar</button></div>';
+    }).join('') : '<div class="vacio">Sin imágenes.</div>';
+    puntos('banco-dots-' + tipo, res.pagina, res.totalPaginas, function (p) { BANCO_PAG[tipo] = p; cargarBancoTipo(tipo); });
+  });
+}
+
+var RESUMEN = {};
+function pintarResumen(tipo, r) {
+  RESUMEN[tipo] = r;
+  if (!RESUMEN.Positiva || !RESUMEN.Negativa) return;
+  var linea = function (t, x) {
+    return '<div style="font-size:11.5px;margin-bottom:6px"><b>' + t + ':</b> ' + x.totalRotacion + ' en rotación' +
+      (PERFIL.esOrigen ? '' : ' (' + x.propias + ' propias + ' + x.general + ' del banco general)') +
+      ' · <b>' + x.disponiblesSinRepetir + '</b> sin usar en los últimos ' + x.recomendado + ' días</div>';
+  };
+  var html = linea('Positivas', RESUMEN.Positiva) + linea('Negativas', RESUMEN.Negativa);
+  var bajo = ['Positiva', 'Negativa'].filter(function (t) { return RESUMEN[t].totalRotacion < RESUMEN[t].recomendado; });
+  if (bajo.length) {
+    html += '<div class="aviso warn" style="margin:8px 0 0">Para no repetir imágenes en ' + RESUMEN.Positiva.recomendado +
+      ' días se recomiendan al menos ' + RESUMEN.Positiva.recomendado + ' positivas y ' + RESUMEN.Positiva.recomendado + ' negativas. Con menos, las imágenes se repetirán antes.</div>';
+  }
+  $('banco-resumen').innerHTML = html;
+}
+
+function puntos(id, pagina, total, fn) {
+  var el = $(id);
+  if (total <= 1) { el.innerHTML = ''; return; }
+  var html = '';
+  for (var i = 1; i <= total; i++) html += '<button class="' + (i === pagina ? 'on' : '') + '" data-p="' + i + '"></button>';
+  el.innerHTML = html;
+  el.querySelectorAll('button').forEach(function (b) { b.onclick = function () { fn(parseInt(this.dataset.p, 10)); }; });
+}
+
+function onTipoChange() {
+  $('wrap-parasito').style.display = $('inp-tipo').value === 'Negativa' ? 'none' : '';
+  actualizarBtnBanco();
+}
+
+function actualizarBtnBanco() {
+  var negativa = $('inp-tipo').value === 'Negativa';
+  $('btn-subir').disabled = !(IMG && (negativa || $('inp-parasito').value));
+}
+
+function onImgDrop(e) { e.preventDefault(); $('upload-zone').classList.remove('drag'); if (e.dataTransfer.files[0]) leerImagen(e.dataTransfer.files[0]); }
+function onImgFile(e) { if (e.target.files[0]) leerImagen(e.target.files[0]); }
+
+function redimensionar(img, max, calidad) {
+  var w = img.width, h = img.height;
+  if (w > max || h > max) { if (w > h) { h = Math.round(h * max / w); w = max; } else { w = Math.round(w * max / h); h = max; } }
+  var c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  c.getContext('2d').drawImage(img, 0, 0, w, h);
+  return c.toDataURL('image/jpeg', calidad);
+}
+
+function leerImagen(file) {
+  if (!/^image\//.test(file.type)) { toast('Solo se aceptan imágenes', 'err'); return; }
+  var reader = new FileReader();
+  reader.onload = function (ev) {
+    var img = new Image();
+    img.onload = function () {
+      IMG = { base64: redimensionar(img, 1400, 0.85), thumb: redimensionar(img, 160, 0.6) };
+      $('upload-txt').innerHTML = '<img class="upload-preview" src="' + IMG.base64 + '"><strong>' + esc(file.name) + '</strong>';
+      actualizarBtnBanco();
+    };
+    img.onerror = function () { toast('No se pudo leer la imagen', 'err'); };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function subirImagen() {
+  var tipo = $('inp-tipo').value;
+  var parasito = tipo === 'Positiva' ? combinar($('inp-parasito').value, $('inp-parasito2').value) : '';
+  if (!IMG) { toast('Falta la imagen', 'err'); return; }
+  if (tipo === 'Positiva' && !parasito) { toast('Falta el nombre del parásito', 'err'); return; }
+  $('btn-subir').disabled = true;
+  $('btn-subir').textContent = 'Subiendo…';
+  api('subirImagenBanco', [IMG.base64, 'image/jpeg', parasito, $('inp-fuente').value, tipo, IMG.thumb], function (res) {
+    $('btn-subir').textContent = 'Agregar imagen';
+    if (!res.success) { toast(res.error, 'err'); actualizarBtnBanco(); return; }
+    toast('Imagen agregada', 'ok');
+    IMG = null;
+    $('input-img').value = '';
+    $('inp-parasito').value = ''; $('inp-parasito2').value = ''; $('inp-fuente').value = '';
+    $('upload-txt').innerHTML = '<strong>Click o arrastra la imagen</strong><span>JPG o PNG</span>';
+    actualizarBtnBanco();
+    BANCO_PAG[tipo] = 1;
+    cargarBancoTipo(tipo);
+  }, function () { $('btn-subir').textContent = 'Agregar imagen'; actualizarBtnBanco(); });
+}
+
+function eliminarImagen(id, tipo) {
+  if (!confirm('¿Quitar esta imagen del banco? Se borrará definitivamente.')) return;
+  api('eliminarImagenBanco', [id], function (res) {
+    if (!res.success) { toast(res.error, 'err'); return; }
+    toast('Imagen eliminada', 'ok');
+    cargarBancoTipo(tipo);
+  });
+}
+
+/* ------------------------------ usuarios ------------------------------ */
+
+var MARCAS = [];
+
+function cargarUsuarios() {
+  $('nu-admin').style.display = PERFIL.admin ? '' : 'none';
+  if (PERFIL.admin && !MARCAS.length) cargarMarcas();
+  $('usuarios-body').innerHTML = '<tr><td colspan="5"><div class="spinner"></div></td></tr>';
+  api('getUsuarios', [], function (res) {
+    $('usuarios-body').innerHTML = res.usuarios.map(function (u) {
+      var propio = u.usuario === PERFIL.usuario;
+      var gestionable = !propio && (PERFIL.admin || u.rol === 'analista');
+      var estado = !u.activo ? '<span class="badge b-none">Inactivo</span>' : u.temporal ? '<span class="badge b-pend">Clave temporal</span>' : '<span class="badge b-ok">Activo</span>';
+      var acciones = gestionable
+        ? '<button class="btn-sm" onclick="restablecer(\'' + esc(u.usuario) + '\')">Restablecer clave</button> ' +
+          '<button class="btn-sm danger" onclick="cambiarEstadoUsuarioApp(\'' + esc(u.usuario) + '\',' + !u.activo + ')">' + (u.activo ? 'Desactivar' : 'Activar') + '</button>'
+        : (propio ? '<span class="fuente-line">Tu cuenta</span>' : '');
+      return '<tr><td><b>' + esc(u.usuario) + '</b></td><td>' + esc(u.nombre) + '</td><td>' + (u.rol === 'supervisor' ? 'Supervisor' : 'Analista') + '</td><td>' + estado + '</td><td style="white-space:nowrap">' + acciones + '</td></tr>';
+    }).join('') || '<tr><td colspan="5" class="vacio">Sin usuarios.</td></tr>';
+  });
+}
+
+function mostrarCredenciales(res) {
+  $('cred-usuario').textContent = res.usuario;
+  $('cred-pass').textContent = res.password;
+  $('cred-modal').classList.add('on');
+}
+
+function crearUsuarioApp() {
+  var nombre = $('nu-nombre').value.trim();
+  if (!nombre) { toast('Escribe el nombre completo', 'err'); return; }
+  var rol = PERFIL.admin ? $('nu-rol').value : 'analista';
+  var marca = PERFIL.admin ? $('nu-marca').value : PERFIL.marca;
+  api('crearUsuario', [nombre, rol, marca], function (res) {
+    if (!res.success) { toast(res.error, 'err'); return; }
+    $('nu-nombre').value = '';
+    mostrarCredenciales(res);
+    cargarUsuarios();
+  });
+}
+
+function restablecer(usuario) {
+  if (!confirm('¿Generar una nueva contraseña temporal para ' + usuario + '?')) return;
+  api('restablecerPassword', [usuario], function (res) {
+    if (!res.success) { toast(res.error, 'err'); return; }
+    mostrarCredenciales(res);
+    cargarUsuarios();
+  });
+}
+
+function cambiarEstadoUsuarioApp(usuario, activo) {
+  api('cambiarEstadoUsuario', [usuario, activo], function (res) {
+    if (!res.success) { toast(res.error, 'err'); return; }
+    cargarUsuarios();
+  });
+}
+
+/* ------------------------------- marcas ------------------------------- */
+
+function cargarMarcas() {
+  api('getMarcas', [], function (res) {
+    MARCAS = res.marcas;
+    $('nu-marca').innerHTML = MARCAS.map(function (m) {
+      return '<option value="' + esc(m.codigo) + '"' + (m.codigo === PERFIL.marca ? ' selected' : '') + '>' + esc(m.codigo) + ' · Lab ' + esc(m.numero) + ' ' + esc(m.nombre) + '</option>';
+    }).join('');
+    $('marcas-body').innerHTML = MARCAS.map(function (m) {
+      var accion = m.esOrigen ? '<span class="fuente-line">Origen</span>'
+        : '<button class="btn-sm' + (m.activa ? ' danger' : '') + '" onclick="cambiarEstadoMarcaApp(\'' + esc(m.codigo) + '\',' + !m.activa + ')">' + (m.activa ? 'Desactivar' : 'Activar') + '</button>';
+      return '<tr><td><b>' + esc(m.codigo) + '</b></td><td>Lab ' + esc(m.numero) + ' ' + esc(m.nombre) + '</td><td>' + (m.tieneSupervisor ? esc(m.codigo) + '-SUP' : '<span class="fuente-line">Sin supervisor</span>') + '</td>' +
+        '<td>' + m.usuarios + '</td><td>' + (m.activa ? '<span class="badge b-ok">Activo</span>' : '<span class="badge b-none">Inactivo</span>') + '</td><td>' + accion + '</td></tr>';
+    }).join('');
+  });
+}
+
+function cambiarEstadoMarcaApp(codigo, activa) {
+  api('cambiarEstadoMarca', [codigo, activa], function (res) {
+    if (!res.success) { toast(res.error, 'err'); return; }
+    cargarMarcas();
+  });
+}
+</script>
+</body>
+</html>
