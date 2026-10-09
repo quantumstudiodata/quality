@@ -670,9 +670,40 @@ function eliminarImagenBanco(token, id) {
   var p = sesion_(token, 'supervisor');
   var fila = leer_('BancoImagenes').filter(function (b) { return b.id === id && b.marca === p.marca && b.estado !== 'eliminada'; })[0];
   if (!fila) return { success: false, error: 'Imagen no encontrada' };
-  borrarArchivos_(fila);
-  actualizar_('BancoImagenes', fila._fila, { estado: 'eliminada' });
-  return { success: true };
+  return conBloqueo_(function () {
+    borrarArchivos_(fila);
+    actualizar_('BancoImagenes', fila._fila, { estado: 'eliminada' });
+    var reemplazadas = reemplazarEnHoy_(fila);
+    return { success: true, reemplazadas: reemplazadas };
+  });
+}
+
+// Si la imagen eliminada estaba asignada hoy a algún laboratorio, se sustituye
+// por otra del mismo tipo, aunque el control ya se esté respondiendo. Los
+// controles que ya terminaron (aprobados o con intentos agotados) no se tocan,
+// para conservar el registro de lo que se evaluó.
+function reemplazarEnHoy_(eliminada) {
+  var marcas = {};
+  marcas_().forEach(function (m) { marcas[m.codigo] = m; });
+  var asignaciones = leer_('Asignaciones');
+  var cambios = 0;
+  asignaciones.filter(function (a) { return a.idImagen === eliminada.id; }).forEach(function (a) {
+    var m = marcas[a.marca];
+    if (!m) return;
+    var perfil = { marca: m.codigo, esOrigen: m.esOrigen === 'SI', zona: m.zonaHoraria || CONFIG.ZONA_DEFAULT };
+    if (a.fecha !== hoy_(perfil)) return;
+    var estado = estadoDeRegistros_(registrosHoy_(perfil));
+    if (estado.aprobado || estado.agotado) return;
+
+    var usadasHoy = asignaciones.filter(function (x) { return x.marca === a.marca && x.fecha === a.fecha; }).map(function (x) { return x.idImagen; });
+    var pool = poolMarca_(leer_('BancoImagenes'), perfil, a.tipo).filter(function (b) { return usadasHoy.indexOf(b.id) === -1; });
+    var nueva = elegirImagen_(pool, ultimaVez_(asignaciones, a.marca));
+    if (!nueva) return;
+    actualizar_('Asignaciones', a._fila, { idImagen: nueva.id, fileId: nueva.fileId, parasito: nueva.parasito, fuente: nueva.fuente });
+    cache_().remove('a_' + a.marca + '_' + a.fecha);
+    cambios++;
+  });
+  return cambios;
 }
 
 function borrarArchivos_(fila) {

@@ -149,9 +149,9 @@ main{max-width:1100px;margin:0 auto;padding:20px 26px}
 }
 
 /* ---------- ventana del control ---------- */
-.ventana-fondo{position:fixed;inset:0;z-index:8000;background:rgba(7,5,14,.92);padding:20px;display:none}
+.ventana-fondo{position:fixed;inset:0;z-index:8000;background:rgba(7,5,14,.82);backdrop-filter:blur(3px);padding:24px;display:none;align-items:center;justify-content:center}
 .ventana-fondo.on{display:flex}
-.ventana{flex:1;display:flex;flex-direction:column;border-radius:14px;background:var(--card);border:1px solid var(--border);animation:aparecer .35s ease-out;min-height:0}
+.ventana{width:100%;max-width:940px;max-height:min(720px,calc(100vh - 48px));display:flex;flex-direction:column;border-radius:14px;background:var(--card);border:1px solid var(--border);animation:aparecer .35s ease-out;min-height:0}
 .ventana header{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border)}
 .ventana .cuerpo{flex:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:18px;min-height:0;overflow:auto}
 @media(max-width:800px){.ventana .cuerpo{grid-template-columns:1fr}}
@@ -164,13 +164,13 @@ main{max-width:1100px;margin:0 auto;padding:20px 26px}
 .icon-btn:hover{border-color:var(--mid)}
 .muestra{display:flex;flex-direction:column;gap:10px;min-width:0}
 .muestra .etq{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.06em}
-.visor{flex:1;min-height:320px;border-radius:10px;background:var(--bg-2);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.visor{height:clamp(200px,38vh,320px);border-radius:10px;background:var(--bg-2);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .visor img{max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in;position:absolute;inset:0;margin:auto}
 .visor .icon-btn{position:absolute;right:8px;top:8px;background:var(--card);z-index:1}
 .agregar{align-self:flex-start;border:none;background:none;color:var(--sub);font-size:11px;transition:color .2s}
 .agregar:hover{color:var(--text)}
 .msg-ventana{font-size:11.5px}
-.resultado{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;min-height:360px;animation:aparecer .35s ease-out}
+.resultado{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;min-height:300px;animation:aparecer .35s ease-out}
 .resultado .circulo{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center}
 .resultado .r1{font-size:16px;font-weight:700}
 .resultado .r2{font-size:11.5px;color:var(--sub);max-width:42ch;line-height:1.6}
