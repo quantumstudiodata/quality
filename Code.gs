@@ -34,10 +34,9 @@ var CONFIG = {
   HORAS_SESION: 6,            // máximo que permite CacheService
   ZONA_DEFAULT: 'America/Mexico_City',
   ITERACIONES_HASH: 200,
+  LARGO_PASSWORD: 4,
   MAX_FALLOS_LOGIN: 5,
-  MINUTOS_BLOQUEO: 15,
-  BANCO_POR_PAGINA: 6,
-  HISTORIAL_POR_PAGINA: 10
+  MINUTOS_BLOQUEO: 15
 };
 
 // [código, número, nombre, ¿es la marca de origen?]
@@ -57,7 +56,7 @@ var MARCAS_INICIALES = [
 
 var HOJAS = {
   Marcas: ['codigo', 'numero', 'nombre', 'zonaHoraria', 'activa', 'esOrigen'],
-  Usuarios: ['usuario', 'nombre', 'marca', 'rol', 'admin', 'hash', 'salt', 'temporal', 'activo', 'creado'],
+  Usuarios: ['usuario', 'nombre', 'marca', 'rol', 'admin', 'hash', 'salt', 'temporal', 'activo', 'creado', 'iniciales', 'numero', 'puesto'],
   BancoImagenes: ['id', 'marca', 'compartida', 'tipo', 'parasito', 'fuente', 'fileId', 'thumbId', 'fechaSubida', 'estado'],
   Asignaciones: ['fecha', 'marca', 'orden', 'tipo', 'idImagen', 'fileId', 'parasito', 'fuente'],
   Registros: ['id', 'fecha', 'marca', 'usuario', 'hora', 'respuesta1', 'respuesta2', 'estado', 'intento']
@@ -75,16 +74,26 @@ function doGet() {
 
 /* ============================ hojas ============================ */
 
+var HOJAS_LISTAS = {};  // hojas ya verificadas en esta ejecución
+var LECTURAS = {};      // lecturas en memoria durante esta ejecución
+
 function hoja_(nombre) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(nombre);
+  var headers = HOJAS[nombre];
   if (!sh) {
-    var headers = HOJAS[nombre];
     sh = ss.insertSheet(nombre);
     sh.getRange(1, 1, sh.getMaxRows(), headers.length).setNumberFormat('@');
     sh.getRange(1, 1, 1, headers.length).setValues([headers]);
     sh.setFrozenRows(1);
+  } else if (!HOJAS_LISTAS[nombre]) {
+    // Agrega al final las columnas nuevas que una versión anterior no tenía.
+    var actuales = sh.getRange(1, 1, 1, Math.max(sh.getLastColumn(), 1)).getValues()[0];
+    if (actuales.length < headers.length) {
+      sh.getRange(1, actuales.length + 1, 1, headers.length - actuales.length).setValues([headers.slice(actuales.length)]);
+    }
   }
+  HOJAS_LISTAS[nombre] = true;
   return sh;
 }
 
@@ -95,6 +104,7 @@ function texto_(v) {
 
 // Devuelve las filas como objetos {columna: valor}, con _fila = número de fila real.
 function leer_(nombre) {
+  if (LECTURAS[nombre]) return LECTURAS[nombre];
   var data = hoja_(nombre).getDataRange().getValues();
   if (data.length < 2) return [];
   var headers = data[0];
@@ -105,6 +115,7 @@ function leer_(nombre) {
     for (var j = 0; j < headers.length; j++) obj[headers[j]] = texto_(data[i][j]);
     out.push(obj);
   }
+  LECTURAS[nombre] = out;
   return out;
 }
 
@@ -114,6 +125,7 @@ function agregar_(nombre, obj) {
 
 function agregarVarios_(nombre, objs) {
   if (!objs.length) return;
+  delete LECTURAS[nombre];
   var sh = hoja_(nombre);
   var headers = HOJAS[nombre];
   var filas = objs.map(function (obj) {
@@ -128,6 +140,7 @@ function agregarVarios_(nombre, objs) {
 }
 
 function actualizar_(nombre, fila, cambios) {
+  delete LECTURAS[nombre];
   var sh = hoja_(nombre);
   var headers = HOJAS[nombre];
   Object.keys(cambios).forEach(function (col) {
@@ -140,6 +153,7 @@ function actualizar_(nombre, fila, cambios) {
 function conBloqueo_(fn) {
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
+  LECTURAS = {}; // dentro del bloqueo siempre se lee lo más reciente
   try { return fn(); } finally { lock.releaseLock(); }
 }
 
@@ -174,10 +188,10 @@ function hash_(password, salt) {
   return v;
 }
 
+// Contraseña temporal de 4 dígitos; se cambia en el primer ingreso.
 function generarPassword_() {
-  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
   var out = '';
-  for (var i = 0; i < 8; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
+  for (var i = 0; i < CONFIG.LARGO_PASSWORD; i++) out += Math.floor(Math.random() * 10);
   return out;
 }
 
@@ -185,10 +199,15 @@ function nuevoId_() { return Utilities.getUuid().replace(/-/g, '').substring(0, 
 
 function cache_() { return CacheService.getScriptCache(); }
 
+function etiquetaMarca_(m) { return m.codigo + '-' + m.numero + ' ' + m.nombre; }
+
 function perfilDe_(u, marca) {
   return {
     usuario: u.usuario,
     nombre: u.nombre,
+    iniciales: u.iniciales || '',
+    puesto: u.puesto || (u.rol === 'supervisor' ? 'Supervisor' : 'Analista'),
+    laboratorio: etiquetaMarca_(marca),
     marca: u.marca,
     numero: marca.numero,
     rol: u.rol,
@@ -241,11 +260,17 @@ function login(usuario, password) {
   var token = Utilities.getUuid() + nuevoId_();
   var perfil = perfilDe_(u, marca);
   guardarSesion_(token, perfil);
-  return { success: true, token: token, perfil: perfil };
+  return { success: true, token: token, perfil: perfil, datos: perfil.temporal ? null : datos_(perfil) };
 }
 
-function getPerfil(token) {
-  return { success: true, perfil: sesion_(token, undefined, true) };
+// Al recargar la página: valida la sesión y entrega todos los datos en una sola llamada.
+function getSesion(token) {
+  var p = sesion_(token, undefined, true);
+  return { success: true, perfil: p, datos: p.temporal ? null : datos_(p) };
+}
+
+function getDatos(token) {
+  return { success: true, datos: datos_(sesion_(token)) };
 }
 
 function cerrarSesion(token) {
@@ -256,7 +281,7 @@ function cerrarSesion(token) {
 function cambiarPassword(token, actual, nueva) {
   var p = sesion_(token, undefined, true);
   nueva = String(nueva || '');
-  if (nueva.length < 6) return { success: false, error: 'La nueva contraseña debe tener al menos 6 caracteres' };
+  if (nueva.length !== CONFIG.LARGO_PASSWORD) return { success: false, error: 'La contraseña debe tener ' + CONFIG.LARGO_PASSWORD + ' caracteres' };
   if (nueva === actual) return { success: false, error: 'La nueva contraseña debe ser distinta a la actual' };
   var u = leer_('Usuarios').filter(function (x) { return x.usuario === p.usuario; })[0];
   if (!u || hash_(String(actual || ''), u.salt) !== u.hash) return { success: false, error: 'La contraseña actual no es correcta' };
@@ -264,7 +289,7 @@ function cambiarPassword(token, actual, nueva) {
   actualizar_('Usuarios', u._fila, { hash: hash_(nueva, salt), salt: salt, temporal: 'NO' });
   p.temporal = false;
   guardarSesion_(token, p);
-  return { success: true, perfil: p };
+  return { success: true, perfil: p, datos: datos_(p) };
 }
 
 /* ============================ Drive ============================ */
@@ -383,22 +408,26 @@ function estadoDeRegistros_(registros) {
   };
 }
 
-// El analista nunca recibe el parásito correcto ni el tipo de imagen.
-function getControlHoy(token) {
-  var p = sesion_(token);
+// El analista nunca recibe el parásito correcto, el tipo de imagen ni la fuente.
+function controlHoy_(p) {
   var asignacion = asignacionHoy_(p, true);
-  var estado = estadoDeRegistros_(registrosHoy_(p));
-  if (!asignacion) return { success: true, hay: false, estado: estado, fecha: hoy_(p) };
-
+  var out = { hay: false, estado: estadoDeRegistros_(registrosHoy_(p)), fecha: hoy_(p) };
+  if (!asignacion) return out;
   var esSup = p.rol === 'supervisor';
-  var positiva = asignacion.A.tipo === 'Positiva' ? asignacion.A : asignacion.B;
-  var imagenes = ['A', 'B'].map(function (orden) {
+  out.hay = true;
+  out.imagenes = ['A', 'B'].map(function (orden) {
     var a = asignacion[orden];
     var img = { url: urlImagen_(a.fileId, 1400) };
-    if (esSup) { img.parasito = a.parasito; img.tipo = a.tipo; }
+    if (esSup) { img.parasito = a.parasito; img.tipo = a.tipo; img.fuente = a.fuente; }
     return img;
   });
-  return { success: true, hay: true, estado: estado, fecha: hoy_(p), fuente: positiva.fuente, imagenes: imagenes };
+  return out;
+}
+
+function getControlHoy(token) {
+  var r = controlHoy_(sesion_(token));
+  r.success = true;
+  return r;
 }
 
 function normalizarRespuesta_(s) {
@@ -435,20 +464,44 @@ function enviarRespuesta(token, respuesta1, respuesta2) {
   });
 }
 
-/* ========================= historial ========================= */
+/* ==================== datos para la aplicación ==================== */
 
-function getHistorial(token, pagina) {
-  var p = sesion_(token);
-  pagina = Number(pagina) || 1;
-  var hoy = hoy_(p);
-  var esSup = p.rol === 'supervisor';
+// Todo lo que la aplicación necesita, en una sola llamada. El navegador lo
+// guarda en memoria y así el cambio de pestaña es inmediato.
+function datos_(p) {
+  var d = { hoy: controlHoy_(p), indicadores: indicadores_(p), historial: historial_(p), atlas: atlas_(p) };
+  if (p.rol === 'supervisor') {
+    d.banco = { Positiva: banco_(p, 'Positiva'), Negativa: banco_(p, 'Negativa') };
+    d.usuarios = usuarios_(p);
+    if (p.admin) d.marcas = marcasLista_();
+  }
+  return d;
+}
 
+function asignacionesPorFecha_(marca) {
   var porFecha = {};
   leer_('Asignaciones').forEach(function (a) {
-    if (a.marca !== p.marca) return;
+    if (a.marca !== marca) return;
     porFecha[a.fecha] = porFecha[a.fecha] || {};
     porFecha[a.fecha][a.orden] = a;
   });
+  return porFecha;
+}
+
+function registrosPorFecha_(marca) {
+  var porFecha = {};
+  leer_('Registros').forEach(function (r) {
+    if (r.marca === marca) (porFecha[r.fecha] = porFecha[r.fecha] || []).push(r);
+  });
+  return porFecha;
+}
+
+/* ========================= historial ========================= */
+
+function historial_(p) {
+  var hoy = hoy_(p);
+  var esSup = p.rol === 'supervisor';
+  var porFecha = asignacionesPorFecha_(p.marca);
   var registros = leer_('Registros').filter(function (r) { return r.marca === p.marca; });
   var conRespuesta = {};
   registros.forEach(function (r) { conRespuesta[r.fecha] = true; });
@@ -467,35 +520,27 @@ function getHistorial(token, pagina) {
       filas.push({ fecha: fecha, usuario: '—', hora: '', respuesta1: '', respuesta2: '', intento: '', estado: 'Sin respuesta' });
     }
   });
-
   filas.sort(function (a, b) {
     var ka = a.fecha + 'T' + (a.hora || '00:00:00'), kb = b.fecha + 'T' + (b.hora || '00:00:00');
     return kb > ka ? 1 : (kb < ka ? -1 : 0);
   });
-  var totalPaginas = Math.max(1, Math.ceil(filas.length / CONFIG.HISTORIAL_POR_PAGINA));
-  pagina = Math.min(pagina, totalPaginas);
-  return {
-    success: true, pagina: pagina, totalPaginas: totalPaginas, total: filas.length,
-    registros: filas.slice((pagina - 1) * CONFIG.HISTORIAL_POR_PAGINA, pagina * CONFIG.HISTORIAL_POR_PAGINA)
-  };
+  return filas;
+}
+
+function getHistorial(token) {
+  return { success: true, registros: historial_(sesion_(token)) };
 }
 
 // Indicadores de los últimos 30 días (desde que la marca empezó a usar el sistema).
-function getIndicadores(token) {
-  var p = sesion_(token, 'supervisor');
+function indicadores_(p) {
   var hoy = hoy_(p);
   var desde = sumarDias_(hoy, -29);
   var asignadas = leer_('Asignaciones').filter(function (a) { return a.marca === p.marca; });
   var inicio = asignadas.reduce(function (min, a) { return a.fecha < min ? a.fecha : min; }, hoy);
   if (inicio > desde) desde = inicio;
+  var porDia = registrosPorFecha_(p.marca);
 
-  var porDia = {};
-  leer_('Registros').forEach(function (r) {
-    if (r.marca !== p.marca || r.fecha < desde || r.fecha > hoy) return;
-    (porDia[r.fecha] = porDia[r.fecha] || []).push(r);
-  });
-
-  var res = { dias: 0, primerIntento: 0, aprobadoReintento: 0, noAprobado: 0, sinRespuesta: 0, desde: desde };
+  var res = { dias: 0, primerIntento: 0, aprobadoReintento: 0, noAprobado: 0, sinRespuesta: 0, desde: desde, ultimo: null };
   for (var f = desde; f <= hoy; f = sumarDias_(f, 1)) {
     var regs = porDia[f] || [];
     if (f === hoy && !regs.length) continue; // hoy todavía puede responderse
@@ -506,8 +551,63 @@ function getIndicadores(token) {
     else if (aprobado) res.aprobadoReintento++;
     else res.noAprobado++;
   }
-  res.porcentajePrimerIntento = res.dias ? Math.round(res.primerIntento * 100 / res.dias) : 0;
-  return { success: true, indicadores: res };
+  var pct = function (n) { return res.dias ? Math.round(n * 100 / res.dias) : 0; };
+  res.concordancia = pct(res.primerIntento + res.aprobadoReintento);
+  res.porcentajePrimerIntento = pct(res.primerIntento);
+  res.cumplimiento = pct(res.dias - res.sinRespuesta);
+  res.controlesAprobados = res.primerIntento + res.aprobadoReintento;
+  res.controlesRealizados = res.dias - res.sinRespuesta;
+
+  var fechas = Object.keys(porDia).sort();
+  for (var i = fechas.length - 1; i >= 0; i--) {
+    var dia = porDia[fechas[i]];
+    var aprob = dia.filter(function (r) { return r.estado === 'Aprobado'; })[0];
+    var ult = aprob || dia[dia.length - 1];
+    if (!aprob && dia.length < CONFIG.MAX_INTENTOS && fechas[i] === hoy) continue; // aún en curso
+    res.ultimo = { fecha: fechas[i], estado: aprob ? 'Aprobado' : 'No aprobado', usuario: ult.usuario, hora: ult.hora, intento: ult.intento };
+    break;
+  }
+  return res;
+}
+
+function getIndicadores(token) {
+  return { success: true, indicadores: indicadores_(sesion_(token)) };
+}
+
+/* ========================= atlas ========================= */
+
+function grupoParasito_(nombre) {
+  return /huevo|larva|progl/i.test(nombre) ? 'Helminto' : 'Protozoario';
+}
+
+// Parásitos que han aparecido en el control de la marca y cuántas veces se
+// identificaron bien en el primer intento. El día de hoy solo cuenta cuando
+// el control ya terminó, para no revelar la respuesta.
+function atlas_(p) {
+  var hoy = hoy_(p);
+  var asignaciones = asignacionesPorFecha_(p.marca);
+  var registros = registrosPorFecha_(p.marca);
+  var mapa = {};
+  Object.keys(asignaciones).forEach(function (fecha) {
+    var regs = registros[fecha];
+    if (!regs || !regs.length) return;
+    if (fecha === hoy) {
+      var e = estadoDeRegistros_(regs);
+      if (!e.aprobado && !e.agotado) return;
+    }
+    var primero = regs.filter(function (r) { return r.intento === '1'; })[0] || regs[0];
+    ['A', 'B'].forEach(function (orden) {
+      var a = asignaciones[fecha][orden];
+      if (!a || a.tipo !== 'Positiva') return;
+      var resp = orden === 'A' ? primero.respuesta1 : primero.respuesta2;
+      var item = mapa[a.parasito] = mapa[a.parasito] || { nombre: a.parasito, grupo: grupoParasito_(a.parasito), veces: 0, correctas: 0, ultima: '', url: '' };
+      item.veces++;
+      if (normalizarRespuesta_(resp) === normalizarRespuesta_(a.parasito)) item.correctas++;
+      if (fecha > item.ultima) { item.ultima = fecha; item.url = urlImagen_(a.fileId, 400); }
+    });
+  });
+  return Object.keys(mapa).map(function (k) { return mapa[k]; })
+    .sort(function (a, b) { return b.ultima > a.ultima ? 1 : -1; });
 }
 
 /* ======================== banco de imágenes ======================== */
@@ -538,37 +638,28 @@ function subirImagenBanco(token, base64, mimeType, parasito, fuente, tipo, thumb
   return { success: true, id: id };
 }
 
-function getBanco(token, tipo, pagina) {
-  var p = sesion_(token, 'supervisor');
-  tipo = tipo === 'Negativa' ? 'Negativa' : 'Positiva';
-  pagina = Number(pagina) || 1;
+function banco_(p, tipo) {
   var hoy = hoy_(p);
   var banco = leer_('BancoImagenes');
-
   var propias = banco.filter(function (b) { return b.marca === p.marca && b.estado === 'activa' && b.tipo === tipo; });
   propias.sort(function (a, b) { return b.fechaSubida > a.fechaSubida ? 1 : -1; });
 
   var pool = poolMarca_(banco, p, tipo);
   var vistas = ultimaVez_(leer_('Asignaciones'), p.marca);
   var limite = sumarDias_(hoy, -CONFIG.DIAS_SIN_REPETIR);
-  var disponibles = pool.filter(function (b) { return !vistas[b.id] || vistas[b.id] <= limite; }).length;
-
-  var totalPaginas = Math.max(1, Math.ceil(propias.length / CONFIG.BANCO_POR_PAGINA));
-  pagina = Math.min(pagina, totalPaginas);
-  var items = propias.slice((pagina - 1) * CONFIG.BANCO_POR_PAGINA, pagina * CONFIG.BANCO_POR_PAGINA).map(function (b) {
-    return {
-      id: b.id, parasito: b.parasito, fuente: b.fuente, fechaSubida: b.fechaSubida,
-      diasEnRotacion: Math.max(0, diasEntre_(hoy, sumarMeses_(b.fechaSubida, CONFIG.MESES_ROTACION))),
-      url: urlImagen_(b.thumbId || b.fileId, 200)
-    };
-  });
   return {
-    success: true, tipo: tipo, pagina: pagina, totalPaginas: totalPaginas, banco: items,
+    items: propias.map(function (b) {
+      return {
+        id: b.id, parasito: b.parasito, fuente: b.fuente, fechaSubida: b.fechaSubida,
+        diasEnRotacion: Math.max(0, diasEntre_(hoy, sumarMeses_(b.fechaSubida, CONFIG.MESES_ROTACION))),
+        url: urlImagen_(b.thumbId || b.fileId, 200)
+      };
+    }),
     resumen: {
       propias: propias.length,
       general: p.esOrigen ? 0 : pool.length - propias.length,
       totalRotacion: pool.length,
-      disponiblesSinRepetir: disponibles,
+      disponiblesSinRepetir: pool.filter(function (b) { return !vistas[b.id] || vistas[b.id] <= limite; }).length,
       recomendado: CONFIG.DIAS_SIN_REPETIR
     }
   };
@@ -591,15 +682,18 @@ function borrarArchivos_(fila) {
 
 /* ========================= usuarios ========================= */
 
-function usuarioPublico_(u) {
-  return { usuario: u.usuario, nombre: u.nombre, marca: u.marca, rol: u.rol, admin: u.admin === 'SI', activo: u.activo === 'SI', temporal: u.temporal === 'SI', creado: u.creado };
-}
-
-function getUsuarios(token) {
-  var p = sesion_(token, 'supervisor');
-  var lista = leer_('Usuarios').filter(function (u) { return p.admin || u.marca === p.marca; }).map(usuarioPublico_);
-  lista.sort(function (a, b) { return a.usuario > b.usuario ? 1 : -1; });
-  return { success: true, usuarios: lista };
+function usuarios_(p) {
+  var marcas = {};
+  marcas_().forEach(function (m) { marcas[m.codigo] = etiquetaMarca_(m); });
+  var lista = leer_('Usuarios').filter(function (u) { return p.admin || u.marca === p.marca; }).map(function (u) {
+    return {
+      usuario: u.usuario, nombre: u.nombre, iniciales: u.iniciales, numero: u.numero, puesto: u.puesto,
+      marca: u.marca, laboratorio: marcas[u.marca] || u.marca, rol: u.rol, admin: u.admin === 'SI',
+      activo: u.activo === 'SI', temporal: u.temporal === 'SI', creado: u.creado
+    };
+  });
+  lista.sort(function (a, b) { return (a.marca + a.usuario) > (b.marca + b.usuario) ? 1 : -1; });
+  return lista;
 }
 
 function puedeGestionar_(p, u) {
@@ -608,33 +702,37 @@ function puedeGestionar_(p, u) {
   return u.marca === p.marca && u.rol === 'analista';
 }
 
-function crearUsuario(token, nombre, rol, marca) {
+// datos: { nombre, iniciales, numero, puesto, rol, marca }. El usuario para
+// iniciar sesión es iniciales + número de analista (ej. MPWN1).
+function crearUsuario(token, datos) {
   var p = sesion_(token, 'supervisor');
-  nombre = String(nombre || '').trim();
+  datos = datos || {};
+  var nombre = String(datos.nombre || '').trim();
+  var iniciales = String(datos.iniciales || '').toUpperCase().replace(/\s+/g, '');
+  var numero = String(datos.numero || '').trim();
+  var puesto = String(datos.puesto || '').trim();
+  var rol = datos.rol === 'supervisor' ? 'supervisor' : 'analista';
+  var marca = p.admin ? String(datos.marca || p.marca) : p.marca;
+
   if (!nombre) return { success: false, error: 'Escribe el nombre completo' };
-  rol = rol === 'supervisor' ? 'supervisor' : 'analista';
-  marca = p.admin ? String(marca || p.marca) : p.marca;
+  if (!/^[A-ZÑ]{2,6}$/.test(iniciales)) return { success: false, error: 'Las iniciales deben ser de 2 a 6 letras' };
+  if (!/^\d{1,3}$/.test(numero)) return { success: false, error: 'El número de analista debe ser de 1 a 3 dígitos' };
   if (!p.admin && rol !== 'analista') return { success: false, error: 'No autorizado' };
-  if (!marca_(marca)) return { success: false, error: 'Marca no válida' };
+  if (!marca_(marca)) return { success: false, error: 'Laboratorio no válido' };
+  var usuario = iniciales + Number(numero);
 
   return conBloqueo_(function () {
-    var usuarios = leer_('Usuarios');
-    var codigo;
-    if (rol === 'supervisor') {
-      codigo = marca + '-SUP';
-      if (usuarios.some(function (u) { return u.usuario === codigo; })) return { success: false, error: 'Esa marca ya tiene supervisor (' + codigo + ')' };
-    } else {
-      var n = 1;
-      do { codigo = marca + '-' + (n < 10 ? '0' : '') + n; n++; }
-      while (usuarios.some(function (u) { return u.usuario === codigo; }));
+    if (leer_('Usuarios').some(function (u) { return u.usuario === usuario; })) {
+      return { success: false, error: 'El usuario ' + usuario + ' ya existe. Cambia el número de analista.' };
     }
     var temporal = generarPassword_();
     var salt = nuevoId_();
     agregar_('Usuarios', {
-      usuario: codigo, nombre: nombre, marca: marca, rol: rol, admin: 'NO', hash: hash_(temporal, salt),
-      salt: salt, temporal: 'SI', activo: 'SI', creado: hoy_(p)
+      usuario: usuario, nombre: nombre, marca: marca, rol: rol, admin: 'NO', hash: hash_(temporal, salt),
+      salt: salt, temporal: 'SI', activo: 'SI', creado: hoy_(p),
+      iniciales: iniciales, numero: String(Number(numero)), puesto: puesto || (rol === 'supervisor' ? 'Supervisor' : 'Analista')
     });
-    return { success: true, usuario: codigo, password: temporal };
+    return { success: true, usuario: usuario, password: temporal };
   });
 }
 
@@ -658,18 +756,21 @@ function cambiarEstadoUsuario(token, usuario, activo) {
 
 /* ====================== marcas (solo admin) ====================== */
 
-function getMarcas(token) {
-  sesion_(token, 'admin');
+function marcasLista_() {
   var usuarios = leer_('Usuarios');
-  var lista = marcas_().map(function (m) {
+  return marcas_().map(function (m) {
     return {
-      codigo: m.codigo, numero: m.numero, nombre: m.nombre, zonaHoraria: m.zonaHoraria,
+      codigo: m.codigo, numero: m.numero, nombre: m.nombre, etiqueta: etiquetaMarca_(m),
       activa: m.activa === 'SI', esOrigen: m.esOrigen === 'SI',
-      tieneSupervisor: usuarios.some(function (u) { return u.marca === m.codigo && u.rol === 'supervisor'; }),
+      supervisores: usuarios.filter(function (u) { return u.marca === m.codigo && u.rol === 'supervisor'; }).map(function (u) { return u.usuario; }),
       usuarios: usuarios.filter(function (u) { return u.marca === m.codigo && u.activo === 'SI'; }).length
     };
   });
-  return { success: true, marcas: lista };
+}
+
+function getMarcas(token) {
+  sesion_(token, 'admin');
+  return { success: true, marcas: marcasLista_() };
 }
 
 function cambiarEstadoMarca(token, codigo, activa) {

@@ -6,6 +6,7 @@ Aplicación web (Google Apps Script + Google Sheets) para el control de calidad 
 
 - **Varios laboratorios.** Cada uno tiene su propio control diario, usuarios, banco de imágenes e historial.
 - **Inicio de sesión con usuario y contraseña.** Las contraseñas se guardan cifradas. La contraseña inicial es temporal y se cambia de forma obligatoria al primer ingreso. Tras 5 intentos fallidos, la cuenta se bloquea 15 minutos.
+- **Ventana del control al entrar.** Al analista se le abre el control del día en una ventana que cubre toda la página; responde y envía ahí mismo. Puede minimizarla y retomarla desde "Estado de hoy" en el menú lateral.
 - **Dos roles:**
   - **Analista:** responde el control diario y consulta el historial.
   - **Supervisor:** ve el control de hoy con las respuestas correctas, los indicadores y el historial; administra el banco de imágenes y las cuentas de sus analistas.
@@ -20,23 +21,19 @@ Aplicación web (Google Apps Script + Google Sheets) para el control de calidad 
 - **Seguridad:** el servidor valida el rol en cada acción y nunca envía al analista la respuesta correcta ni cuál imagen es la positiva.
 - **Fechas por zona horaria del laboratorio**, protección contra accesos simultáneos y memoria temporal en el servidor para cargar más rápido.
 
-## Códigos de usuario
+## Usuarios
 
-| Laboratorio | Código | Supervisor | Analistas |
-|---|---|---|---|
-| Lab 01 Lister (origen) | LST | LST-SUP | LST-01, LST-02… |
-| Lab 02 Azteca | AZT | AZT-SUP | AZT-01… |
-| Lab 03 Swiss Lab | SWL | SWL-SUP | SWL-01… |
-| Lab 04 Polab | PLB | PLB-SUP | PLB-01… |
-| Lab 05 Jenner | JNR | JNR-SUP | JNR-01… |
-| Lab 06 Moreira | MRA | MRA-SUP | MRA-01… |
-| Lab 07 Liacsa | LCS | LCS-SUP | LCS-01… |
-| Lab 08 Biomedica | BMD | BMD-SUP | BMD-01… |
-| Lab 09 Exakta | EXK | EXK-SUP | EXK-01… |
-| Lab 10 Promedic | PMD | PMD-SUP | PMD-01… |
-| Lab 11 FamilyLabs | FML | FML-SUP | FML-01… |
+- Cada cuenta se da de alta con **nombre completo, iniciales, número de analista, puesto y laboratorio**.
+- El usuario para iniciar sesión es **iniciales + número de analista**, por ejemplo `MPWN1` o `EMAR2`. Debe ser único en todos los laboratorios.
+- Al crearla se genera una **contraseña temporal de 4 dígitos**. En su primer ingreso la persona crea la suya, también de **4 caracteres**, y puede cambiarla después desde **Mi perfil**.
+- En **Mi perfil** cada quien ve su nombre, puesto, usuario y laboratorio, sin poder editarlos.
+- La cuenta inicial de administración es `LST-SUP`.
 
-Al inicio solo Lister está activo. Los demás laboratorios se activan desde la sección **Laboratorios** cuando decidan participar.
+Los laboratorios se muestran como `LST-01 Lister`, `AZT-02 Azteca`, etc. Al inicio solo Lister está activo; los demás se activan desde **Laboratorios** cuando decidan participar.
+
+## Velocidad
+
+Al iniciar sesión, la aplicación descarga en **una sola llamada** todo lo que necesita (control de hoy, indicadores, historial, atlas y, para el supervisor, banco y usuarios). Cambiar de pestaña es inmediato porque no vuelve a consultar al servidor. Después de cada acción, los datos se actualizan en segundo plano. Al recargar la página se muestra al instante lo último que se vio mientras se actualiza.
 
 ## Instalación
 
