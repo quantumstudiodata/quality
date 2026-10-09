@@ -748,15 +748,22 @@ function configurarInicial() {
 // (lo que va entre /d/ y /edit en la URL). Si están en esta misma, dejar vacío.
 var ID_HOJA_ANTERIOR = '';
 
-// Ejecutar UNA VEZ desde el editor, después de configurarInicial.
+// Ejecutar desde el editor, después de configurarInicial. Se puede repetir
+// sin duplicar datos.
 // Pasa a la marca de origen: las imágenes del banco anterior (incluidas las
 // ya usadas, que vuelven a rotar), el historial de imágenes del día y las
 // respuestas. Las imágenes migradas cuentan sus 6 meses desde hoy.
 function migrarDatosAnteriores() {
-  var props = PropertiesService.getScriptProperties();
-  if (props.getProperty('migrado') === 'SI') return 'La migración ya se había ejecutado.';
-
   var ss = ID_HOJA_ANTERIOR ? SpreadsheetApp.openById(ID_HOJA_ANTERIOR) : SpreadsheetApp.getActiveSpreadsheet();
+  var nombresViejos = ['Banco', 'ImagenDia', 'Respuestas'];
+  var encontradas = nombresViejos.filter(function (n) { return ss.getSheetByName(n); });
+  if (!encontradas.length) {
+    var aviso = 'No se encontraron las hojas anteriores (' + nombresViejos.join(', ') + ') en la hoja de cálculo "' +
+      ss.getName() + '". Hojas que sí tiene: ' + ss.getSheets().map(function (h) { return h.getName(); }).join(', ') +
+      '. Si tus datos están en otra hoja de cálculo, pega su ID en ID_HOJA_ANTERIOR.';
+    Logger.log(aviso);
+    return aviso;
+  }
   var origen = MARCAS_INICIALES.filter(function (m) { return m[3] === 'SI'; })[0][0];
   var hoy = Utilities.formatDate(new Date(), CONFIG.ZONA_DEFAULT, 'yyyy-MM-dd');
 
@@ -772,6 +779,10 @@ function migrarDatosAnteriores() {
         if (v instanceof Date) v = Utilities.formatDate(v, ss.getSpreadsheetTimeZone(), h === 'hora' ? 'HH:mm:ss' : 'yyyy-MM-dd');
         o[h] = v === null || v === undefined ? '' : String(v);
       });
+      if (!o.fileId && o.url) {
+        var m = o.url.match(/[?&](?:img|id)=([^&]+)/);
+        if (m) o.fileId = decodeURIComponent(m[1]);
+      }
       return o;
     });
   };
@@ -822,8 +833,7 @@ function migrarDatosAnteriores() {
     };
   }));
 
-  props.setProperty('migrado', 'SI');
-  var mensaje = 'Migración lista. Imágenes: ' + nuevasImagenes.length + ' · Días: ' + dias.length + ' · Respuestas: ' + respuestas.length;
+  var mensaje = 'Migración lista (hojas encontradas: ' + encontradas.join(', ') + '). Imágenes: ' + nuevasImagenes.length + ' · Días: ' + dias.length + ' · Respuestas: ' + respuestas.length;
   Logger.log(mensaje);
   return mensaje;
 }
