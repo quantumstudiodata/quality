@@ -50,7 +50,7 @@ button{cursor:pointer}
 table.tabla{width:100%;border-collapse:collapse;font-size:11px}
 .tabla th{text-align:left;color:var(--sub);font-size:10px;font-weight:600;padding:8px 14px}
 .tabla td{padding:8px 14px;border-top:1px solid var(--line);vertical-align:middle}
-.tabla td.mono{white-space:nowrap}
+.tabla td.mono,.una-linea td{white-space:nowrap}
 .tabla .correcta{color:var(--sub);font-size:10px;line-height:1.5}
 .paginacion{display:flex;align-items:center;gap:4px;padding:10px 14px;flex-wrap:wrap}
 .paginacion button{min-width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--sub);font-size:10.5px}
@@ -206,6 +206,9 @@ main{max-width:1100px;margin:0 auto;padding:20px 26px}
 .cred{font-family:var(--mono);font-size:18px;letter-spacing:.2em;text-align:center;padding:12px;border-radius:8px;background:var(--bg-2);border:1px solid var(--border);margin:6px 0 12px;user-select:all}
 .modal{position:fixed;inset:0;z-index:9500;background:rgba(7,5,14,.85);display:none;align-items:center;justify-content:center;padding:20px}
 .modal.on{display:flex}
+.circulo-sm{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sufijo{display:flex;align-items:center;height:36px;padding:0 10px;border-radius:8px;border:1px dashed var(--border);color:var(--sub);font-family:var(--mono);font-size:12px;user-select:none}
+.banco-item img{cursor:zoom-in}
 .modal .card{width:100%;max-width:360px;padding:20px;animation:aparecer .25s ease-out}
 .lightbox{position:fixed;inset:0;z-index:99999;background:rgba(6,4,14,.94);display:none;align-items:center;justify-content:center}
 .lightbox.on{display:flex}
@@ -324,7 +327,6 @@ main{max-width:1100px;margin:0 auto;padding:20px 26px}
         <div class="card">
           <div class="card-head">Agregar imagen</div>
           <div class="card-body">
-            <div class="b-ok" id="banco-aviso" style="font-size:11px;line-height:1.5;padding:8px 10px;border-radius:8px;margin-bottom:10px"></div>
             <label class="upload" id="upload" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="onDrop(event)">
               <input type="file" accept="image/*" id="input-img" onchange="if(this.files[0]) leerImagen(this.files[0])">
               <span id="upload-txt"><b style="color:var(--text)">Clic o arrastra la imagen</b><br>JPG o PNG</span>
@@ -340,13 +342,10 @@ main{max-width:1100px;margin:0 auto;padding:20px 26px}
             <button class="btn" id="btn-subir" type="button" onclick="subirImagen()" style="width:100%" disabled>Agregar imagen</button>
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:14px">
-          <div class="card"><div class="card-head">Rotación</div><div class="card-body" id="banco-resumen"></div></div>
-          <div class="card">
-            <div class="card-head"><span id="banco-lista-titulo">Imágenes</span><div class="chips" id="banco-lista-tipo"></div></div>
-            <div class="card-body" style="padding-top:4px" id="banco-lista"></div>
-            <div class="paginacion" id="banco-pag"></div>
-          </div>
+        <div class="card">
+          <div class="card-head"><span id="banco-lista-titulo">Imágenes</span><div class="chips" id="banco-lista-tipo"></div></div>
+          <div class="card-body" style="padding-top:4px" id="banco-lista"></div>
+          <div class="paginacion" id="banco-pag"></div>
         </div>
       </div>
     </section>
@@ -357,25 +356,11 @@ main{max-width:1100px;margin:0 auto;padding:20px 26px}
       <div class="grid-2" style="grid-template-columns:minmax(0,320px) minmax(0,1fr)">
         <div class="card">
           <div class="card-head">Nuevo usuario</div>
-          <div class="card-body">
-            <div class="campo"><label for="nu-nombre">Nombre completo</label><input class="input" id="nu-nombre" placeholder="Ej. María Pérez Wong Núñez"></div>
-            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
-              <div class="campo"><label for="nu-iniciales">Iniciales</label><input class="input mono" id="nu-iniciales" maxlength="6" placeholder="MPWN" oninput="this.value=this.value.toUpperCase().replace(/[^A-ZÑ]/g,'');previewUsuario()"></div>
-              <div class="campo"><label for="nu-numero">N.º de analista</label><input class="input mono" id="nu-numero" maxlength="3" inputmode="numeric" placeholder="1" oninput="this.value=this.value.replace(/\D/g,'');previewUsuario()"></div>
-            </div>
-            <div class="campo"><label for="nu-puesto">Puesto</label><input class="input" id="nu-puesto" placeholder="Ej. Químico analista"></div>
-            <div id="nu-admin" class="oculto">
-              <div class="campo"><label>Rol</label><div class="chips" id="nu-rol"></div></div>
-              <div class="campo"><label>Laboratorio</label><div id="nu-marca"></div></div>
-            </div>
-            <div class="sub" style="font-size:11px;margin:4px 0 12px">Usuario para iniciar sesión: <b class="mono" style="color:var(--accent)" id="nu-preview">—</b></div>
-            <button class="btn" type="button" style="width:100%" onclick="crearUsuarioApp()">Crear usuario</button>
-            <div class="sub" style="font-size:10px;margin-top:8px;line-height:1.5">Se genera una contraseña temporal de 4 dígitos. La persona la cambia al entrar por primera vez.</div>
-          </div>
+          <div class="card-body" id="nu-form"></div>
         </div>
         <div class="card">
           <div class="card-head">Cuentas</div>
-          <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Usuario</th><th>Nombre</th><th>Puesto</th><th>Laboratorio</th><th>Estado</th><th></th></tr></thead><tbody id="usuarios-body"></tbody></table></div>
+          <div class="tabla-wrap"><table class="tabla una-linea"><thead><tr><th>Usuario</th><th>Nombre</th><th>Puesto</th><th>Laboratorio</th><th>Estado</th><th></th></tr></thead><tbody id="usuarios-body"></tbody></table></div>
         </div>
       </div>
     </section>
@@ -399,8 +384,11 @@ main{max-width:1100px;margin:0 auto;padding:20px 26px}
         </div>
         <div id="perfil-datos"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-          <div class="sub" style="font-size:10.5px">Para corregir tus datos, pide a tu supervisor.</div>
-          <button class="btn-sec" type="button" onclick="abrirCambioPassword()">Cambiar contraseña</button>
+          <div class="sub" style="font-size:10.5px" id="perfil-nota">Para corregir tus datos, pide a tu supervisor.</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-sec oculto" type="button" id="perfil-editar" onclick="abrirEditar(PERFIL.usuario)">Editar mis datos</button>
+            <button class="btn-sec" type="button" onclick="abrirCambioPassword()">Cambiar contraseña</button>
+          </div>
         </div>
       </div>
     </section>
@@ -432,6 +420,29 @@ main{max-width:1100px;margin:0 auto;padding:20px 26px}
     <div class="campo" style="margin-top:12px"><label>Usuario</label><div class="cred" id="cred-usuario"></div></div>
     <div class="campo"><label>Contraseña temporal</label><div class="cred" id="cred-pass"></div></div>
     <button class="btn" type="button" style="width:100%" onclick="document.getElementById('modal-cred').classList.remove('on')">Listo</button>
+  </div>
+</div>
+<div class="modal" id="modal-confirmar">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span id="conf-icono" class="circulo-sm"></span>
+      <div style="font-size:14px;font-weight:700" id="conf-titulo"></div>
+    </div>
+    <div class="sub" style="font-size:11.5px;line-height:1.6;margin-bottom:16px" id="conf-texto"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button class="btn-sec" type="button" onclick="cerrarConfirmar()">Cancelar</button>
+      <button class="btn" type="button" id="conf-ok">Aceptar</button>
+    </div>
+  </div>
+</div>
+<div class="modal" id="modal-editar">
+  <div class="card" style="max-width:380px">
+    <div style="font-size:14px;font-weight:700;margin-bottom:12px" id="ed-titulo">Editar datos</div>
+    <div id="ed-form"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+      <button class="btn-sec" type="button" onclick="$('modal-editar').classList.remove('on')">Cancelar</button>
+      <button class="btn" type="button" id="ed-guardar" onclick="guardarEdicion()">Guardar</button>
+    </div>
   </div>
 </div>
 <div class="lightbox" id="lightbox" onclick="this.classList.remove('on')"><img id="lightbox-img" alt="Imagen ampliada"></div>
@@ -951,14 +962,36 @@ function renderAtlas() {
   $('atlas-grid').innerHTML = html || '<div class="vacio">Sin coincidencias.</div>';
 }
 
+/* ============================ confirmación ============================ */
+
+var ICONO_ALERTA = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"></path><circle cx="12" cy="12" r="9"></circle></svg>';
+var ICONO_LLAVE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"></circle><path d="M10.7 12.3L21 2M17 6l3 3M14 9l2 2"></path></svg>';
+
+// Ventana de confirmación propia, en lugar de la del navegador.
+function confirmar(opc) {
+  $('conf-titulo').textContent = opc.titulo;
+  $('conf-texto').innerHTML = opc.texto;
+  $('conf-icono').innerHTML = opc.icono || ICONO_ALERTA;
+  $('conf-icono').style.background = opc.peligro ? 'rgba(248,113,113,.12)' : 'rgba(139,92,246,.14)';
+  var ok = $('conf-ok');
+  ok.textContent = opc.boton || 'Aceptar';
+  ok.style.background = opc.peligro ? '#b91c1c' : '';
+  ok.onclick = function () { cerrarConfirmar(); opc.accion(); };
+  $('modal-confirmar').classList.add('on');
+}
+function cerrarConfirmar() { $('modal-confirmar').classList.remove('on'); }
+
 /* ================================ perfil ================================ */
 
 function pintarPerfil() {
+  var esSup = PERFIL.rol === 'supervisor';
   $('perfil-avatar').textContent = iniciales2(PERFIL);
   $('perfil-codigo').textContent = PERFIL.usuario;
-  $('perfil-rol').textContent = PERFIL.rol === 'supervisor' ? 'Supervisor' + (PERFIL.admin ? ' · administración' : '') : 'Analista';
+  $('perfil-rol').textContent = esSup ? 'Supervisor' + (PERFIL.admin ? ' · administración' : '') : 'Analista';
   var dato = function (t, v) { return '<div class="dato"><span>' + t + '</span><span>' + esc(v || '—') + '</span></div>'; };
-  $('perfil-datos').innerHTML = dato('Nombre completo', PERFIL.nombre) + dato('Puesto', PERFIL.puesto) + dato('Iniciales y número', PERFIL.usuario) + dato('Laboratorio', PERFIL.laboratorio);
+  $('perfil-datos').innerHTML = dato('Nombre completo', PERFIL.nombre) + dato('Puesto', PERFIL.puesto) + dato(esSup ? 'Usuario' : 'Iniciales y número', PERFIL.usuario) + dato('Laboratorio', PERFIL.laboratorio);
+  $('perfil-nota').classList.toggle('oculto', esSup);
+  $('perfil-editar').classList.toggle('oculto', !esSup);
 }
 
 /* ================================ banco ================================ */
@@ -970,31 +1003,21 @@ function pintarBanco() {
     BANCO.sel1 = new Selector($('banco-sel1'), { placeholder: 'Selecciona el hallazgo', items: function () { return CATALOGO.slice(1); }, onChange: actualizarBtnSubir });
     BANCO.sel2 = new Selector($('banco-sel2'), { placeholder: 'Ninguno', items: function () { return CATALOGO.slice(1); } });
   }
-  $('banco-aviso').innerHTML = PERFIL.esOrigen
-    ? 'Las imágenes que subes forman el <b>banco general</b> y se distribuyen a todos los laboratorios.'
-    : 'Las imágenes que subes son <b>solo para tu laboratorio</b>. También recibes las del banco general.';
   chips('banco-tipo', [['Positiva', 'Positiva'], ['Negativa', 'Negativa']], BANCO.tipo, function (v) { BANCO.tipo = v; pintarBanco(); });
   $('banco-parasito').classList.toggle('oculto', BANCO.tipo === 'Negativa');
   actualizarBtnSubir();
 
-  var res = DATOS.banco, rp = res.Positiva.resumen, rn = res.Negativa.resumen;
-  var linea = function (t, r) {
-    return '<div style="margin-bottom:6px"><b>' + t + ':</b> ' + r.totalRotacion + ' en rotación' + (PERFIL.esOrigen ? '' : ' (' + r.propias + ' propias + ' + r.general + ' generales)') +
-      ' · <b>' + r.disponiblesSinRepetir + '</b> sin usar en ' + r.recomendado + ' días</div>';
-  };
-  var aviso = (rp.totalRotacion < rp.recomendado || rn.totalRotacion < rn.recomendado)
-    ? '<div class="b-warn" style="font-size:10.5px;line-height:1.5;padding:8px 10px;border-radius:8px;margin-top:8px">Para no repetir imágenes en ' + rp.recomendado + ' días se recomiendan al menos ' + rp.recomendado + ' positivas y ' + rp.recomendado + ' negativas.</div>' : '';
-  $('banco-resumen').innerHTML = linea('Positivas', rp) + linea('Negativas', rn) + aviso;
-
+  var res = DATOS.banco;
   $('banco-lista-titulo').textContent = PERFIL.esOrigen ? 'Banco general (tus imágenes)' : 'Imágenes propias';
-  chips('banco-lista-tipo', [['Positiva', 'Positivas · ' + rp.propias], ['Negativa', 'Negativas · ' + rn.propias]], BANCO.listaTipo, function (v) { BANCO.listaTipo = v; BANCO.pagina = 1; pintarBanco(); });
+  chips('banco-lista-tipo', [['Positiva', 'Positivas · ' + res.Positiva.items.length], ['Negativa', 'Negativas · ' + res.Negativa.items.length]], BANCO.listaTipo, function (v) { BANCO.listaTipo = v; BANCO.pagina = 1; pintarBanco(); });
   var items = res[BANCO.listaTipo].items, porPagina = 8, total = Math.max(1, Math.ceil(items.length / porPagina));
   BANCO.pagina = Math.min(BANCO.pagina, total);
   $('banco-lista').innerHTML = items.length ? items.slice((BANCO.pagina - 1) * porPagina, BANCO.pagina * porPagina).map(function (b) {
-    return '<div class="banco-item"><img src="' + esc(b.url) + '" alt="" loading="lazy"><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:11.5px">' + esc(b.parasito) + '</div>' +
+    return '<div class="banco-item"><img src="' + esc(b.url) + '" alt="Ver imagen" loading="lazy" data-grande="' + esc(b.urlGrande || b.url) + '"><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:11.5px">' + esc(b.parasito) + '</div>' +
       '<div class="sub" style="font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(b.fuente || 'Sin fuente') + ' · ' + fechaCorta(b.fechaSubida) + ' · ' + b.diasEnRotacion + ' días más en rotación</div></div>' +
       '<button class="btn-sec peligro" type="button" data-id="' + esc(b.id) + '">Quitar</button></div>';
   }).join('') : '<div class="vacio">Sin imágenes.</div>';
+  $('banco-lista').querySelectorAll('img[data-grande]').forEach(function (i) { i.onclick = function () { abrirLightbox(this.dataset.grande); }; });
   $('banco-lista').querySelectorAll('button[data-id]').forEach(function (b) { b.onclick = function () { eliminarImagen(this.dataset.id); }; });
   paginar('banco-pag', BANCO.pagina, total, function (p) { BANCO.pagina = p; pintarBanco(); });
 }
@@ -1046,62 +1069,104 @@ function subirImagen() {
 }
 
 function eliminarImagen(id) {
-  if (!confirm('¿Quitar esta imagen del banco? Se borrará definitivamente.')) return;
-  var lista = DATOS.banco[BANCO.listaTipo];
-  lista.items = lista.items.filter(function (b) { return b.id !== id; });
-  lista.resumen.propias--;
-  pintarBanco();
-  api('eliminarImagenBanco', [id], function (r) { if (!r.success) toast(r.error, 'err'); refrescar(); }, refrescar);
+  confirmar({
+    titulo: 'Quitar imagen', boton: 'Quitar', peligro: true,
+    texto: 'La imagen se borrará del banco y ya no aparecerá en el control.',
+    accion: function () {
+      var lista = DATOS.banco[BANCO.listaTipo];
+      lista.items = lista.items.filter(function (b) { return b.id !== id; });
+      pintarBanco();
+      api('eliminarImagenBanco', [id], function (r) { if (!r.success) toast(r.error, 'err'); refrescar(); }, refrescar);
+    }
+  });
 }
 
 /* ================================ usuarios ================================ */
 
 var NU = { rol: 'analista', marca: null };
 
-function previewUsuario() {
-  var v = $('nu-iniciales').value + ($('nu-numero').value ? Number($('nu-numero').value) : '');
-  $('nu-preview').textContent = v || '—';
+// Campos de nombre, iniciales, número (o sufijo -SUP), puesto y laboratorio.
+// prefijo distingue el formulario de alta (nu) del de edición (ed).
+function camposUsuario(prefijo, rol, valores) {
+  valores = valores || {};
+  var esSup = rol === 'supervisor';
+  return '<div class="campo"><label for="' + prefijo + '-nombre">Nombre completo</label><input class="input" id="' + prefijo + '-nombre" value="' + esc(valores.nombre || '') + '" placeholder="Ej. María Pérez Wong Núñez"></div>' +
+    '<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">' +
+      '<div class="campo"><label for="' + prefijo + '-iniciales">Iniciales</label><input class="input mono" id="' + prefijo + '-iniciales" maxlength="6" value="' + esc(valores.iniciales || '') + '" placeholder="MPWN" oninput="this.value=this.value.toUpperCase().replace(/[^A-ZÑ]/g,\'\');previewUsuario(\'' + prefijo + '\')"></div>' +
+      (esSup
+        ? '<div class="campo"><label>Sufijo</label><div class="sufijo" title="Fijo para supervisores">-SUP</div></div>'
+        : '<div class="campo"><label for="' + prefijo + '-numero">N.º de analista</label><input class="input mono" id="' + prefijo + '-numero" maxlength="3" inputmode="numeric" value="' + esc(valores.numero || '') + '" placeholder="1" oninput="this.value=this.value.replace(/\\D/g,\'\');previewUsuario(\'' + prefijo + '\')"></div>') +
+    '</div>' +
+    '<div class="campo"><label for="' + prefijo + '-puesto">Puesto</label><input class="input" id="' + prefijo + '-puesto" value="' + esc(valores.puesto || '') + '" placeholder="' + (esSup ? 'Ej. Supervisor de parasitología' : 'Ej. Químico analista') + '"></div>' +
+    (PERFIL.admin ? '<div class="campo"><label>Laboratorio</label><div id="' + prefijo + '-marca"></div></div>' : '') +
+    '<div class="sub" style="font-size:11px;margin:4px 0 12px">Usuario para iniciar sesión: <b class="mono" style="color:var(--accent)" id="' + prefijo + '-preview">—</b></div>';
+}
+
+function selectorMarca(prefijo, codigo) {
+  if (!PERFIL.admin) return null;
+  var etiquetas = (DATOS.marcas || []).map(function (m) { return m.etiqueta; });
+  var s = new Selector($(prefijo + '-marca'), { placeholder: 'Selecciona el laboratorio', items: function () { return etiquetas; } });
+  var m = (DATOS.marcas || []).filter(function (x) { return x.codigo === codigo; })[0];
+  if (m) s.set(m.etiqueta);
+  return s;
+}
+function codigoMarca(selector, defecto) {
+  if (!selector || !selector.get()) return defecto;
+  var m = DATOS.marcas.filter(function (x) { return x.etiqueta === selector.get(); })[0];
+  return m ? m.codigo : defecto;
+}
+
+function previewUsuario(prefijo) {
+  var ini = $(prefijo + '-iniciales').value, num = $(prefijo + '-numero');
+  var v = num ? ini + (num.value ? Number(num.value) : '') : (ini ? ini + '-SUP' : '');
+  $(prefijo + '-preview').textContent = v || '—';
+}
+
+function pintarFormNuevo() {
+  var rol = PERFIL.admin ? NU.rol : 'analista';
+  $('nu-form').innerHTML = (PERFIL.admin ? '<div class="campo"><label>Rol</label><div class="chips" id="nu-rol"></div></div>' : '') +
+    camposUsuario('nu', rol) +
+    '<button class="btn" type="button" style="width:100%" onclick="crearUsuarioApp()">Crear usuario</button>' +
+    '<div class="sub" style="font-size:10px;margin-top:8px;line-height:1.5">Se genera una contraseña temporal de 4 dígitos. La persona la cambia al entrar por primera vez.</div>';
+  if (PERFIL.admin) chips('nu-rol', [['analista', 'Analista'], ['supervisor', 'Supervisor']], NU.rol, function (v) { NU.rol = v; pintarFormNuevo(); });
+  NU.marca = selectorMarca('nu', PERFIL.marca);
 }
 
 function pintarUsuarios() {
-  $('nu-admin').classList.toggle('oculto', !PERFIL.admin);
-  if (PERFIL.admin) {
-    chips('nu-rol', [['analista', 'Analista'], ['supervisor', 'Supervisor']], NU.rol, function (v) { NU.rol = v; pintarUsuarios(); });
-    var etiquetas = (DATOS.marcas || []).map(function (m) { return m.etiqueta; });
-    if (!NU.marca) {
-      NU.marca = new Selector($('nu-marca'), { placeholder: 'Selecciona el laboratorio', items: function () { return etiquetas; } });
-      var propia = (DATOS.marcas || []).filter(function (m) { return m.codigo === PERFIL.marca; })[0];
-      if (propia) NU.marca.set(propia.etiqueta);
-    }
-  }
+  if (!$('nu-form').innerHTML) pintarFormNuevo();
   $('usuarios-body').innerHTML = DATOS.usuarios.map(function (u) {
     var propio = u.usuario === PERFIL.usuario;
     var gestionable = !propio && (PERFIL.admin || u.rol === 'analista');
-    var estado = !u.activo ? '<span class="badge b-none">Inactivo</span>' : u.temporal ? '<span class="badge b-warn">Clave temporal</span>' : '<span class="badge b-ok">Activo</span>';
+    var estado = u.temporal ? '<span class="badge b-warn">Clave temporal</span>' : '<span class="badge b-ok">Activo</span>';
     var acciones = gestionable
-      ? '<button class="btn-sec" type="button" data-a="reset" data-u="' + esc(u.usuario) + '">Restablecer</button> <button class="btn-sec peligro" type="button" data-a="estado" data-u="' + esc(u.usuario) + '" data-v="' + (!u.activo) + '">' + (u.activo ? 'Desactivar' : 'Activar') + '</button>'
+      ? '<button class="btn-sec" type="button" data-a="editar" data-u="' + esc(u.usuario) + '">Editar</button> ' +
+        '<button class="btn-sec" type="button" data-a="reset" data-u="' + esc(u.usuario) + '">Restablecer</button> ' +
+        '<button class="btn-sec peligro" type="button" data-a="eliminar" data-u="' + esc(u.usuario) + '">Eliminar</button>'
       : (propio ? '<span class="sub" style="font-size:10px">Tu cuenta</span>' : '');
     return '<tr><td class="mono" style="font-weight:500">' + esc(u.usuario) + '</td><td>' + esc(u.nombre) + '</td><td class="sub">' + esc(u.puesto || (u.rol === 'supervisor' ? 'Supervisor' : 'Analista')) + '</td><td class="sub">' + esc(u.laboratorio) + '</td><td>' + estado + '</td><td style="white-space:nowrap">' + acciones + '</td></tr>';
   }).join('');
   $('usuarios-body').querySelectorAll('button[data-a]').forEach(function (b) {
     b.onclick = function () {
-      if (this.dataset.a === 'reset') restablecer(this.dataset.u);
-      else cambiarEstadoUsuarioApp(this.dataset.u, this.dataset.v === 'true');
+      var u = this.dataset.u;
+      if (this.dataset.a === 'editar') abrirEditar(u);
+      else if (this.dataset.a === 'reset') restablecer(u);
+      else eliminarUsuario(u);
     };
   });
 }
 
+function datosForm(prefijo) {
+  var num = $(prefijo + '-numero');
+  return { nombre: $(prefijo + '-nombre').value, iniciales: $(prefijo + '-iniciales').value, numero: num ? num.value : '', puesto: $(prefijo + '-puesto').value };
+}
+
 function crearUsuarioApp() {
-  var marca = PERFIL.marca;
-  if (PERFIL.admin && NU.marca.get()) {
-    var m = DATOS.marcas.filter(function (x) { return x.etiqueta === NU.marca.get(); })[0];
-    if (m) marca = m.codigo;
-  }
-  var datos = { nombre: $('nu-nombre').value, iniciales: $('nu-iniciales').value, numero: $('nu-numero').value, puesto: $('nu-puesto').value, rol: PERFIL.admin ? NU.rol : 'analista', marca: marca };
+  var datos = datosForm('nu');
+  datos.rol = PERFIL.admin ? NU.rol : 'analista';
+  datos.marca = codigoMarca(NU.marca, PERFIL.marca);
   api('crearUsuario', [datos], function (r) {
     if (!r.success) { toast(r.error, 'err'); return; }
-    ['nu-nombre', 'nu-iniciales', 'nu-numero', 'nu-puesto'].forEach(function (i) { $(i).value = ''; });
-    previewUsuario();
+    pintarFormNuevo();
     mostrarCredenciales(r);
     refrescar();
   });
@@ -1110,14 +1175,60 @@ function crearUsuarioApp() {
 function mostrarCredenciales(r) { $('cred-usuario').textContent = r.usuario; $('cred-pass').textContent = r.password; $('modal-cred').classList.add('on'); }
 
 function restablecer(usuario) {
-  if (!confirm('¿Generar una nueva contraseña temporal para ' + usuario + '?')) return;
-  api('restablecerPassword', [usuario], function (r) { if (!r.success) { toast(r.error, 'err'); return; } mostrarCredenciales(r); refrescar(); });
+  confirmar({
+    titulo: 'Restablecer contraseña', boton: 'Restablecer', icono: ICONO_LLAVE,
+    texto: 'Se generará una contraseña temporal de 4 dígitos para <b class="mono" style="color:var(--text)">' + esc(usuario) + '</b>. Deberá cambiarla al entrar.',
+    accion: function () {
+      api('restablecerPassword', [usuario], function (r) { if (!r.success) { toast(r.error, 'err'); return; } mostrarCredenciales(r); refrescar(); });
+    }
+  });
 }
 
-function cambiarEstadoUsuarioApp(usuario, activo) {
-  DATOS.usuarios.forEach(function (u) { if (u.usuario === usuario) u.activo = activo; });
-  pintarUsuarios();
-  api('cambiarEstadoUsuario', [usuario, activo], function (r) { if (!r.success) toast(r.error, 'err'); refrescar(); }, refrescar);
+function eliminarUsuario(usuario) {
+  confirmar({
+    titulo: 'Eliminar cuenta', boton: 'Eliminar', peligro: true,
+    texto: 'La cuenta <b class="mono" style="color:var(--text)">' + esc(usuario) + '</b> ya no podrá entrar y desaparecerá de la lista. Sus respuestas pasadas se conservan en el historial.',
+    accion: function () {
+      DATOS.usuarios = DATOS.usuarios.filter(function (u) { return u.usuario !== usuario; });
+      pintarUsuarios();
+      api('cambiarEstadoUsuario', [usuario, false], function (r) { if (!r.success) toast(r.error, 'err'); refrescar(); }, refrescar);
+    }
+  });
+}
+
+/* ------------------------- edición de datos ------------------------- */
+
+var ED = { usuario: null, marca: null };
+
+function abrirEditar(usuario) {
+  var u = usuario === PERFIL.usuario ? null : DATOS.usuarios.filter(function (x) { return x.usuario === usuario; })[0];
+  var v = u || { nombre: PERFIL.nombre, iniciales: PERFIL.iniciales || PERFIL.usuario.replace(/-SUP$/, ''), numero: '', puesto: PERFIL.puesto, marca: PERFIL.marca, rol: PERFIL.rol };
+  ED.usuario = usuario;
+  $('ed-titulo').textContent = u ? 'Editar ' + usuario : 'Editar mis datos';
+  $('ed-form').innerHTML = camposUsuario('ed', v.rol, v);
+  ED.marca = selectorMarca('ed', v.marca);
+  previewUsuario('ed');
+  $('modal-editar').classList.add('on');
+}
+
+function guardarEdicion() {
+  var datos = datosForm('ed');
+  if (ED.marca) datos.marca = codigoMarca(ED.marca, '');
+  $('ed-guardar').disabled = true;
+  api('editarUsuario', [ED.usuario, datos], function (r) {
+    $('ed-guardar').disabled = false;
+    if (!r.success) { toast(r.error, 'err'); return; }
+    $('modal-editar').classList.remove('on');
+    if (r.perfil) {
+      PERFIL = r.perfil;
+      $('avatar').textContent = iniciales2(PERFIL);
+      $('u-codigo').textContent = PERFIL.usuario;
+      $('u-puesto').textContent = PERFIL.puesto || '';
+      pintarPerfil();
+    }
+    toast(r.usuario !== ED.usuario ? 'Datos guardados. El usuario ahora es ' + r.usuario : 'Datos guardados', 'ok');
+    refrescar();
+  }, function () { $('ed-guardar').disabled = false; });
 }
 
 /* ============================== laboratorios ============================== */

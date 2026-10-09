@@ -652,7 +652,8 @@ function banco_(p, tipo) {
       return {
         id: b.id, parasito: b.parasito, fuente: b.fuente, fechaSubida: b.fechaSubida,
         diasEnRotacion: Math.max(0, diasEntre_(hoy, sumarMeses_(b.fechaSubida, CONFIG.MESES_ROTACION))),
-        url: urlImagen_(b.thumbId || b.fileId, 200)
+        url: urlImagen_(b.thumbId || b.fileId, 200),
+        urlGrande: urlImagen_(b.fileId, 1400)
       };
     }),
     resumen: {
@@ -685,7 +686,8 @@ function borrarArchivos_(fila) {
 function usuarios_(p) {
   var marcas = {};
   marcas_().forEach(function (m) { marcas[m.codigo] = etiquetaMarca_(m); });
-  var lista = leer_('Usuarios').filter(function (u) { return p.admin || u.marca === p.marca; }).map(function (u) {
+  // Las cuentas eliminadas no se listan; su fila se conserva para el historial.
+  var lista = leer_('Usuarios').filter(function (u) { return u.activo === 'SI' && (p.admin || u.marca === p.marca); }).map(function (u) {
     return {
       usuario: u.usuario, nombre: u.nombre, iniciales: u.iniciales, numero: u.numero, puesto: u.puesto,
       marca: u.marca, laboratorio: marcas[u.marca] || u.marca, rol: u.rol, admin: u.admin === 'SI',
@@ -702,37 +704,82 @@ function puedeGestionar_(p, u) {
   return u.marca === p.marca && u.rol === 'analista';
 }
 
-// datos: { nombre, iniciales, numero, puesto, rol, marca }. El usuario para
-// iniciar sesión es iniciales + número de analista (ej. MPWN1).
+// Valida los datos de una cuenta y arma su usuario: iniciales + número de
+// analista (ej. MPWN1) o, para supervisores, iniciales + "-SUP" (ej. MPWN-SUP).
+function validarDatosUsuario_(datos, rol) {
+  var d = {
+    nombre: String(datos.nombre || '').trim(),
+    iniciales: String(datos.iniciales || '').toUpperCase().replace(/\s+/g, ''),
+    numero: String(datos.numero || '').trim(),
+    puesto: String(datos.puesto || '').trim()
+  };
+  if (!d.nombre) return { error: 'Escribe el nombre completo' };
+  if (!/^[A-ZÑ]{2,6}$/.test(d.iniciales)) return { error: 'Las iniciales deben ser de 2 a 6 letras' };
+  if (rol === 'supervisor') {
+    d.numero = '';
+    d.usuario = d.iniciales + '-SUP';
+  } else {
+    if (!/^\d{1,3}$/.test(d.numero)) return { error: 'El número de analista debe ser de 1 a 3 dígitos' };
+    d.numero = String(Number(d.numero));
+    d.usuario = d.iniciales + d.numero;
+  }
+  if (!d.puesto) d.puesto = rol === 'supervisor' ? 'Supervisor' : 'Analista';
+  return d;
+}
+
+// datos: { nombre, iniciales, numero, puesto, rol, marca }
 function crearUsuario(token, datos) {
   var p = sesion_(token, 'supervisor');
   datos = datos || {};
-  var nombre = String(datos.nombre || '').trim();
-  var iniciales = String(datos.iniciales || '').toUpperCase().replace(/\s+/g, '');
-  var numero = String(datos.numero || '').trim();
-  var puesto = String(datos.puesto || '').trim();
   var rol = datos.rol === 'supervisor' ? 'supervisor' : 'analista';
   var marca = p.admin ? String(datos.marca || p.marca) : p.marca;
-
-  if (!nombre) return { success: false, error: 'Escribe el nombre completo' };
-  if (!/^[A-ZÑ]{2,6}$/.test(iniciales)) return { success: false, error: 'Las iniciales deben ser de 2 a 6 letras' };
-  if (!/^\d{1,3}$/.test(numero)) return { success: false, error: 'El número de analista debe ser de 1 a 3 dígitos' };
   if (!p.admin && rol !== 'analista') return { success: false, error: 'No autorizado' };
   if (!marca_(marca)) return { success: false, error: 'Laboratorio no válido' };
-  var usuario = iniciales + Number(numero);
+  var d = validarDatosUsuario_(datos, rol);
+  if (d.error) return { success: false, error: d.error };
 
   return conBloqueo_(function () {
-    if (leer_('Usuarios').some(function (u) { return u.usuario === usuario; })) {
-      return { success: false, error: 'El usuario ' + usuario + ' ya existe. Cambia el número de analista.' };
+    if (leer_('Usuarios').some(function (u) { return u.usuario === d.usuario; })) {
+      return { success: false, error: 'El usuario ' + d.usuario + ' ya existe.' };
     }
     var temporal = generarPassword_();
     var salt = nuevoId_();
     agregar_('Usuarios', {
-      usuario: usuario, nombre: nombre, marca: marca, rol: rol, admin: 'NO', hash: hash_(temporal, salt),
+      usuario: d.usuario, nombre: d.nombre, marca: marca, rol: rol, admin: 'NO', hash: hash_(temporal, salt),
       salt: salt, temporal: 'SI', activo: 'SI', creado: hoy_(p),
-      iniciales: iniciales, numero: String(Number(numero)), puesto: puesto || (rol === 'supervisor' ? 'Supervisor' : 'Analista')
+      iniciales: d.iniciales, numero: d.numero, puesto: d.puesto
     });
-    return { success: true, usuario: usuario, password: temporal };
+    return { success: true, usuario: d.usuario, password: temporal };
+  });
+}
+
+// Un supervisor edita sus propios datos o los de sus analistas; solo la
+// administración cambia el laboratorio. Si cambian las iniciales o el número,
+// cambia el usuario para iniciar sesión (los registros pasados conservan el anterior).
+function editarUsuario(token, usuario, datos) {
+  var p = sesion_(token, 'supervisor');
+  datos = datos || {};
+  return conBloqueo_(function () {
+    var usuarios = leer_('Usuarios');
+    var u = usuarios.filter(function (x) { return x.usuario === usuario && x.activo === 'SI'; })[0];
+    if (!u || (u.usuario !== p.usuario && !puedeGestionar_(p, u))) return { success: false, error: 'No autorizado' };
+    var d = validarDatosUsuario_(datos, u.rol);
+    if (d.error) return { success: false, error: d.error };
+    var marca = p.admin && datos.marca ? String(datos.marca) : u.marca;
+    if (!marca_(marca)) return { success: false, error: 'Laboratorio no válido' };
+    if (d.usuario !== u.usuario && usuarios.some(function (x) { return x.usuario === d.usuario; })) {
+      return { success: false, error: 'El usuario ' + d.usuario + ' ya existe.' };
+    }
+    actualizar_('Usuarios', u._fila, { usuario: d.usuario, nombre: d.nombre, iniciales: d.iniciales, numero: d.numero, puesto: d.puesto, marca: marca });
+
+    var res = { success: true, usuario: d.usuario };
+    if (u.usuario === p.usuario) {
+      var nuevo = leer_('Usuarios').filter(function (x) { return x.usuario === d.usuario; })[0];
+      var perfil = perfilDe_(nuevo, marca_(nuevo.marca));
+      guardarSesion_(token, perfil);
+      res.perfil = perfil;
+    }
+    return res;
   });
 }
 

@@ -25,6 +25,9 @@ Aplicación web (Google Apps Script + Google Sheets) para el control de calidad 
 
 - Cada cuenta se da de alta con **nombre completo, iniciales, número de analista, puesto y laboratorio**.
 - El usuario para iniciar sesión es **iniciales + número de analista**, por ejemplo `MPWN1` o `EMAR2`. Debe ser único en todos los laboratorios.
+- Los supervisores no tienen número de analista: su usuario es **iniciales + `-SUP`**, por ejemplo `JLR-SUP`. El sufijo no se puede modificar.
+- Los supervisores pueden editar sus propios datos y los de sus analistas. Solo la administración cambia el laboratorio de una cuenta.
+- **Eliminar** una cuenta impide que vuelva a entrar y la quita de la lista; sus respuestas pasadas se conservan en el historial.
 - Al crearla se genera una **contraseña temporal de 4 dígitos**. En su primer ingreso la persona crea la suya, también de **4 caracteres**, y puede cambiarla después desde **Mi perfil**.
 - En **Mi perfil** cada quien ve su nombre, puesto, usuario y laboratorio, sin poder editarlos.
 - La cuenta inicial de administración es `LST-SUP`.
