@@ -935,31 +935,35 @@ function configurarInicial() {
 
 // Si se cambia el nombre de un parásito en el catálogo (Index), las imágenes
 // que ya estaban en el banco conservan el nombre anterior y nadie podría
-// acertarlas. Ejecutar UNA VEZ desde el editor después de cambiar el catálogo.
-// Actualiza el banco y el control de hoy; el historial pasado no se modifica.
+// acertarlas. Ejecutar desde el editor después de cambiar el catálogo.
+// Actualiza el banco, las imágenes asignadas y las respuestas guardadas, para
+// que el atlas y el historial muestren el nombre nuevo. Se puede repetir.
 function actualizarNombreGiardia() {
-  return renombrarParasito_('Giardia spp quiste', 'Giardia intestinalis quiste');
+  return renombrarParasitos_({
+    'Giardia spp quiste': 'Giardia intestinalis quiste',
+    'Giardia spp trofozoíto': 'Giardia intestinalis trofozoíto'
+  });
 }
 
-function renombrarParasito_(anterior, nuevo) {
+function renombrarParasitos_(cambios) {
   var cambiar = function (texto) {
-    return String(texto).split(' + ').map(function (x) { return x === anterior ? nuevo : x; }).sort().join(' + ');
+    var partes = String(texto || '').split(' + ');
+    if (!partes.some(function (x) { return cambios[x]; })) return null;
+    return partes.map(function (x) { return cambios[x] || x; }).sort().join(' + ');
   };
-  var hoy = Utilities.formatDate(new Date(), CONFIG.ZONA_DEFAULT, 'yyyy-MM-dd');
   return conBloqueo_(function () {
-    var imagenes = 0, asignaciones = 0;
-    leer_('BancoImagenes').forEach(function (b) {
-      if (b.parasito.split(' + ').indexOf(anterior) === -1) return;
-      actualizar_('BancoImagenes', b._fila, { parasito: cambiar(b.parasito) });
-      imagenes++;
+    var cuenta = { BancoImagenes: 0, Asignaciones: 0, Registros: 0 };
+    [['BancoImagenes', ['parasito']], ['Asignaciones', ['parasito']], ['Registros', ['respuesta1', 'respuesta2']]].forEach(function (h) {
+      leer_(h[0]).forEach(function (fila) {
+        var nuevos = {};
+        h[1].forEach(function (col) { var v = cambiar(fila[col]); if (v !== null) nuevos[col] = v; });
+        if (!Object.keys(nuevos).length) return;
+        actualizar_(h[0], fila._fila, nuevos);
+        if (h[0] === 'Asignaciones') cache_().remove('a_' + fila.marca + '_' + fila.fecha);
+        cuenta[h[0]]++;
+      });
     });
-    leer_('Asignaciones').forEach(function (a) {
-      if (a.fecha < hoy || a.parasito.split(' + ').indexOf(anterior) === -1) return;
-      actualizar_('Asignaciones', a._fila, { parasito: cambiar(a.parasito) });
-      cache_().remove('a_' + a.marca + '_' + a.fecha);
-      asignaciones++;
-    });
-    var mensaje = 'Imágenes actualizadas: ' + imagenes + ' · Controles de hoy actualizados: ' + asignaciones;
+    var mensaje = 'Imágenes del banco: ' + cuenta.BancoImagenes + ' · Imágenes asignadas: ' + cuenta.Asignaciones + ' · Respuestas: ' + cuenta.Registros;
     Logger.log(mensaje);
     return mensaje;
   });
