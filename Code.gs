@@ -931,6 +931,40 @@ function configurarInicial() {
   return mensaje;
 }
 
+/* ================== cambio de nombre en el catálogo ================== */
+
+// Si se cambia el nombre de un parásito en el catálogo (Index), las imágenes
+// que ya estaban en el banco conservan el nombre anterior y nadie podría
+// acertarlas. Ejecutar UNA VEZ desde el editor después de cambiar el catálogo.
+// Actualiza el banco y el control de hoy; el historial pasado no se modifica.
+function actualizarNombreGiardia() {
+  return renombrarParasito_('Giardia spp quiste', 'Giardia intestinalis quiste');
+}
+
+function renombrarParasito_(anterior, nuevo) {
+  var cambiar = function (texto) {
+    return String(texto).split(' + ').map(function (x) { return x === anterior ? nuevo : x; }).sort().join(' + ');
+  };
+  var hoy = Utilities.formatDate(new Date(), CONFIG.ZONA_DEFAULT, 'yyyy-MM-dd');
+  return conBloqueo_(function () {
+    var imagenes = 0, asignaciones = 0;
+    leer_('BancoImagenes').forEach(function (b) {
+      if (b.parasito.split(' + ').indexOf(anterior) === -1) return;
+      actualizar_('BancoImagenes', b._fila, { parasito: cambiar(b.parasito) });
+      imagenes++;
+    });
+    leer_('Asignaciones').forEach(function (a) {
+      if (a.fecha < hoy || a.parasito.split(' + ').indexOf(anterior) === -1) return;
+      actualizar_('Asignaciones', a._fila, { parasito: cambiar(a.parasito) });
+      cache_().remove('a_' + a.marca + '_' + a.fecha);
+      asignaciones++;
+    });
+    var mensaje = 'Imágenes actualizadas: ' + imagenes + ' · Controles de hoy actualizados: ' + asignaciones;
+    Logger.log(mensaje);
+    return mensaje;
+  });
+}
+
 /* ================ migración desde la versión anterior ================ */
 
 // Si los datos anteriores están en OTRA hoja de cálculo, pegar aquí su ID
