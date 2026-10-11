@@ -392,7 +392,7 @@ function crearAsignacion_(perfil, fecha, existentes) {
 
 function registrosHoy_(perfil) {
   var fecha = hoy_(perfil);
-  return leer_('Registros').filter(function (r) { return r.marca === perfil.marca && r.fecha === fecha; });
+  return registrosMarca_(perfil.marca).filter(function (r) { return r.fecha === fecha; });
 }
 
 function estadoDeRegistros_(registros) {
@@ -488,10 +488,20 @@ function asignacionesPorFecha_(marca) {
   return porFecha;
 }
 
+// Un registro sin fecha o sin resultado (por ejemplo, un renglón incompleto
+// copiado de la versión anterior) no se toma en cuenta.
+function registroValido_(r) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(r.fecha) && (r.estado === 'Aprobado' || r.estado === 'Rechazado');
+}
+
+function registrosMarca_(marca) {
+  return leer_('Registros').filter(function (r) { return r.marca === marca && registroValido_(r); });
+}
+
 function registrosPorFecha_(marca) {
   var porFecha = {};
-  leer_('Registros').forEach(function (r) {
-    if (r.marca === marca) (porFecha[r.fecha] = porFecha[r.fecha] || []).push(r);
+  registrosMarca_(marca).forEach(function (r) {
+    (porFecha[r.fecha] = porFecha[r.fecha] || []).push(r);
   });
   return porFecha;
 }
@@ -502,7 +512,7 @@ function historial_(p) {
   var hoy = hoy_(p);
   var esSup = p.rol === 'supervisor';
   var porFecha = asignacionesPorFecha_(p.marca);
-  var registros = leer_('Registros').filter(function (r) { return r.marca === p.marca; });
+  var registros = registrosMarca_(p.marca);
   var conRespuesta = {};
   registros.forEach(function (r) { conRespuesta[r.fecha] = true; });
 
@@ -1004,7 +1014,9 @@ function migrarDatosAnteriores() {
     };
   }));
 
-  var respuestas = leerViejo('Respuestas').filter(function (r) { return !r.id || !yaRegistrado[r.id]; });
+  var respuestas = leerViejo('Respuestas').filter(function (r) {
+    return r.fecha && r.estado && (!r.id || !yaRegistrado[r.id]);
+  });
   agregarVarios_('Registros', respuestas.map(function (r) {
     return {
       id: r.id || nuevoId_(), fecha: r.fecha, marca: origen, usuario: r.analista, hora: r.hora,
