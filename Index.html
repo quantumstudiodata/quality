@@ -66,6 +66,9 @@ table.tabla{width:100%;border-collapse:collapse;font-size:11px}
 ::-webkit-scrollbar-thumb{background:#2f2450;border-radius:8px}
 ::-webkit-scrollbar-thumb:hover{background:#4c3a7a}
 .tabla .correcta{color:var(--sub);font-size:10px;line-height:1.5}
+.tabla tr.dia td{padding:14px 14px 6px;border-top:1px solid var(--border);font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--accent);text-transform:uppercase}
+.tabla tr.dia:first-child td{border-top:none;padding-top:8px}
+.tabla tr.dia + tr td{border-top:none}
 .paginacion{display:flex;align-items:center;gap:4px;padding:10px 14px;flex-wrap:wrap}
 .paginacion button{min-width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--sub);font-size:10.5px}
 .paginacion button.on{background:var(--dark);border-color:var(--dark);color:#fff}
@@ -913,13 +916,23 @@ function pintarHoy() {
 
   var filas = DATOS.historial.slice(0, 8);
   $('hoy-head').innerHTML = encabezado(esSup);
-  $('hoy-body').innerHTML = filas.map(function (r) { return filaHistorial(r, esSup); }).join('');
+  $('hoy-body').innerHTML = filasPorDia(filas, esSup);
   $('hoy-vacio').classList.toggle('oculto', filas.length > 0);
 }
 
 function encabezado(esSup) {
   return '<tr><th>Fecha</th><th>Hora</th><th>Analista</th><th>Imagen 1</th><th>Imagen 2</th>' + (esSup ? '<th>Esperado</th>' : '') + '<th>Intento</th><th>Resultado</th></tr>';
 }
+// Agrupa las respuestas por día con un encabezado de fecha entre cada grupo.
+function filasPorDia(filas, esSup) {
+  var columnas = esSup ? 8 : 7, ultima = '';
+  return filas.map(function (r) {
+    var sep = '';
+    if (r.fecha !== ultima) { ultima = r.fecha; sep = '<tr class="dia"><td colspan="' + columnas + '">' + esc(fechaLarga(r.fecha)) + '</td></tr>'; }
+    return sep + filaHistorial(r, esSup);
+  }).join('');
+}
+
 function filaHistorial(r, esSup) {
   return '<tr><td class="mono">' + fechaCorta(r.fecha) + '</td><td class="mono sub">' + esc(String(r.hora || '—').slice(0, 5)) + '</td><td>' + esc(r.usuario) + '</td>' +
     '<td>' + esc(r.respuesta1 || '—') + '</td><td>' + esc(r.respuesta2 || '—') + '</td>' +
@@ -938,7 +951,7 @@ function pintarHistorial() {
   var porPagina = 15, total = Math.max(1, Math.ceil(filas.length / porPagina));
   HIST.pagina = Math.min(HIST.pagina, total);
   $('hist-head').innerHTML = encabezado(esSup);
-  $('hist-body').innerHTML = filas.slice((HIST.pagina - 1) * porPagina, HIST.pagina * porPagina).map(function (r) { return filaHistorial(r, esSup); }).join('');
+  $('hist-body').innerHTML = filasPorDia(filas.slice((HIST.pagina - 1) * porPagina, HIST.pagina * porPagina), esSup);
   $('hist-vacio').classList.toggle('oculto', filas.length > 0);
   paginar('hist-pag', HIST.pagina, total, function (p) { HIST.pagina = p; pintarHistorial(); });
 }
