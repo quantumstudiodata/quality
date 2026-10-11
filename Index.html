@@ -66,9 +66,29 @@ table.tabla{width:100%;border-collapse:collapse;font-size:11px}
 ::-webkit-scrollbar-thumb{background:#2f2450;border-radius:8px}
 ::-webkit-scrollbar-thumb:hover{background:#4c3a7a}
 .tabla .correcta{color:var(--sub);font-size:10px;line-height:1.5}
-.tabla tr.dia td{padding:14px 14px 6px;border-top:1px solid var(--border);font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--accent);text-transform:uppercase}
-.tabla tr.dia:first-child td{border-top:none;padding-top:8px}
-.tabla tr.dia + tr td{border-top:none}
+.dias{display:flex;flex-direction:column;gap:10px;padding:12px}
+.dias:empty{display:none}
+.dia-bloque{position:relative;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:linear-gradient(135deg,rgba(139,92,246,.07) 0%,rgba(139,92,246,0) 45%),var(--bg-2);animation:entrar .3s ease-out both;transition:border-color .25s,box-shadow .25s}
+.dia-bloque:hover{border-color:#4c3a7a;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.dia-bloque::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--color-dia,var(--mute))}
+.dia-cab{display:flex;align-items:center;gap:12px;padding:12px 14px 10px 16px}
+.dia-num{width:40px;height:42px;border-radius:9px;background:var(--card);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;line-height:1}
+.dia-num b{font-size:15px}
+.dia-num span{font-family:var(--mono);font-size:8.5px;color:var(--sub);margin-top:3px;letter-spacing:.06em}
+.dia-titulo{flex:1;min-width:0}
+.dia-titulo div:first-child{font-size:12.5px;font-weight:700}
+.dia-titulo div:last-child{font-size:10px;color:var(--sub);margin-top:2px}
+.dia-resumen{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;font-size:10.5px;font-weight:700;white-space:nowrap;background:color-mix(in srgb,var(--color-dia,var(--mute)) 14%,transparent);color:var(--color-dia,var(--sub))}
+.dia-resumen i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.dia-filas{border-top:1px solid var(--line);padding:4px 0}
+.dia-fila,.dias-cab{display:grid;grid-template-columns:52px 70px minmax(0,1.2fr) minmax(0,1.2fr) var(--col-esperado,0px) 70px 92px;gap:10px;align-items:center;padding:7px 14px 7px 16px;font-size:11px}
+.dia-fila{transition:background .2s}
+.dia-fila:hover{background:rgba(139,92,246,.06)}
+.dia-fila .hora{font-family:var(--mono);color:var(--sub)}
+.dia-fila .esperado{color:var(--sub);font-size:10px;line-height:1.45}
+.dias-cab{padding:6px 15px 0 17px;color:var(--sub);font-size:10px;font-weight:600}
+.con-esperado{--col-esperado:minmax(0,1.2fr)}
+@media(max-width:900px){.dia-fila,.dias-cab{grid-template-columns:44px 60px minmax(0,1fr) minmax(0,1fr) 0 0 84px}.dia-fila .int,.dias-cab .int,.dia-fila .esperado,.dias-cab .esp{display:none}}
 .paginacion{display:flex;align-items:center;gap:4px;padding:10px 14px;flex-wrap:wrap}
 .paginacion button{min-width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--sub);font-size:10.5px}
 .paginacion button.on{background:var(--dark);border-color:var(--dark);color:#fff}
@@ -305,7 +325,7 @@ main{max-width:1100px;margin:0 auto;padding:20px 26px}
       <div class="kpis" id="hoy-kpis"></div>
       <div class="card">
         <div class="card-head"><span>Respuestas registradas</span><button class="btn-sec" type="button" onclick="irA('historial')">Ver historial</button></div>
-        <div class="tabla-wrap"><table class="tabla"><thead id="hoy-head"></thead><tbody id="hoy-body"></tbody></table></div>
+        <div class="dias" id="hoy-lista"></div>
         <div class="vacio oculto" id="hoy-vacio">Aún no hay respuestas registradas.</div>
       </div>
     </section>
@@ -317,7 +337,7 @@ main{max-width:1100px;margin:0 auto;padding:20px 26px}
         <div class="chips" id="hist-filtros"></div>
       </div>
       <div class="card">
-        <div class="tabla-wrap"><table class="tabla"><thead id="hist-head"></thead><tbody id="hist-body"></tbody></table></div>
+        <div class="dias" id="hist-lista"></div>
         <div class="vacio oculto" id="hist-vacio">Sin registros.</div>
         <div class="paginacion" id="hist-pag"></div>
       </div>
@@ -914,45 +934,84 @@ function pintarHoy() {
     kpi('Cumplimiento', k.controlesRealizados + ' / ' + k.dias, 'días con control realizado') +
     kpi('Último control', u ? esc(u.estado) : '—', u ? fechaCorta(u.fecha) + ' · ' + esc(String(u.hora).slice(0, 5)) + ' · ' + esc(u.usuario) : 'sin registros', u ? (u.estado === 'Aprobado' ? 'var(--ok)' : 'var(--fail)') : '');
 
-  var filas = DATOS.historial.slice(0, 8);
-  $('hoy-head').innerHTML = encabezado(esSup);
-  $('hoy-body').innerHTML = filasPorDia(filas, esSup);
+  var filas = filasDeDias(DATOS.historial, ultimosDias(DATOS.historial, 5));
+  $('hoy-lista').innerHTML = filas.length ? bloquesPorDia(filas, esSup) : '';
   $('hoy-vacio').classList.toggle('oculto', filas.length > 0);
 }
 
-function encabezado(esSup) {
-  return '<tr><th>Fecha</th><th>Hora</th><th>Analista</th><th>Imagen 1</th><th>Imagen 2</th>' + (esSup ? '<th>Esperado</th>' : '') + '<th>Intento</th><th>Resultado</th></tr>';
+function mayuscula(t) { t = String(t); return t.charAt(0).toUpperCase() + t.slice(1); }
+var MESES_CORTOS = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+
+// Encabezado de columnas que se repite arriba de los bloques de días.
+function encabezadoDias(esSup) {
+  return '<div class="dias-cab' + (esSup ? ' con-esperado' : '') + '"><span>Hora</span><span>Analista</span><span>Imagen 1</span><span>Imagen 2</span><span class="esp">' + (esSup ? 'Esperado' : '') + '</span><span class="int">Intento</span><span>Resultado</span></div>';
 }
-// Agrupa las respuestas por día con un encabezado de fecha entre cada grupo.
-function filasPorDia(filas, esSup) {
-  var columnas = esSup ? 8 : 7, ultima = '';
-  return filas.map(function (r) {
-    var sep = '';
-    if (r.fecha !== ultima) { ultima = r.fecha; sep = '<tr class="dia"><td colspan="' + columnas + '">' + esc(fechaLarga(r.fecha)) + '</td></tr>'; }
-    return sep + filaHistorial(r, esSup);
+
+// Agrupa las respuestas por día: cada día es un bloque con su fecha, un resumen
+// del resultado y una barra de color según cómo terminó el control.
+function bloquesPorDia(filas, esSup) {
+  var dias = [], porFecha = {};
+  filas.forEach(function (r) {
+    if (!porFecha[r.fecha]) { porFecha[r.fecha] = []; dias.push(r.fecha); }
+    porFecha[r.fecha].push(r);
+  });
+  return encabezadoDias(esSup) + dias.map(function (fecha, i) {
+    var regs = porFecha[fecha];
+    var aprobado = regs.filter(function (r) { return r.estado === 'Aprobado'; })[0];
+    var intentos = regs.filter(function (r) { return r.intento; }).length;
+    var sinRespuesta = regs.length === 1 && regs[0].estado === 'Sin respuesta';
+    var color, resumen;
+    if (sinRespuesta) { color = 'var(--mute)'; resumen = 'Sin respuesta'; }
+    else if (aprobado) { color = aprobado.intento === '1' ? 'var(--ok)' : 'var(--accent)'; resumen = aprobado.intento === '1' ? 'Aprobado al primer intento' : 'Aprobado al intento ' + aprobado.intento; }
+    else if (intentos >= MAX_INTENTOS) { color = 'var(--fail)'; resumen = 'No aprobado'; }
+    else { color = 'var(--warn)'; resumen = 'En curso'; }
+    var analistas = regs.map(function (r) { return r.usuario; }).filter(function (u, j, a) { return u && u !== '—' && a.indexOf(u) === j; });
+    var p = String(fecha).split('-');
+    var detalle = sinRespuesta ? 'Nadie respondió el control de este día' : intentos + (intentos === 1 ? ' intento' : ' intentos') + (analistas.length ? ' · ' + analistas.join(', ') : '');
+    var filasHtml = sinRespuesta ? '' : '<div class="dia-filas">' + regs.slice().reverse().map(function (r) { return filaDia(r, esSup); }).join('') + '</div>';
+    return '<div class="dia-bloque" style="--color-dia:' + color + ';animation-delay:' + Math.min(i * 40, 240) + 'ms">' +
+      '<div class="dia-cab"><div class="dia-num"><b>' + Number(p[2]) + '</b><span>' + (MESES_CORTOS[Number(p[1]) - 1] || '') + '</span></div>' +
+      '<div class="dia-titulo"><div>' + esc(mayuscula(fechaLarga(fecha))) + '</div><div>' + esc(detalle) + '</div></div>' +
+      '<div class="dia-resumen"><i></i>' + resumen + '</div></div>' + filasHtml + '</div>';
   }).join('');
 }
 
-function filaHistorial(r, esSup) {
-  return '<tr><td class="mono">' + fechaCorta(r.fecha) + '</td><td class="mono sub">' + esc(String(r.hora || '—').slice(0, 5)) + '</td><td>' + esc(r.usuario) + '</td>' +
-    '<td>' + esc(r.respuesta1 || '—') + '</td><td>' + esc(r.respuesta2 || '—') + '</td>' +
-    (esSup ? '<td class="correcta">' + esc(r.correcta1 || '—') + '<br>' + esc(r.correcta2 || '—') + '</td>' : '') +
-    '<td class="sub">' + (r.intento ? esc(r.intento) + ' de ' + MAX_INTENTOS : '—') + '</td><td>' + badge(r.estado) + '</td></tr>';
+function filaDia(r, esSup) {
+  return '<div class="dia-fila' + (esSup ? ' con-esperado' : '') + '"><span class="hora">' + esc(String(r.hora || '—').slice(0, 5)) + '</span><span>' + esc(r.usuario) + '</span>' +
+    '<span>' + esc(r.respuesta1 || '—') + '</span><span>' + esc(r.respuesta2 || '—') + '</span>' +
+    '<span class="esperado">' + (esSup ? esc(r.correcta1 || '—') + '<br>' + esc(r.correcta2 || '—') : '') + '</span>' +
+    '<span class="int sub">' + (r.intento ? esc(r.intento) + ' de ' + MAX_INTENTOS : '—') + '</span><span>' + badge(r.estado) + '</span></div>';
 }
 
 /* ============================== historial ============================== */
 
 var HIST = { filtro: 'todos', pagina: 1 };
 
+// Fechas (más recientes primero) y las filas que pertenecen a ciertas fechas.
+function ultimosDias(filas, n) {
+  var vistos = [];
+  filas.forEach(function (r) { if (vistos.indexOf(r.fecha) === -1) vistos.push(r.fecha); });
+  return n ? vistos.slice(0, n) : vistos;
+}
+function filasDeDias(filas, fechas) { return filas.filter(function (r) { return fechas.indexOf(r.fecha) !== -1; }); }
+
+function resultadoDia(regs) {
+  if (regs.some(function (r) { return r.estado === 'Aprobado'; })) return 'Aprobado';
+  if (regs.length === 1 && regs[0].estado === 'Sin respuesta') return 'Sin respuesta';
+  return regs.length >= MAX_INTENTOS ? 'No aprobado' : 'En curso';
+}
+
 function pintarHistorial() {
   var esSup = PERFIL.rol === 'supervisor';
-  chips('hist-filtros', [['todos', 'Todos'], ['Aprobado', 'Aprobados'], ['Rechazado', 'Rechazados'], ['Sin respuesta', 'Sin respuesta']], HIST.filtro, function (v) { HIST.filtro = v; HIST.pagina = 1; pintarHistorial(); });
-  var filas = DATOS.historial.filter(function (r) { return HIST.filtro === 'todos' || r.estado === HIST.filtro; });
-  var porPagina = 15, total = Math.max(1, Math.ceil(filas.length / porPagina));
+  chips('hist-filtros', [['todos', 'Todos'], ['Aprobado', 'Aprobados'], ['No aprobado', 'No aprobados'], ['Sin respuesta', 'Sin respuesta']], HIST.filtro, function (v) { HIST.filtro = v; HIST.pagina = 1; pintarHistorial(); });
+  var fechas = ultimosDias(DATOS.historial).filter(function (f) {
+    return HIST.filtro === 'todos' || resultadoDia(filasDeDias(DATOS.historial, [f])) === HIST.filtro;
+  });
+  var porPagina = 7, total = Math.max(1, Math.ceil(fechas.length / porPagina));
   HIST.pagina = Math.min(HIST.pagina, total);
-  $('hist-head').innerHTML = encabezado(esSup);
-  $('hist-body').innerHTML = filasPorDia(filas.slice((HIST.pagina - 1) * porPagina, HIST.pagina * porPagina), esSup);
-  $('hist-vacio').classList.toggle('oculto', filas.length > 0);
+  var pagina = fechas.slice((HIST.pagina - 1) * porPagina, HIST.pagina * porPagina);
+  $('hist-lista').innerHTML = pagina.length ? bloquesPorDia(filasDeDias(DATOS.historial, pagina), esSup) : '';
+  $('hist-vacio').classList.toggle('oculto', fechas.length > 0);
   paginar('hist-pag', HIST.pagina, total, function (p) { HIST.pagina = p; pintarHistorial(); });
 }
 
