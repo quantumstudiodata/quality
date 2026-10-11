@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shortify, Series & Dramas — Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080130; --fg:#ece9ff;
+  --bg2:#0f0847; --card:#140c52; --line:rgba(236,233,255,.12);
+  --muted:rgba(236,233,255,.65);
+  --a1:#7c5cff; --a2:#35e0ff; --a3:#ff4fd8;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 Inter,system-ui,sans-serif;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(600px 400px at 85% -5%,rgba(124,92,255,.35),transparent),
+             radial-gradient(500px 400px at -5% 40%,rgba(53,224,255,.12),transparent);}
+h1,h2,h3,.logo{font-family:Sora,sans-serif}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1200px;margin:auto;padding:0 20px;position:relative}
+/* nav */
+nav{position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);background:rgba(8,1,48,.7);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:28px;height:68px}
+.logo{font-weight:800;font-size:22px;letter-spacing:-.5px}
+.logo span{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;color:transparent}
+.logo small{display:block;font:500 10px Inter;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-top:-4px}
+nav ul{display:flex;gap:22px;list-style:none;color:var(--muted);font-size:14px}
+nav ul a:hover{color:var(--fg)}
+.sp{flex:1}
+.search{background:rgba(236,233,255,.07);border:1px solid var(--line);border-radius:99px;padding:8px 16px;color:var(--muted);font-size:14px;min-width:200px}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:99px;padding:11px 22px;font-weight:600;font-size:14px;border:1px solid var(--line);cursor:pointer;transition:.2s}
+.btn.primary{background:linear-gradient(90deg,var(--a1),#9d6bff 60%,var(--a2));color:#080130;border:0;box-shadow:0 0 28px rgba(124,92,255,.5)}
+.btn.primary:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(53,224,255,.5)}
+.btn.ghost:hover{background:rgba(236,233,255,.08)}
+/* hero */
+.hero{padding:56px 0 40px;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:5px 14px;font-size:12px;color:var(--a2);letter-spacing:1px;text-transform:uppercase;background:rgba(53,224,255,.06)}
+.hero h1{font-size:clamp(36px,5.5vw,64px);line-height:1.05;font-weight:800;letter-spacing:-2px;margin:18px 0}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--a1),var(--a3) 50%,var(--a2));-webkit-background-clip:text;color:transparent}
+.hero p{color:var(--muted);max-width:480px;font-size:18px}
+.cta{display:flex;gap:12px;margin:28px 0;flex-wrap:wrap}
+.stats{display:flex;gap:32px;color:var(--muted);font-size:13px}
+.stats b{display:block;color:var(--fg);font:800 24px Sora}
+.stage{position:relative;height:460px}
+.poster{position:absolute;width:210px;height:310px;border-radius:20px;border:1px solid var(--line);overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.5);display:flex;align-items:flex-end;padding:16px;font:700 16px Sora}
+.poster.p1{left:0;top:70px;transform:rotate(-8deg);background:linear-gradient(160deg,#ff4fd8,#3a0ca3 70%)}
+.poster.p2{left:130px;top:0;z-index:2;width:240px;height:350px;background:linear-gradient(160deg,#35e0ff,#7c5cff 60%,#1a0a6b);box-shadow:0 0 60px rgba(124,92,255,.6)}
+.poster.p3{right:0;top:110px;transform:rotate(8deg);background:linear-gradient(160deg,#ffb86b,#d1306b 60%,#2b0a5a)}
+.play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(8,1,48,.55);backdrop-filter:blur(8px);border:1px solid var(--fg);display:grid;place-items:center}
+.play::after{content:"";border-left:18px solid var(--fg);border-top:11px solid transparent;border-bottom:11px solid transparent;margin-left:5px}
+.badge{position:absolute;top:12px;left:12px;font:600 11px Inter;background:rgba(8,1,48,.7);border-radius:99px;padding:3px 10px}
+/* sections */
+section{padding:34px 0}
+.head{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.head h2{font-size:24px;letter-spacing:-.5px}
+.head a{color:var(--a2);font-size:14px}
+.chips{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
+.chip{white-space:nowrap;border:1px solid var(--line);border-radius:99px;padding:8px 18px;font-size:14px;color:var(--muted);background:rgba(236,233,255,.04)}
+.chip.on,.chip:hover{background:var(--fg);color:var(--bg);font-weight:600}
+.row{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(170px,1fr);gap:16px;overflow-x:auto;padding-bottom:10px}
+.card{position:relative;aspect-ratio:2/3;border-radius:16px;overflow:hidden;border:1px solid var(--line);padding:14px;display:flex;flex-direction:column;justify-content:flex-end;transition:.25s}
+.card:hover{transform:translateY(-6px) scale(1.02);border-color:var(--a2);box-shadow:0 0 30px rgba(53,224,255,.3)}
+.card::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 45%,rgba(8,1,48,.92))}
+.card>*{position:relative;z-index:1}
+.card b{font:700 15px Sora;line-height:1.2}
+.card small{color:var(--muted);font-size:12px}
+.lock{position:absolute!important;top:10px;right:10px;font-size:11px;background:rgba(8,1,48,.7);border-radius:99px;padding:2px 9px;z-index:2}
+.g1{background:linear-gradient(160deg,#7c5cff,#1a0a6b)}.g2{background:linear-gradient(160deg,#ff4fd8,#43106b)}
+.g3{background:linear-gradient(160deg,#35e0ff,#16337a)}.g4{background:linear-gradient(160deg,#ff8a5c,#6b1040)}
+.g5{background:linear-gradient(160deg,#9d6bff,#0f0847)}.g6{background:linear-gradient(160deg,#41e0a8,#12306b)}
+/* player */
+.player{display:grid;grid-template-columns:260px 1fr;gap:32px;background:var(--bg2);border:1px solid var(--line);border-radius:28px;padding:28px}
+.phone{aspect-ratio:9/16;border-radius:24px;background:linear-gradient(170deg,#7c5cff,#ff4fd8 55%,#1a0a6b);position:relative;border:6px solid #000;box-shadow:0 0 50px rgba(124,92,255,.45)}
+.bar{position:absolute;left:14px;right:14px;bottom:16px;height:4px;border-radius:9px;background:rgba(236,233,255,.3)}
+.bar i{display:block;width:38%;height:100%;border-radius:9px;background:var(--fg)}
+.eps{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:8px;margin-top:16px}
+.ep{aspect-ratio:1;display:grid;place-items:center;border-radius:12px;border:1px solid var(--line);font-size:14px}
+.ep.free{background:rgba(53,224,255,.12);color:var(--a2)}
+.ep.cur{background:var(--fg);color:var(--bg);font-weight:700}
+.ep.lk{color:var(--muted)}
+.paywall{margin-top:20px;padding:16px 18px;border-radius:16px;background:linear-gradient(90deg,rgba(124,92,255,.25),rgba(53,224,255,.12));border:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+/* pricing */
+.plan{max-width:560px;margin:auto;text-align:center;padding:2px;border-radius:30px;background:linear-gradient(135deg,var(--a1),var(--a2),var(--a3))}
+.plan>div{background:var(--bg);border-radius:28px;padding:40px 32px}
+.plan h3{font-size:30px}
+.price{font:800 56px Sora;margin:10px 0}
+.price small{font:400 16px Inter;color:var(--muted)}
+.plan ul{list-style:none;text-align:left;margin:22px auto 28px;max-width:360px;display:grid;gap:10px}
+.plan li::before{content:"✦";color:var(--a2);margin-right:10px}
+.note{color:var(--muted);font-size:13px;margin-top:12px}
+footer{border-top:1px solid var(--line);margin-top:40px;padding:30px 0;color:var(--muted);font-size:13px}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+@media(max-width:860px){
+  .hero,.player{grid-template-columns:1fr}
+  nav ul,.search{display:none}
+  .stage{height:400px;transform:scale(.85);transform-origin:top center}
+  .phone{max-width:240px;margin:auto}
+}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="logo" href="#">Short<span>ify</span><small>Series & Dramas</small></a>
+  <ul><li><a href="#">Inicio</a></li><li><a href="#">Categorías</a></li><li><a href="#">Nuevos</a></li><li><a href="#">Mi lista</a></li></ul>
+  <div class="sp"></div>
+  <div class="search">🔍 Buscar series…</div>
+  <a class="btn ghost" href="#">Entrar</a>
+  <a class="btn primary" href="#plan">Acceso Total</a>
+</div></nav>
+
+<main class="wrap">
+  <header class="hero">
+    <div>
+      <span class="tag">Nuevo · Estrenos cada semana</span>
+      <h1>Historias que no puedes <em>dejar de ver</em></h1>
+      <p>Miniseries en episodios cortos, directo en tu pantalla. Una sola membresía, todo el catálogo. Sin monedas, sin trucos.</p>
+      <div class="cta">
+        <a class="btn primary" href="#plan">▶ Empezar con Acceso Total</a>
+        <a class="btn ghost" href="#player">Ver primeros episodios gratis</a>
+      </div>
+      <div class="stats"><div><b>+200</b>series</div><div><b>1 plan</b>todo incluido</div><div><b>0</b>monedas</div></div>
+    </div>
+    <div class="stage">
+      <div class="poster p1"><span class="badge">Romance</span>Traición en Palacio</div>
+      <div class="poster p2"><span class="badge">🔥 Tendencia</span>El Heredero Oculto<div class="play"></div></div>
+      <div class="poster p3"><span class="badge">Suspenso</span>La Otra Esposa</div>
+    </div>
+  </header>
+
+  <section>
+    <div class="chips">
+      <span class="chip on">Todo</span><span class="chip">Romance</span><span class="chip">Venganza</span><span class="chip">CEO</span>
+      <span class="chip">Fantasía</span><span class="chip">Suspenso</span><span class="chip">Familia</span><span class="chip">Hombres lobo</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><h2>🔥 Tendencias ahora</h2><a href="#">Ver todo →</a></div>
+    <div class="row">
+      <a class="card g1"><span class="lock">✦ Total</span><b>El Heredero Oculto</b><small>80 eps · Romance</small></a>
+      <a class="card g2"><span class="lock">✦ Total</span><b>Casada con mi Enemigo</b><small>64 eps · Drama</small></a>
+      <a class="card g3"><span class="lock">✦ Total</span><b>Reina de la Venganza</b><small>72 eps · Venganza</small></a>
+      <a class="card g4"><span class="lock">✦ Total</span><b>La Otra Esposa</b><small>58 eps · Suspenso</small></a>
+      <a class="card g5"><span class="lock">✦ Total</span><b>Luna de Sangre</b><small>90 eps · Fantasía</small></a>
+      <a class="card g6"><span class="lock">✦ Total</span><b>Mi CEO Millonario</b><small>66 eps · CEO</small></a>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><h2>✨ Estrenos de la semana</h2><a href="#">Ver todo →</a></div>
+    <div class="row">
+      <a class="card g3"><b>Secretos de Familia</b><small>Nuevo · 40 eps</small></a>
+      <a class="card g5"><b>Dos Vidas, Un Amor</b><small>Nuevo · 52 eps</small></a>
+      <a class="card g1"><b>Su Majestad la Cocinera</b><small>Nuevo · 60 eps</small></a>
+      <a class="card g4"><b>Contrato de Fuego</b><small>Nuevo · 48 eps</small></a>
+      <a class="card g2"><b>Después de Medianoche</b><small>Nuevo · 44 eps</small></a>
+      <a class="card g6"><b>El Último Apellido</b><small>Nuevo · 70 eps</small></a>
+    </div>
+  </section>
+
+  <section id="player">
+    <div class="head"><h2>Reproductor</h2></div>
+    <div class="player">
+      <div class="phone"><span class="badge">EP 7</span><div class="play"></div><div class="bar"><i></i></div></div>
+      <div>
+        <h3 style="font-size:28px">El Heredero Oculto</h3>
+        <p style="color:var(--muted)">Romance · 80 episodios · Los primeros 5 son gratis.</p>
+        <div class="eps">
+          <span class="ep free">1</span><span class="ep free">2</span><span class="ep free">3</span><span class="ep free">4</span><span class="ep free">5</span>
+          <span class="ep cur">6</span><span class="ep lk">🔒7</span><span class="ep lk">🔒8</span><span class="ep lk">🔒9</span><span class="ep lk">🔒10</span>
+          <span class="ep lk">🔒11</span><span class="ep lk">🔒12</span><span class="ep lk">…</span>
+        </div>
+        <div class="paywall">
+          <div><b>Sigue viendo sin límites</b><br><small style="color:var(--muted)">Un solo plan abre todas las series.</small></div>
+          <a class="btn primary" href="#plan">Desbloquear todo</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="plan">
+    <div class="head" style="justify-content:center"><h2 style="font-size:32px">Un plan. Todo el catálogo.</h2></div>
+    <div class="plan"><div>
+      <span class="tag">Plan único</span>
+      <h3 style="margin-top:14px">Acceso Total</h3>
+      <div class="price">$X.XX<small> / mes</small></div>
+      <ul>
+        <li>Todas las series y episodios desbloqueados</li>
+        <li>Estrenos nuevos cada semana</li>
+        <li>Sin monedas ni recompensas diarias</li>
+        <li>Cancela cuando quieras</li>
+      </ul>
+      <a class="btn primary" style="width:100%;justify-content:center" href="#">Suscribirme ahora</a>
+      <p class="note">Pago seguro · Tarjeta y billeteras digitales</p>
+    </div></div>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  <span>© 2026 Shortify, Series & Dramas</span>
+  <span>Términos · Privacidad · Soporte</span>
+</div></footer>
+</body>
+</html>
