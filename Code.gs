@@ -35,6 +35,7 @@ var CONFIG = {
   ZONA_DEFAULT: 'America/Mexico_City',
   ITERACIONES_HASH: 200,
   LARGO_PASSWORD: 4,
+  MAX_MB_VIDEO: 20,
   MAX_FALLOS_LOGIN: 5,
   MINUTOS_BLOQUEO: 15
 };
@@ -57,8 +58,8 @@ var MARCAS_INICIALES = [
 var HOJAS = {
   Marcas: ['codigo', 'numero', 'nombre', 'zonaHoraria', 'activa', 'esOrigen'],
   Usuarios: ['usuario', 'nombre', 'marca', 'rol', 'admin', 'hash', 'salt', 'temporal', 'activo', 'creado', 'iniciales', 'numero', 'puesto'],
-  BancoImagenes: ['id', 'marca', 'compartida', 'tipo', 'parasito', 'fuente', 'fileId', 'thumbId', 'fechaSubida', 'estado'],
-  Asignaciones: ['fecha', 'marca', 'orden', 'tipo', 'idImagen', 'fileId', 'parasito', 'fuente'],
+  BancoImagenes: ['id', 'marca', 'compartida', 'tipo', 'parasito', 'fuente', 'fileId', 'thumbId', 'fechaSubida', 'estado', 'medio'],
+  Asignaciones: ['fecha', 'marca', 'orden', 'tipo', 'idImagen', 'fileId', 'parasito', 'fuente', 'medio', 'thumbId'],
   Registros: ['id', 'fecha', 'marca', 'usuario', 'hora', 'respuesta1', 'respuesta2', 'estado', 'intento']
 };
 
@@ -306,6 +307,15 @@ function hacerPublico_(file) {
 function urlImagen_(fileId, ancho) {
   return 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w' + (ancho || 1400);
 }
+function urlVideo_(fileId) { return 'https://drive.google.com/file/d/' + fileId + '/preview'; }
+
+// Datos para mostrar una imagen o un video del banco (o de una asignación).
+function medio_(x, ancho) {
+  var esVideo = x.medio === 'video';
+  var m = { medio: esVideo ? 'video' : 'imagen', url: urlImagen_(esVideo && x.thumbId ? x.thumbId : x.fileId, ancho) };
+  if (esVideo) m.video = urlVideo_(x.fileId);
+  return m;
+}
 
 /* ===================== selección de imágenes ===================== */
 
@@ -381,7 +391,8 @@ function crearAsignacion_(perfil, fecha, existentes) {
     ocupadas.push(orden);
     nuevas.push({
       fecha: fecha, marca: perfil.marca, orden: orden, tipo: tipo, idImagen: elegida.id,
-      fileId: elegida.fileId, parasito: elegida.parasito, fuente: elegida.fuente
+      fileId: elegida.fileId, parasito: elegida.parasito, fuente: elegida.fuente,
+      medio: elegida.medio || 'imagen', thumbId: elegida.thumbId || ''
     });
   });
   agregarVarios_('Asignaciones', nuevas);
@@ -411,13 +422,18 @@ function estadoDeRegistros_(registros) {
 // El analista nunca recibe el parásito correcto, el tipo de imagen ni la fuente.
 function controlHoy_(p) {
   var asignacion = asignacionHoy_(p, true);
-  var out = { hay: false, estado: estadoDeRegistros_(registrosHoy_(p)), fecha: hoy_(p) };
+  var regs = registrosHoy_(p);
+  var out = { hay: false, estado: estadoDeRegistros_(regs), fecha: hoy_(p) };
+  // Respuestas ya enviadas hoy, para consultarlas sin poder editarlas.
+  out.respuestas = regs.map(function (r) {
+    return { intento: r.intento, hora: r.hora, usuario: r.usuario, respuesta1: r.respuesta1, respuesta2: r.respuesta2, estado: r.estado };
+  });
   if (!asignacion) return out;
   var esSup = p.rol === 'supervisor';
   out.hay = true;
   out.imagenes = ['A', 'B'].map(function (orden) {
     var a = asignacion[orden];
-    var img = { url: urlImagen_(a.fileId, 1400) };
+    var img = medio_(a, 1400);
     if (esSup) { img.parasito = a.parasito; img.tipo = a.tipo; img.fuente = a.fuente; }
     return img;
   });
@@ -469,7 +485,7 @@ function enviarRespuesta(token, respuesta1, respuesta2) {
 // Todo lo que la aplicación necesita, en una sola llamada. El navegador lo
 // guarda en memoria y así el cambio de pestaña es inmediato.
 function datos_(p) {
-  var d = { hoy: controlHoy_(p), indicadores: indicadores_(p), historial: historial_(p), atlas: atlas_(p), especiesBanco: especiesBanco_(p) };
+  var d = { hoy: controlHoy_(p), indicadores: indicadores_(p), historial: historial_(p), atlas: atlas_(p), especiesBanco: especiesBanco_(p), estadisticas: estadisticas_(p) };
   if (p.rol === 'supervisor') {
     d.banco = { Positiva: banco_(p, 'Positiva'), Negativa: banco_(p, 'Negativa') };
     d.usuarios = usuarios_(p);
@@ -584,6 +600,115 @@ function getIndicadores(token) {
   return { success: true, indicadores: indicadores_(sesion_(token)) };
 }
 
+/* ========================= estadísticas ========================= */
+
+var PERIODOS = { semana: 7, mes: 30, trimestre: 90 };
+
+// Días con control entre dos fechas, con sus imágenes y sus respuestas en
+// orden de intento. Hoy solo cuenta cuando el control ya terminó.
+function diasControl_(p, desde, hasta) {
+  var hoy = hoy_(p);
+  var asignaciones = asignacionesPorFecha_(p.marca);
+  var registros = registrosPorFecha_(p.marca);
+  var dias = [];
+  Object.keys(asignaciones).sort().forEach(function (f) {
+    var a = asignaciones[f];
+    if (f < desde || f > hasta || f > hoy || !a.A || !a.B) return;
+    var regs = (registros[f] || []).slice().sort(function (x, y) { return Number(x.intento) - Number(y.intento); });
+    var e = estadoDeRegistros_(regs);
+    if (f === hoy && !e.aprobado && !e.agotado) return;
+    dias.push({ fecha: f, A: a.A, B: a.B, regs: regs, aprobado: e.aprobado });
+  });
+  return dias;
+}
+
+function pct_(n, d) { return d ? Math.round(n * 100 / d) : null; }
+
+// Indicadores de calidad de un conjunto de días.
+// concordancia: muestras identificadas bien en el primer intento / muestras evaluadas.
+// aprobacionDirecta: controles aprobados en el primer intento / controles realizados.
+// cumplimiento: controles realizados / días con control.
+function metricas_(dias) {
+  var m = { controles: dias.length, realizados: 0, aprobados: 0, directos: 0, muestras: 0, correctas: 0, intentos: 0,
+    errores: { falsoNegativo: 0, falsoPositivo: 0, especie: 0 } };
+  dias.forEach(function (d) {
+    if (!d.regs.length) return;
+    m.realizados++;
+    if (d.aprobado) m.aprobados++;
+    if (d.regs[0].estado === 'Aprobado') m.directos++;
+    m.intentos += d.regs.length;
+    d.regs.forEach(function (r, i) {
+      [[d.A, r.respuesta1], [d.B, r.respuesta2]].forEach(function (par) {
+        var bien = normalizarRespuesta_(par[1]) === normalizarRespuesta_(par[0].parasito);
+        if (i === 0) { m.muestras++; if (bien) m.correctas++; }
+        if (bien) return;
+        if (par[0].tipo === 'Negativa') m.errores.falsoPositivo++;
+        else if (normalizarRespuesta_(par[1]) === normalizarRespuesta_(NEGATIVO)) m.errores.falsoNegativo++;
+        else m.errores.especie++;
+      });
+    });
+  });
+  m.noAprobados = m.realizados - m.aprobados;
+  m.concordancia = pct_(m.correctas, m.muestras);
+  m.aprobacionDirecta = pct_(m.directos, m.realizados);
+  m.cumplimiento = pct_(m.realizados, m.controles);
+  m.intentosPromedio = m.realizados ? Math.round(m.intentos * 10 / m.realizados) / 10 : null;
+  return m;
+}
+
+// Parásitos con menos aciertos en el primer intento dentro del periodo.
+function especiesDificiles_(dias) {
+  var mapa = {};
+  dias.forEach(function (d) {
+    if (!d.regs.length) return;
+    [[d.A, d.regs[0].respuesta1], [d.B, d.regs[0].respuesta2]].forEach(function (par) {
+      if (par[0].tipo !== 'Positiva') return;
+      var e = mapa[par[0].parasito] = mapa[par[0].parasito] || { nombre: par[0].parasito, veces: 0, correctas: 0 };
+      e.veces++;
+      if (normalizarRespuesta_(par[1]) === normalizarRespuesta_(par[0].parasito)) e.correctas++;
+    });
+  });
+  return Object.keys(mapa).map(function (k) { return mapa[k]; })
+    .sort(function (a, b) { return (a.correctas / a.veces - b.correctas / b.veces) || (b.veces - a.veces); })
+    .slice(0, 5);
+}
+
+function estadisticas_(p) {
+  var hoy = hoy_(p);
+  var todos = diasControl_(p, sumarDias_(hoy, -179), hoy);
+  var entre = function (desde, hasta) { return todos.filter(function (d) { return d.fecha >= desde && d.fecha <= hasta; }); };
+  var out = {};
+  Object.keys(PERIODOS).forEach(function (clave) {
+    var n = PERIODOS[clave];
+    var desde = sumarDias_(hoy, -(n - 1));
+    var actuales = entre(desde, hoy);
+    var r = {
+      desde: desde, actual: metricas_(actuales), anterior: metricas_(entre(sumarDias_(hoy, -(2 * n - 1)), sumarDias_(hoy, -n))),
+      especies: especiesDificiles_(actuales), serie: []
+    };
+    // Concordancia por semana (de la más antigua a la actual).
+    var semanas = Math.max(8, Math.ceil(n / 7));
+    for (var i = semanas - 1; i >= 0; i--) {
+      var fin = sumarDias_(hoy, -7 * i), ini = sumarDias_(fin, -6);
+      r.serie.push({ desde: ini, valor: metricas_(entre(ini, fin)).concordancia });
+    }
+    if (p.rol === 'supervisor') {
+      var porUsuario = {};
+      actuales.forEach(function (d) {
+        if (!d.regs.length) return;
+        var u = d.regs[0].usuario;
+        (porUsuario[u] = porUsuario[u] || []).push(d);
+      });
+      r.porAnalista = Object.keys(porUsuario).sort().map(function (u) {
+        var m = metricas_(porUsuario[u]);
+        return { usuario: u, controles: m.realizados, concordancia: m.concordancia, aprobacionDirecta: m.aprobacionDirecta, noAprobados: m.noAprobados };
+      });
+    }
+    out[clave] = r;
+  });
+  return out;
+}
+
 /* ========================= atlas ========================= */
 
 function grupoParasito_(nombre) {
@@ -610,14 +735,23 @@ function atlas_(p) {
       var a = asignaciones[fecha][orden];
       if (!a || a.tipo !== 'Positiva') return;
       var resp = orden === 'A' ? primero.respuesta1 : primero.respuesta2;
-      var item = mapa[a.parasito] = mapa[a.parasito] || { nombre: a.parasito, grupo: grupoParasito_(a.parasito), veces: 0, correctas: 0, ultima: '', url: '' };
+      var item = mapa[a.parasito] = mapa[a.parasito] || { nombre: a.parasito, grupo: grupoParasito_(a.parasito), veces: 0, correctas: 0, ultima: '', url: '', hist: [] };
+      var bien = normalizarRespuesta_(resp) === normalizarRespuesta_(a.parasito);
       item.veces++;
-      if (normalizarRespuesta_(resp) === normalizarRespuesta_(a.parasito)) item.correctas++;
-      if (fecha > item.ultima) { item.ultima = fecha; item.url = urlImagen_(a.fileId, 400); }
+      if (bien) item.correctas++;
+      item.hist.push([fecha, bien ? 1 : 0]);
+      if (fecha > item.ultima) {
+        item.ultima = fecha;
+        var m = medio_(a, 600);
+        item.url = m.url; item.medio = m.medio; item.video = m.video || '';
+      }
     });
   });
-  return Object.keys(mapa).map(function (k) { return mapa[k]; })
-    .sort(function (a, b) { return b.ultima > a.ultima ? 1 : -1; });
+  return Object.keys(mapa).map(function (k) {
+    var it = mapa[k];
+    it.hist = it.hist.sort(function (x, y) { return x[0] > y[0] ? 1 : -1; }).map(function (x) { return x[1]; }).slice(-12);
+    return it;
+  }).sort(function (a, b) { return b.ultima > a.ultima ? 1 : -1; });
 }
 
 // Parásitos que de verdad pueden salir en el control de la marca: los que
@@ -635,11 +769,14 @@ function subirImagenBanco(token, base64, mimeType, parasito, fuente, tipo, thumb
   tipo = tipo === 'Negativa' ? 'Negativa' : 'Positiva';
   parasito = String(parasito || '').trim();
   if (!base64) return { success: false, error: 'Falta la imagen' };
+  var esVideo = /^video\//.test(String(mimeType || ''));
+  if (esVideo && base64.length > CONFIG.MAX_MB_VIDEO * 1.4 * 1024 * 1024) return { success: false, error: 'El video pesa más de ' + CONFIG.MAX_MB_VIDEO + ' MB' };
   if (tipo === 'Positiva' && !parasito) return { success: false, error: 'Falta el nombre del parásito' };
 
   var id = nuevoId_();
   var folder = carpeta_(CONFIG.CARPETA_IMAGENES);
-  var file = folder.createFile(Utilities.newBlob(Utilities.base64Decode(base64.split(',').pop()), mimeType || 'image/jpeg', id + '.jpg'));
+  var extension = esVideo ? '.' + (String(mimeType).split('/')[1] || 'mp4').replace('quicktime', 'mov') : '.jpg';
+  var file = folder.createFile(Utilities.newBlob(Utilities.base64Decode(base64.split(',').pop()), mimeType || 'image/jpeg', id + extension));
   hacerPublico_(file);
   var thumbId = '';
   if (thumbBase64) {
@@ -651,7 +788,7 @@ function subirImagenBanco(token, base64, mimeType, parasito, fuente, tipo, thumb
     id: id, marca: p.marca, compartida: p.esOrigen ? 'SI' : 'NO', tipo: tipo,
     parasito: tipo === 'Negativa' ? NEGATIVO : parasito,
     fuente: tipo === 'Negativa' ? '' : String(fuente || '').trim(),
-    fileId: file.getId(), thumbId: thumbId, fechaSubida: hoy_(p), estado: 'activa'
+    fileId: file.getId(), thumbId: thumbId, fechaSubida: hoy_(p), estado: 'activa', medio: esVideo ? 'video' : 'imagen'
   });
   return { success: true, id: id };
 }
@@ -671,7 +808,8 @@ function banco_(p, tipo) {
         id: b.id, parasito: b.parasito, fuente: b.fuente, fechaSubida: b.fechaSubida,
         diasEnRotacion: Math.max(0, diasEntre_(hoy, sumarMeses_(b.fechaSubida, CONFIG.MESES_ROTACION))),
         url: urlImagen_(b.thumbId || b.fileId, 200),
-        urlGrande: urlImagen_(b.fileId, 1400)
+        urlGrande: b.medio === 'video' ? urlVideo_(b.fileId) : urlImagen_(b.fileId, 1400),
+        medio: b.medio === 'video' ? 'video' : 'imagen'
       };
     }),
     resumen: {
@@ -717,7 +855,7 @@ function reemplazarEnHoy_(eliminada) {
     var pool = poolMarca_(leer_('BancoImagenes'), perfil, a.tipo).filter(function (b) { return usadasHoy.indexOf(b.id) === -1; });
     var nueva = elegirImagen_(pool, ultimaVez_(asignaciones, a.marca));
     if (!nueva) return;
-    actualizar_('Asignaciones', a._fila, { idImagen: nueva.id, fileId: nueva.fileId, parasito: nueva.parasito, fuente: nueva.fuente });
+    actualizar_('Asignaciones', a._fila, { idImagen: nueva.id, fileId: nueva.fileId, parasito: nueva.parasito, fuente: nueva.fuente, medio: nueva.medio || 'imagen', thumbId: nueva.thumbId || '' });
     cache_().remove('a_' + a.marca + '_' + a.fecha);
     cambios++;
   });
