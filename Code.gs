@@ -469,7 +469,7 @@ function enviarRespuesta(token, respuesta1, respuesta2) {
 // Todo lo que la aplicación necesita, en una sola llamada. El navegador lo
 // guarda en memoria y así el cambio de pestaña es inmediato.
 function datos_(p) {
-  var d = { hoy: controlHoy_(p), indicadores: indicadores_(p), historial: historial_(p), atlas: atlas_(p) };
+  var d = { hoy: controlHoy_(p), indicadores: indicadores_(p), historial: historial_(p), atlas: atlas_(p), especiesBanco: especiesBanco_(p) };
   if (p.rol === 'supervisor') {
     d.banco = { Positiva: banco_(p, 'Positiva'), Negativa: banco_(p, 'Negativa') };
     d.usuarios = usuarios_(p);
@@ -618,6 +618,14 @@ function atlas_(p) {
   });
   return Object.keys(mapa).map(function (k) { return mapa[k]; })
     .sort(function (a, b) { return b.ultima > a.ultima ? 1 : -1; });
+}
+
+// Parásitos que de verdad pueden salir en el control de la marca: los que
+// tienen al menos una imagen positiva activa en su banco (propio + general).
+function especiesBanco_(p) {
+  var vistos = {};
+  poolMarca_(leer_('BancoImagenes'), p, 'Positiva').forEach(function (b) { if (b.parasito) vistos[b.parasito] = true; });
+  return Object.keys(vistos).sort();
 }
 
 /* ======================== banco de imágenes ======================== */

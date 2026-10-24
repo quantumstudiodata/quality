@@ -1024,10 +1024,12 @@ function grupo(n) { return /huevo|larva|progl/i.test(n) ? 'Helminto' : 'Protozoa
 function renderAtlas() {
   if (!DATOS) return;
   chips('atlas-filtros', [['todos', 'Todos'], ['Protozoario', 'Protozoarios'], ['Helminto', 'Helmintos']], ATLAS_FILTRO, function (v) { ATLAS_FILTRO = v; renderAtlas(); });
-  var especies = CATALOGO.slice(1);
+  // Solo cuentan los parásitos que tienen imagen en el banco de la marca
+  // (más los que ya aparecieron, aunque su imagen se haya eliminado).
   var vistos = {}; DATOS.atlas.forEach(function (a) { vistos[a.nombre] = a; });
+  var especies = (DATOS.especiesBanco || []).filter(function (n) { return !vistos[n]; }).concat(Object.keys(vistos)).sort();
   var evaluadas = especies.filter(function (n) { return vistos[n]; }).length;
-  var pct = Math.round(evaluadas * 100 / especies.length);
+  var pct = especies.length ? Math.round(evaluadas * 100 / especies.length) : 0;
   $('atlas-anillo').style.background = 'conic-gradient(var(--accent) 0 ' + pct + '%, var(--line) ' + pct + '% 100%)';
   $('atlas-anillo').firstChild.textContent = evaluadas + '/' + especies.length;
   $('atlas-resumen').innerHTML = evaluadas + ' de ' + especies.length + ' especies<br>ya evaluadas';
