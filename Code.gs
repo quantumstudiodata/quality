@@ -832,40 +832,41 @@ function exportarExcel(token, mes) {
     hoja.setName('Control diario');
     var n = datos.filas.length;
     var marca = marca_(p.marca);
-    hoja.getRange('A1:H2').setValues([
-      ['Mes:', datos.etiqueta, '', '', 'Área:', 'Parasitología', '', ''],
-      ['Laboratorio:', marca ? marca.nombre : p.laboratorio, '', '', '', '', '', '']
+    hoja.getRange('A1:G2').setValues([
+      ['Mes:', datos.etiqueta, '', 'Área:', 'Parasitología', '', ''],
+      ['Laboratorio:', marca ? marca.nombre : p.laboratorio, '', '', '', '', '']
     ]);
-    hoja.getRange('B1:D1').merge(); hoja.getRange('B2:D2').merge(); hoja.getRange('F1:H1').merge();
-    hoja.getRange('A1:A2').setFontWeight('bold'); hoja.getRange('E1').setFontWeight('bold');
-    hoja.getRange('B1:D1').setBorder(null, null, true, null, null, null);
-    hoja.getRange('B2:D2').setBorder(null, null, true, null, null, null);
-    hoja.getRange('F1:H1').setBorder(null, null, true, null, null, null);
+    hoja.getRange('B1:C1').merge(); hoja.getRange('B2:C2').merge(); hoja.getRange('E1:G1').merge();
+    hoja.getRange('A1:A2').setFontWeight('bold'); hoja.getRange('D1').setFontWeight('bold');
+    hoja.getRange('B1:C1').setBorder(null, null, true, null, null, null);
+    hoja.getRange('B2:C2').setBorder(null, null, true, null, null, null);
+    hoja.getRange('E1:G1').setBorder(null, null, true, null, null, null);
 
     var inicio = 4;
-    var cab = ['No.', 'Día', 'Hora', 'Muestra 1', 'Muestra 2', 'Intento', 'Analista', 'Resultado'];
-    hoja.getRange(inicio, 1, 1, 8).setValues([cab]).setFontWeight('bold').setFontColor('#ffffff').setBackground('#312e81');
+    var cab = ['Día', 'Hora', 'Muestra 1', 'Muestra 2', 'Intento', 'Analista', 'Resultado'];
+    hoja.getRange(inicio, 1, 1, 7).setValues([cab]).setFontWeight('bold').setFontColor('#ffffff').setBackground('#312e81');
     var reglas = [];
     if (n) {
-      hoja.getRange(inicio + 1, 1, n, 8).setValues(datos.filas.map(function (f, i) { return [i + 1, f.dia, f.hora, f.a, f.b, f.intento, f.analista, f.resultado]; }));
-      hoja.getRange(inicio + 1, 2, n, 1).setBackground('#e5e7eb');
-      var res = hoja.getRange(inicio + 1, 8, n, 1);
+      hoja.getRange(inicio + 1, 1, n, 7).setValues(datos.filas.map(function (f) { return [f.dia, f.hora, f.a, f.b, f.intento, f.analista, f.resultado]; }));
+      hoja.getRange(inicio + 1, 1, n, 1).setBackground('#e5e7eb');
+      var res = hoja.getRange(inicio + 1, 7, n, 1);
       reglas.push(
         SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Aprobado').setBackground('#d1fae5').setFontColor('#065f46').setRanges([res]).build(),
         SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Rechazado').setBackground('#fee2e2').setFontColor('#991b1b').setRanges([res]).build(),
         SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Sin respuesta').setBackground('#f3f4f6').setFontColor('#6b7280').setRanges([res]).build());
     }
-    hoja.getRange(inicio, 1, Math.max(n, 1) + 1, 8).setBorder(true, true, true, true, true, true, '#9ca3af', SpreadsheetApp.BorderStyle.SOLID);
+    hoja.getRange(inicio, 1, Math.max(n, 1) + 1, 7).setBorder(true, true, true, true, true, true, '#9ca3af', SpreadsheetApp.BorderStyle.SOLID);
 
     // Indicadores del mes, debajo de la tabla.
     var est = estadisticas_(p).meses.filter(function (x) { return x.mes === mes; })[0];
     var ind = indicadoresExportacion_(est);
     var fi = inicio + Math.max(n, 1) + 2;
-    hoja.getRange(fi, 1, 1, 8).setValues([['Indicador', '', '', 'Resultado', '', 'Dictamen', '', '']]);
-    hoja.getRange(fi + 1, 1, ind.length, 8).setValues(ind.map(function (r) { return [r[0], '', '', r[1], '', r[2], '', '']; }));
-    for (var i = fi; i <= fi + ind.length; i++) { hoja.getRange(i, 1, 1, 3).merge(); hoja.getRange(i, 4, 1, 2).merge(); hoja.getRange(i, 6, 1, 3).merge(); }
-    hoja.getRange(fi, 1, 1, 8).setFontWeight('bold').setFontColor('#ffffff').setBackground('#312e81');
-    hoja.getRange(fi, 1, ind.length + 1, 8).setBorder(true, true, true, true, true, true, '#9ca3af', SpreadsheetApp.BorderStyle.SOLID);
+    // Indicador en Día y Hora, Resultado en Muestra 1 a Intento, Dictamen en Analista y Resultado.
+    hoja.getRange(fi, 1, 1, 7).setValues([['Indicador', '', 'Resultado', '', '', 'Dictamen', '']]);
+    hoja.getRange(fi + 1, 1, ind.length, 7).setValues(ind.map(function (r) { return [r[0], '', r[1], '', '', r[2], '']; }));
+    for (var i = fi; i <= fi + ind.length; i++) { hoja.getRange(i, 1, 1, 2).merge(); hoja.getRange(i, 3, 1, 3).merge(); hoja.getRange(i, 6, 1, 2).merge(); }
+    hoja.getRange(fi, 1, 1, 7).setFontWeight('bold').setFontColor('#ffffff').setBackground('#312e81');
+    hoja.getRange(fi, 1, ind.length + 1, 7).setBorder(true, true, true, true, true, true, '#9ca3af', SpreadsheetApp.BorderStyle.SOLID);
     var dictamen = hoja.getRange(fi + 1, 6, ind.length, 1);
     reglas.push(
       SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Cumple').setBackground('#d1fae5').setFontColor('#065f46').setRanges([dictamen]).build(),
@@ -873,12 +874,15 @@ function exportarExcel(token, mes) {
     hoja.setConditionalFormatRules(reglas);
 
     // Letra Arial 10 centrada, sin ajuste de línea; columnas y renglones a la medida del texto.
-    var todo = hoja.getRange(1, 1, fi + ind.length, 8);
+    var todo = hoja.getRange(1, 1, fi + ind.length, 7);
     todo.setFontFamily('Arial').setFontSize(10).setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(false);
-    hoja.getRange(1, 1, 2, 1).setHorizontalAlignment('right'); hoja.getRange(1, 5).setHorizontalAlignment('right');
-    hoja.autoResizeColumns(1, 8);
-    for (var c = 1; c <= 8; c++) hoja.setColumnWidth(c, Math.max(hoja.getColumnWidth(c) + 18, [40, 44, 52, 120, 120, 56, 70, 84][c - 1]));
-    hoja.setRowHeights(1, fi + ind.length, 22);
+    hoja.getRange(1, 1, 2, 1).setHorizontalAlignment('right'); hoja.getRange(1, 4).setHorizontalAlignment('right');
+    // El ancho se calcula con la tabla diaria; los indicadores se acomodan en dos líneas si hace falta.
+    hoja.autoResizeColumns(1, 7);
+    for (var c = 1; c <= 7; c++) hoja.setColumnWidth(c, Math.max(hoja.getColumnWidth(c) + 18, [48, 56, 150, 150, 60, 74, 90][c - 1]));
+    hoja.getRange(fi + 1, 1, ind.length, 2).setWrap(true);
+    hoja.setRowHeights(1, fi - 1, 22);
+    hoja.setRowHeights(fi, ind.length + 1, 34);
 
     // Datos de la gráfica en una hoja aparte; la gráfica queda a la derecha de la tabla.
     var g = libro.insertSheet('Datos de la gráfica');
@@ -888,6 +892,7 @@ function exportarExcel(token, mes) {
     g.getRange(1, 1, Math.max(puntos.length, 1) + 1, 3).setFontFamily('Arial').setFontSize(10).setHorizontalAlignment('center');
     if (puntos.length) {
       var grafica = hoja.newChart().asLineChart()
+        .setNumHeaders(1).setOption('useFirstColumnAsDomain', true).setOption('treatLabelsAsText', true)
         .addRange(g.getRange(1, 1, puntos.length + 1, 3))
         .setTitle('Concordancia acumulada del mes')
         .setOption('vAxis', { viewWindow: { min: 60, max: 150 }, title: 'Concordancia (%)' })
@@ -898,10 +903,54 @@ function exportarExcel(token, mes) {
         })
         .setOption('legend', { position: 'bottom' })
         .setOption('width', 560).setOption('height', 320)
-        .setPosition(inicio, 10, 0, 0)
+        .setPosition(inicio, 9, 0, 0)
         .build();
       hoja.insertChart(grafica);
     }
+
+    // Debajo: tendencia mensual y tabla del intervalo de confianza (hasta el mes exportado).
+    var meses = estadisticas_(p).meses.filter(function (x) { return x.mes <= mes; }).reverse();
+    var conDatos = meses.filter(function (x) { return x.actual.concordancia != null; });
+    g.getRange(1, 5, 1, 3).setValues([['Mes', 'Concordancia mensual (%)', 'Meta (' + CONFIG.META_CONCORDANCIA + ' %)']]);
+    if (conDatos.length) {
+      g.getRange(2, 5, conDatos.length, 3).setValues(conDatos.map(function (x) { return [etiquetaMes_(x.mes), x.actual.concordancia, CONFIG.META_CONCORDANCIA]; }));
+      hoja.insertChart(hoja.newChart().asLineChart()
+        .setNumHeaders(1).setOption('useFirstColumnAsDomain', true).setOption('treatLabelsAsText', true)
+        .addRange(g.getRange(1, 5, conDatos.length + 1, 3))
+        .setTitle('Tendencia de la concordancia mensual')
+        .setOption('vAxis', { viewWindow: { min: 60, max: 150 }, title: 'Concordancia (%)' })
+        .setOption('hAxis', { title: 'Mes' })
+        .setOption('series', {
+          0: { color: '#4f46e5', pointSize: 7, lineWidth: 2 },
+          1: { color: '#dc2626', pointSize: 0, lineWidth: 2, lineDashStyle: [8, 5] }
+        })
+        .setOption('legend', { position: 'bottom' })
+        .setOption('width', 560).setOption('height', 320)
+        .setPosition(inicio + 16, 9, 0, 0)
+        .build());
+    }
+    var ti = inicio + 32;
+    hoja.getRange(ti, 9, 1, 4).setValues([['Mes', 'Concordancia del mes', 'IC 95 % acumulado', 'Dictamen']])
+      .setFontWeight('bold').setFontColor('#ffffff').setBackground('#312e81');
+    var filasIC = meses.map(function (x) {
+      var ic = x.intervalo;
+      return [etiquetaMes_(x.mes), x.actual.concordancia == null ? 'Sin datos' : x.actual.concordancia + ' %',
+        ic ? ic.inferior + ' % a ' + ic.superior + ' %' : 'Sin datos', ic ? (x.evaluacion.intervalo ? 'Cumple' : 'No cumple') : 'Sin datos'];
+    });
+    if (filasIC.length) {
+      hoja.getRange(ti + 1, 9, filasIC.length, 4).setValues(filasIC);
+      var dic = hoja.getRange(ti + 1, 12, filasIC.length, 1);
+      hoja.setConditionalFormatRules(hoja.getConditionalFormatRules().concat([
+        SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Cumple').setBackground('#d1fae5').setFontColor('#065f46').setRanges([dic]).build(),
+        SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('No cumple').setBackground('#fee2e2').setFontColor('#991b1b').setRanges([dic]).build()]));
+    }
+    var tablaIC = hoja.getRange(ti, 9, Math.max(filasIC.length, 1) + 1, 4);
+    tablaIC.setBorder(true, true, true, true, true, true, '#9ca3af', SpreadsheetApp.BorderStyle.SOLID)
+      .setFontFamily('Arial').setFontSize(10).setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(false);
+    hoja.autoResizeColumns(9, 4);
+    for (var c2 = 9; c2 <= 12; c2++) hoja.setColumnWidth(c2, hoja.getColumnWidth(c2) + 18);
+    hoja.getRange(ti - 1, 9).setValue('Intervalo de confianza 95 % (acumulado desde el inicio del control, máximo 12 meses)')
+      .setFontFamily('Arial').setFontSize(10).setFontWeight('bold');
     SpreadsheetApp.flush();
     var url = 'https://docs.google.com/spreadsheets/d/' + libro.getId() + '/export?format=xlsx';
     var archivo = UrlFetchApp.fetch(url, { headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() } }).getBlob();
