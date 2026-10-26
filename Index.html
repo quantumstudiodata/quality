@@ -372,6 +372,9 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .globo .tuyo{display:block;margin-top:9px;padding:7px 9px;border-radius:8px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);color:#f3e2b3}
 .tdia{display:grid;grid-template-columns:50px 110px 110px 90px minmax(0,1fr);gap:10px;align-items:center;font-size:11px;padding:7px 0;border-bottom:1px solid #12112e}
 .tdia:last-child{border-bottom:none}
+.estado-atlas{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:#fbbf24}
+.estado-atlas i{width:7px;height:7px;border-radius:50%;background:#fbbf24}
+.estado-atlas.ok{color:#c7d2fe}.estado-atlas.ok i{background:#6366f1}
 .contador{font-family:var(--mono);font-size:10.5px;color:var(--accent);padding:3px 8px;border-radius:6px;background:rgba(79,70,229,.12);border:1px solid rgba(99,102,241,.3)}
 @media(max-width:1000px){.atlas-cuerpo{grid-template-columns:1fr}.panel-atlas{position:relative;top:0}}
 
@@ -870,7 +873,7 @@ var AYUDA = {
     '<span class="et">EN CONTROL DE CALIDAD</span><p>Grado de acuerdo entre el resultado que emite el analista y el valor de referencia asignado a una muestra control. Es la medida básica de exactitud en pruebas cualitativas, como la identificación de parásitos.</p>' +
     '<span class="et">EN ESTE CONTROL</span><p>Concordancia mensual por muestra, primer intento. Cada muestra se compara contra su resultado esperado usando solo la respuesta del primer intento, porque refleja el desempeño sin retroalimentación.</p>' +
     '<span class="formula">muestras correctas al 1.er intento ÷ muestras evaluadas × 100</span>' +
-    '<span class="et">CRITERIO DE ACEPTACIÓN</span><p>Mínimo de 90 % en el mes (definido en el IQCP).</p>',
+    '<span class="et">CRITERIO DE ACEPTACIÓN</span><p>Mínimo de 90 % en el mes.</p>',
     function (m) { if (!m || !m.actual.muestras) return ''; var a = m.actual; return 'Concordancia ' + a.concordancia + ' %: ' + a.correctas + ' de ' + a.muestras + ' muestras correctas al primer intento; ' + (a.muestras - a.correctas) + ' no coincidieron.'; }],
   fn: ['Falsos negativos',
     '<span class="et">EN CONTROL DE CALIDAD</span><p>Muestra positiva que se informa como negativa. Es el error de mayor riesgo diagnóstico, porque deja al paciente sin diagnóstico ni tratamiento.</p>' +
@@ -878,10 +881,11 @@ var AYUDA = {
     '<span class="et">CRITERIO DE ACEPTACIÓN</span><p>Cero tolerados en el mes.</p>',
     function (m) { if (!m || !m.actual.realizados) return ''; var a = m.actual; return a.errores.falsoNegativo + ' falso' + (a.errores.falsoNegativo === 1 ? '' : 's') + ' negativo' + (a.errores.falsoNegativo === 1 ? '' : 's') + ' en ' + a.positivas + ' muestras positivas evaluadas este mes.'; }],
   ic: ['Intervalo de confianza 95 %',
-    '<span class="et">EN CONTROL DE CALIDAD</span><p>Rango dentro del que probablemente está la concordancia real, según el número de muestras evaluadas. Con pocas muestras el rango es amplio; con muchas, se estrecha.</p>' +
-    '<span class="et">EN ESTE CONTROL</span><p>Se calcula con el método de Wilson sobre las muestras acumuladas de los últimos 12 meses (primer intento). Hace defendible el dato cuando un mes tiene pocas muestras.</p>' +
-    '<span class="et">CRITERIO DE ACEPTACIÓN</span><p>El límite inferior debe ser de 80 % o más.</p>',
-    function (m) { if (!m || !m.intervalo) return ''; var ic = m.intervalo; return 'Con ' + ic.n + ' muestras en 12 meses (' + ic.aciertos + ' correctas), la concordancia real está entre ' + ic.inferior + ' % y ' + ic.superior + ' %.'; }],
+    '<span class="et">QUÉ ES</span><p>Rango dentro del que probablemente está la concordancia real, según el número de muestras evaluadas. Con pocas muestras el rango es amplio; con muchas, se estrecha.</p>' +
+    '<span class="et">CÁLCULO</span><p>Se calcula con el método de puntuación de Wilson sobre las muestras correctas al 1.er intento y las muestras evaluadas (CLSI EP12-A2, sección 10.1.3).</p>' +
+    '<p>Se evalúa el acumulado desde que inició el control, con un máximo de 12 meses, y se compara su límite inferior contra el criterio de aceptación.</p>' +
+    '<span class="et">CRITERIO DE ACEPTACIÓN</span><p>Límite inferior ≥ 80 %.</p>',
+    function (m) { if (!m || !m.intervalo) return ''; var ic = m.intervalo; return 'Acumulado desde ' + mesTexto(ic.desde, true).toLowerCase() + ': la concordancia real está entre ' + ic.inferior + ' % y ' + ic.superior + ' %.'; }],
   fpy: ['Rendimiento a la primera (First Pass Yield)',
     '<span class="et">EN CONTROL DE CALIDAD</span><p>Proporción de unidades que completan un proceso cumpliendo la especificación desde la primera vez, sin reproceso ni corrección.</p>' +
     '<span class="et">EN ESTE CONTROL</span><p>La unidad es el control diario. Solo cuenta como aprobado a la primera si las dos muestras se acertaron en el primer intento; esto lo diferencia de la concordancia, que cuenta cada muestra por separado.</p><p>Un FPY bajo indica errores de identificación o poca consistencia del analista.</p>' +
@@ -896,8 +900,7 @@ var AYUDA = {
     function (m) { if (!m || !m.actual.controles) return ''; var a = m.actual; return 'Cumplimiento ' + a.cumplimiento + ' %: ' + a.realizados + ' de ' + a.controles + ' días con control se respondieron.'; }],
   grafica: ['Concordancia mensual, primer intento',
     '<span class="et">QUÉ ES</span><p>Gráfica de tendencia de la concordancia: un punto por cada mes con datos. Permite ver si el desempeño se mantiene estable o se desvía con el tiempo.</p>' +
-    '<span class="et">POR QUÉ LA META ES 90 %</span><p>El 80 % es el mínimo usado en evaluación externa; es el criterio del reporte semestral a la EMA descrito en el procedimiento 300-04-02-002.</p><p>La meta interna se fija en 90 % para tener margen y detectar una desviación antes de llegar a ese mínimo.</p>' +
-    '<span class="et">LÍNEAS</span><ul><li>Roja punteada: meta de 90 %.</li><li>Tenue: promedio de los meses mostrados.</li></ul>'],
+    '<span class="et">CRITERIO DE ACEPTACIÓN</span><p>Mínimo de 90 % de concordancia mensual.</p>'],
   errores: ['Errores de identificación',
     '<span class="et">EN CONTROL DE CALIDAD</span><p>Resultados que no coinciden con el valor de referencia, clasificados según su efecto diagnóstico.</p>' +
     '<span class="et">TIPOS</span><ul><li>Falso negativo: se informa negativo en una muestra positiva. Es el error de mayor riesgo.</li>' +
@@ -1485,7 +1488,7 @@ function delta(act, ant, meta) {
   return '<div class="dl' + (alerta ? ' alerta' : '') + '">' + (d > 0 ? '+' : '') + d + '% vs mes anterior</div>';
 }
 function criterio(cumple, texto) {
-  return '<span class="criterio' + (cumple == null ? '' : cumple ? ' si' : ' no') + '">' + texto + (cumple == null ? '' : cumple ? ', cumple' : ', no cumple') + '</span>';
+  return '<span class="criterio' + (cumple == null ? '' : cumple ? ' si' : ' no') + '" title="' + (cumple == null ? 'Sin datos' : cumple ? 'Cumple' : 'No cumple') + '">Aceptación: ' + texto + '</span>';
 }
 
 function filaBarra(nombre, texto, pctBarra, rojo) {
@@ -1499,11 +1502,11 @@ function pintarEstadisticas() {
   if (!datosMes(MES_SEL)) MES_SEL = todo.meses[0].mes;
   $('est-mes').innerHTML = todo.meses.map(function (m) { return '<option value="' + m.mes + '"' + (m.mes === MES_SEL ? ' selected' : '') + '>' + mesTexto(m.mes, true) + '</option>'; }).join('');
   var est = datosMes(MES_SEL), a = est.actual, b = est.anterior, ev = est.evaluacion, cr = todo.criterios, ic = est.intervalo;
-  var kpi = function (tipo, k, clave, v, extra) { return '<div class="kpi' + (tipo === 'SEGUIMIENTO' ? ' seg' : '') + '"><div class="tipo-kpi">' + tipo + '</div><div class="k">' + k + ayuda(clave) + '</div><div class="kv">' + v + '</div>' + extra + '</div>'; };
+  var kpi = function (tipo, k, clave, v, extra) { return '<div class="kpi' + (tipo === 'SEGUIMIENTO' ? ' seg' : '') + '"><div class="k">' + k + ayuda(clave) + '</div><div class="kv">' + v + '</div>' + extra + '</div>'; };
   $('est-kpis').innerHTML =
     kpi('EVALUABLE', 'CONCORDANCIA', 'concordancia', valor(a.concordancia, '%'), criterio(ev.concordancia, '≥ ' + cr.concordancia + '%') + delta(a.concordancia, b.concordancia, cr.concordancia)) +
     kpi('EVALUABLE', 'FALSOS NEGATIVOS', 'fn', a.realizados ? a.errores.falsoNegativo : valor(null), criterio(ev.falsosNegativos, '≤ ' + cr.falsosNegativos) + '<div class="dl">de ' + a.positivas + ' muestras positivas</div>') +
-    kpi('EVALUABLE', 'IC 95 %, 12 MESES', 'ic', ic ? Math.round(ic.inferior) + '<small>%</small> <span style="color:var(--mute);font-weight:400">a</span> ' + Math.round(ic.superior) + '<small>%</small>' : valor(null), criterio(ev.intervalo, 'inferior ≥ ' + cr.intervalo + '%') + '<div class="dl">' + (ic ? 'n = ' + ic.n + ' muestras' : 'sin muestras') + '</div>') +
+    kpi('EVALUABLE', 'IC 95 %', 'ic', ic ? Math.round(ic.inferior) + '<small>%</small> <span style="color:var(--mute);font-weight:400">a</span> ' + Math.round(ic.superior) + '<small>%</small>' : valor(null), criterio(ev.intervalo, 'inferior ≥ ' + cr.intervalo + '%') + '<div class="dl">' + (ic ? 'Acumulado desde ' + mesTexto(ic.desde, true).toLowerCase() : 'sin muestras') + '</div>') +
     kpi('SEGUIMIENTO', 'RENDIMIENTO A LA PRIMERA', 'fpy', valor(a.aprobacionDirecta, '%'), delta(a.aprobacionDirecta, b.aprobacionDirecta)) +
     kpi('SEGUIMIENTO', 'CUMPLIMIENTO', 'cumplimiento', valor(a.cumplimiento, '%'), '<div class="dl">' + a.realizados + ' de ' + a.controles + ' días</div>');
   $('est-grafica').innerHTML = grafica(serieGrafica(), 250, 'e');
@@ -1567,11 +1570,10 @@ function renderAtlas() {
   if (!visibles.some(function (a) { return a.nombre === ATLAS.sel; })) ATLAS.sel = visibles[0] ? visibles[0].nombre : null;
 
   var html = visibles.map(function (a, i) {
-    var p = Math.round(a.correctas * 100 / a.veces);
     return '<button type="button" class="ficha' + (a.nombre === ATLAS.sel ? ' sel' : '') + '" data-n="' + esc(a.nombre) + '" style="animation-delay:' + Math.min(i * 30, 300) + 'ms">' +
       '<div class="foto">' + (a.url ? '<img src="' + esc(a.url.replace(/sz=w\d+/, 'sz=w400')) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + (a.medio === 'video' ? PLAY : '') + '</div>' +
       '<div class="info"><span class="n" title="' + esc(a.nombre) + '">' + esc(a.nombre) + '</span>' +
-      '<span style="display:flex;align-items:center;gap:8px" title="Veces que se identificó correctamente al cerrar el control (incluye reintentos)"><span class="bar" style="flex:1"><span style="width:' + p + '%"></span></span><span class="mono" style="font-size:9.5px;color:#8487b8">' + p + '%</span></span></div></button>';
+      estadoAtlas(a) + '</div></button>';
   }).join('');
   html += pendientes.filter(ok).map(function (n) {
     return '<div class="ficha pendiente"><div class="foto"><span class="mono" style="font-size:16px;color:#2e2c70">?</span></div><div class="info"><span class="n" title="' + esc(n) + '">' + esc(n) + '</span><span class="mono" style="font-size:9.5px;color:#4a4d78">Aún no aparece</span></div></div>';
@@ -1589,6 +1591,13 @@ function renderAtlas() {
   pintarPanelAtlas(vistos[ATLAS.sel]);
 }
 
+// Según el último resultado: identificada a la primera o pendiente de reforzar.
+function estadoAtlas(a) {
+  var ok = a.ultimoResultado === 2;
+  return '<span class="estado-atlas' + (ok ? ' ok' : '') + '"><i></i>' + (ok ? 'Identificada' : 'Pendiente de reforzar') + '</span>' +
+    '<span class="mono" style="font-size:9.5px;color:#8487b8">' + (a.primeras || 0) + ' de ' + a.veces + ' a la primera</span>';
+}
+
 function pintarPanelAtlas(a) {
   var panel = $('atlas-panel');
   if (!a) { panel.innerHTML = '<div class="sub" style="font-size:11px;line-height:1.6">Cuando un parásito aparezca en el control, aquí verás su imagen y cómo se ha identificado.</div>'; return; }
@@ -1598,7 +1607,7 @@ function pintarPanelAtlas(a) {
   var estados = ['no', 're', 'ok'], textos = ['No se identificó', 'Bien en un reintento', 'Bien a la primera'];
   panel.innerHTML = '<div class="visor"><div id="atlas-campo"></div><button class="icon-btn" type="button" id="atlas-ampliar" aria-label="Ver en grande" title="Ver en grande">' + AMPLIAR + '</button></div>' +
     '<div><div class="k" style="color:#8487b8">' + esc(String(a.grupo || grupo(a.nombre)).toUpperCase()) + '</div><div style="font-size:15px;font-weight:700;line-height:1.25;margin-top:4px">' + esc(a.nombre) + '</div></div>' +
-    '<div class="datos3"><div><span class="k">VECES</span><b>' + a.veces + '</b></div><div><span class="k">IDENTIFICADO</span><b>' + a.correctas + '<span style="font-size:11px;color:var(--mute)">/' + a.veces + '</span></b></div><div><span class="k">ÚLTIMA</span><b>' + fechaCorta(a.ultima) + '</b></div></div>' +
+    '<div class="datos3"><div><span class="k">VECES</span><b>' + a.veces + '</b></div><div><span class="k">A LA PRIMERA</span><b>' + (a.primeras || 0) + '<span style="font-size:11px;color:var(--mute)"> de ' + a.veces + '</span></b></div><div><span class="k">ÚLTIMA</span><b>' + fechaCorta(a.ultima) + '</b></div></div>' +
     '<div><div class="k" style="margin-bottom:8px">RESULTADO EN CADA APARICIÓN</div><div style="display:flex;gap:4px;flex-wrap:wrap">' + (a.hist || []).map(function (x) { return '<span class="cel ' + estados[x] + '" title="' + textos[x] + '"></span>'; }).join('') + '</div>' +
     '<div class="leyenda"><span><i class="cel ok"></i>A la primera</span><span><i class="cel re"></i>En reintento</span><span><i class="cel no"></i>No se identificó</span></div></div>';
   var medio = { medio: a.medio, url: a.url, fileId: a.fileId };

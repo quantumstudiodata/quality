@@ -36,7 +36,7 @@ var CONFIG = {
   ITERACIONES_HASH: 200,
   LARGO_PASSWORD: 4,
   MAX_MB_VIDEO: 20,
-  // Criterios de aceptación de los indicadores evaluables (se definen en el IQCP).
+  // Criterios de aceptación de los indicadores evaluables .
   META_CONCORDANCIA: 90,         // % mínimo de concordancia mensual, primer intento
   MAX_FALSOS_NEGATIVOS: 0,       // falsos negativos tolerados por mes
   MIN_IC_INFERIOR: 80,           // % mínimo del límite inferior del IC 95 % (12 meses)
@@ -754,8 +754,11 @@ function estadisticas_(p) {
     var dias = porMes[mes];
     var anterior = porMes[inicioDeMes_(mes + '-01', -1).substring(0, 7)] || [];
     var actual = metricas_(dias);
-    var acumulado = metricas_(todos.filter(function (d) { return d.fecha >= inicioDeMes_(mes + '-01', -11) && d.fecha <= finDeMes_(mes); }));
+    // IC 95 %: acumulado desde que inició el control, con un máximo de 12 meses.
+    var desdeIC = claves[0] > inicioDeMes_(mes + '-01', -11).substring(0, 7) ? claves[0] : inicioDeMes_(mes + '-01', -11).substring(0, 7);
+    var acumulado = metricas_(todos.filter(function (d) { return d.fecha >= desdeIC + '-01' && d.fecha <= finDeMes_(mes); }));
     var ic = intervaloWilson_(acumulado.correctas, acumulado.muestras);
+    if (ic) ic.desde = desdeIC;
     var m = {
       mes: mes, actual: actual, anterior: metricas_(anterior), especies: especiesDificiles_(dias),
       intervalo: ic, evaluacion: evaluacion_(actual, ic),
@@ -805,19 +808,16 @@ function filasExportacion_(p, mes) {
   return { etiqueta: etiquetaMes_(mes), filas: filas };
 }
 
-// Renglones de indicadores para el Excel: nombre, resultado, criterio, tipo y dictamen.
+// Indicadores del mes para el Excel: nombre, resultado y dictamen.
 function indicadoresExportacion_(est) {
   var a = est ? est.actual : metricas_([]), ev = est ? est.evaluacion : {}, ic = est ? est.intervalo : null;
   var dict = function (v) { return v == null ? 'Sin datos' : v ? 'Cumple' : 'No cumple'; };
   var pct = function (v) { return v == null ? 'Sin datos' : v + ' %'; };
   return [
-    ['Concordancia mensual, primer intento (acumulada del mes)', pct(a.concordancia) + ' (' + a.correctas + '/' + a.muestras + ' muestras)', '≥ ' + CONFIG.META_CONCORDANCIA + ' %', 'Evaluable', dict(ev.concordancia)],
-    ['Falsos negativos, primer intento', String(a.errores.falsoNegativo) + ' de ' + a.positivas + ' muestras positivas', '≤ ' + CONFIG.MAX_FALSOS_NEGATIVOS, 'Evaluable', dict(ev.falsosNegativos)],
-    ['IC 95 % de la concordancia (12 meses)', ic ? ic.inferior + ' a ' + ic.superior + ' % (n = ' + ic.n + ')' : 'Sin datos', 'Límite inferior ≥ ' + CONFIG.MIN_IC_INFERIOR + ' %', 'Evaluable', dict(ev.intervalo)],
-    ['Rendimiento a la primera (FPY)', pct(a.aprobacionDirecta) + ' (' + a.directos + '/' + a.realizados + ' controles)', 'Sin criterio', 'Seguimiento', '—'],
-    ['Cumplimiento', pct(a.cumplimiento) + ' (' + a.realizados + '/' + a.controles + ' días)', 'Sin criterio', 'Seguimiento', '—'],
-    ['Falsos positivos, primer intento', String(a.errores.falsoPositivo), 'Sin criterio', 'Seguimiento', '—'],
-    ['Especie equivocada, primer intento', String(a.errores.especie), 'Sin criterio', 'Seguimiento', '—']
+    ['Concordancia acumulada del mes', pct(a.concordancia), dict(ev.concordancia)],
+    ['Falsos negativos', a.positivas ? pct(Math.round(a.errores.falsoNegativo * 1000 / a.positivas) / 10) : 'Sin datos', dict(ev.falsosNegativos)],
+    ['Intervalo de confianza 95 %', ic ? ic.inferior + ' % a ' + ic.superior + ' %' : 'Sin datos', dict(ev.intervalo)],
+    ['Cumplimiento', pct(a.cumplimiento), '—']
   ];
 }
 
@@ -831,33 +831,21 @@ function exportarExcel(token, mes) {
     var hoja = libro.getSheets()[0];
     hoja.setName('Control diario');
     var n = datos.filas.length;
+    var marca = marca_(p.marca);
     hoja.getRange('A1:H2').setValues([
       ['Mes:', datos.etiqueta, '', '', 'Área:', 'Parasitología', '', ''],
-      ['Laboratorio:', p.laboratorio, '', '', 'Exportado por:', p.usuario, '', '']
+      ['Laboratorio:', marca ? marca.nombre : p.laboratorio, '', '', '', '', '', '']
     ]);
-    hoja.getRange('B1:D1').merge(); hoja.getRange('B2:D2').merge();
-    hoja.getRange('F1:H1').merge(); hoja.getRange('F2:H2').merge();
-    hoja.getRange('A1:A2').setFontWeight('bold'); hoja.getRange('E1:E2').setFontWeight('bold');
-    hoja.getRange('B1:D2').setBorder(null, null, true, null, null, null);
-    hoja.getRange('F1:H2').setBorder(null, null, true, null, null, null);
+    hoja.getRange('B1:D1').merge(); hoja.getRange('B2:D2').merge(); hoja.getRange('F1:H1').merge();
+    hoja.getRange('A1:A2').setFontWeight('bold'); hoja.getRange('E1').setFontWeight('bold');
+    hoja.getRange('B1:D1').setBorder(null, null, true, null, null, null);
+    hoja.getRange('B2:D2').setBorder(null, null, true, null, null, null);
+    hoja.getRange('F1:H1').setBorder(null, null, true, null, null, null);
 
-    // Indicadores del mes con su criterio de aceptación.
-    var est = estadisticas_(p).meses.filter(function (x) { return x.mes === mes; })[0];
-    var ind = indicadoresExportacion_(est);
-    hoja.getRange(4, 1, 1, 8).setValues([['Indicador', '', '', 'Resultado', 'Criterio de aceptación', 'Tipo', 'Dictamen', '']]);
-    hoja.getRange(5, 1, ind.length, 8).setValues(ind.map(function (r) { return [r[0], '', '', r[1], r[2], r[3], r[4], '']; }));
-    for (var i = 4; i < 5 + ind.length; i++) { hoja.getRange(i, 1, 1, 3).merge(); hoja.getRange(i, 7, 1, 2).merge(); }
-    hoja.getRange(4, 1, 1, 8).setFontWeight('bold').setFontColor('#ffffff').setBackground('#312e81');
-    hoja.getRange(4, 1, ind.length + 1, 8).setBorder(true, true, true, true, true, true, '#9ca3af', SpreadsheetApp.BorderStyle.SOLID);
-    var dictamen = hoja.getRange(5, 7, ind.length, 1);
-    var inicio = 6 + ind.length;   // la tabla diaria empieza después de los indicadores
-
+    var inicio = 4;
     var cab = ['No.', 'Día', 'Hora', 'Muestra 1', 'Muestra 2', 'Intento', 'Analista', 'Resultado'];
     hoja.getRange(inicio, 1, 1, 8).setValues([cab]).setFontWeight('bold').setFontColor('#ffffff').setBackground('#312e81');
-    var reglas = [
-      SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Cumple').setBackground('#d1fae5').setFontColor('#065f46').setRanges([dictamen]).build(),
-      SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('No cumple').setBackground('#fee2e2').setFontColor('#991b1b').setRanges([dictamen]).build()
-    ];
+    var reglas = [];
     if (n) {
       hoja.getRange(inicio + 1, 1, n, 8).setValues(datos.filas.map(function (f, i) { return [i + 1, f.dia, f.hora, f.a, f.b, f.intento, f.analista, f.resultado]; }));
       hoja.getRange(inicio + 1, 2, n, 1).setBackground('#e5e7eb');
@@ -867,12 +855,30 @@ function exportarExcel(token, mes) {
         SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Rechazado').setBackground('#fee2e2').setFontColor('#991b1b').setRanges([res]).build(),
         SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Sin respuesta').setBackground('#f3f4f6').setFontColor('#6b7280').setRanges([res]).build());
     }
+    hoja.getRange(inicio, 1, Math.max(n, 1) + 1, 8).setBorder(true, true, true, true, true, true, '#9ca3af', SpreadsheetApp.BorderStyle.SOLID);
+
+    // Indicadores del mes, debajo de la tabla.
+    var est = estadisticas_(p).meses.filter(function (x) { return x.mes === mes; })[0];
+    var ind = indicadoresExportacion_(est);
+    var fi = inicio + Math.max(n, 1) + 2;
+    hoja.getRange(fi, 1, 1, 8).setValues([['Indicador', '', '', 'Resultado', '', 'Dictamen', '', '']]);
+    hoja.getRange(fi + 1, 1, ind.length, 8).setValues(ind.map(function (r) { return [r[0], '', '', r[1], '', r[2], '', '']; }));
+    for (var i = fi; i <= fi + ind.length; i++) { hoja.getRange(i, 1, 1, 3).merge(); hoja.getRange(i, 4, 1, 2).merge(); hoja.getRange(i, 6, 1, 3).merge(); }
+    hoja.getRange(fi, 1, 1, 8).setFontWeight('bold').setFontColor('#ffffff').setBackground('#312e81');
+    hoja.getRange(fi, 1, ind.length + 1, 8).setBorder(true, true, true, true, true, true, '#9ca3af', SpreadsheetApp.BorderStyle.SOLID);
+    var dictamen = hoja.getRange(fi + 1, 6, ind.length, 1);
+    reglas.push(
+      SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Cumple').setBackground('#d1fae5').setFontColor('#065f46').setRanges([dictamen]).build(),
+      SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('No cumple').setBackground('#fee2e2').setFontColor('#991b1b').setRanges([dictamen]).build());
     hoja.setConditionalFormatRules(reglas);
-    var tabla = hoja.getRange(inicio, 1, Math.max(n, 1) + 1, 8);
-    tabla.setBorder(true, true, true, true, true, true, '#9ca3af', SpreadsheetApp.BorderStyle.SOLID);
-    hoja.getRange(1, 1, Math.max(inicio + n, inicio), 8).setFontFamily('Arial').setFontSize(10)
-      .setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(true);
-    [44, 84, 54, 190, 190, 56, 76, 92].forEach(function (w, i) { hoja.setColumnWidth(i + 1, w); });
+
+    // Letra Arial 10 centrada, sin ajuste de línea; columnas y renglones a la medida del texto.
+    var todo = hoja.getRange(1, 1, fi + ind.length, 8);
+    todo.setFontFamily('Arial').setFontSize(10).setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(false);
+    hoja.getRange(1, 1, 2, 1).setHorizontalAlignment('right'); hoja.getRange(1, 5).setHorizontalAlignment('right');
+    hoja.autoResizeColumns(1, 8);
+    for (var c = 1; c <= 8; c++) hoja.setColumnWidth(c, Math.max(hoja.getColumnWidth(c) + 18, [40, 44, 52, 120, 120, 56, 70, 84][c - 1]));
+    hoja.setRowHeights(1, fi + ind.length, 22);
 
     // Datos de la gráfica en una hoja aparte; la gráfica queda a la derecha de la tabla.
     var g = libro.insertSheet('Datos de la gráfica');
@@ -940,6 +946,7 @@ function atlas_(p) {
       item.veces++;
       if (alFinal) item.correctas++;
       // 2: bien a la primera, 1: bien en un reintento, 0: no se identificó.
+      if (alPrimero) item.primeras = (item.primeras || 0) + 1;
       item.hist.push([fecha, alPrimero ? 2 : alFinal ? 1 : 0]);
       if (fecha > item.ultima) {
         item.ultima = fecha;
@@ -950,7 +957,10 @@ function atlas_(p) {
   });
   return Object.keys(mapa).map(function (k) {
     var it = mapa[k];
-    it.hist = it.hist.sort(function (x, y) { return x[0] > y[0] ? 1 : -1; }).map(function (x) { return x[1]; }).slice(-12);
+    it.hist = it.hist.sort(function (x, y) { return x[0] > y[0] ? 1 : -1; }).map(function (x) { return x[1]; });
+    it.primeras = it.primeras || 0;
+    it.ultimoResultado = it.hist[it.hist.length - 1];
+    it.hist = it.hist.slice(-12);
     return it;
   }).sort(function (a, b) { return b.ultima > a.ultima ? 1 : -1; });
 }
