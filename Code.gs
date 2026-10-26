@@ -765,7 +765,12 @@ function estadisticas_(p) {
       dias: dias.map(function (d) {
         var f = resultadoFinal_(d);
         return { dia: Number(d.fecha.substring(8, 10)), concordancia: concordanciaDia_(d), resultado: f ? (f.estado === 'Aprobado' ? 'Aprobado' : 'Rechazado') : 'Sin respuesta',
-          intento: f ? Number(f.intento) : null, analista: f ? f.usuario : '' };
+          intento: f ? Number(f.intento) : null, analista: f ? f.usuario : '',
+          // Detalle para el panel de la gráfica: cada intento con sus dos muestras.
+          intentos: d.regs.map(function (r) {
+            return { intento: Number(r.intento), usuario: r.usuario, r1: r.respuesta1, r2: r.respuesta2,
+              c1: normalizarRespuesta_(r.respuesta1) === normalizarRespuesta_(d.A.parasito), c2: normalizarRespuesta_(r.respuesta2) === normalizarRespuesta_(d.B.parasito) };
+          }) };
       })
     };
     if (p.rol === 'supervisor') {
@@ -817,7 +822,7 @@ function indicadoresExportacion_(est) {
     ['Concordancia acumulada del mes', pct(a.concordancia), dict(ev.concordancia)],
     ['Falsos negativos', a.positivas ? pct(Math.round(a.errores.falsoNegativo * 1000 / a.positivas) / 10) : 'Sin datos', dict(ev.falsosNegativos)],
     ['Intervalo de confianza 95 %', ic ? ic.inferior + ' % a ' + ic.superior + ' %' : 'Sin datos', dict(ev.intervalo)],
-    ['Cumplimiento', pct(a.cumplimiento), '—']
+    ['Cumplimiento', pct(a.cumplimiento), a.controles ? 'Cumple' : 'Sin datos']
   ];
 }
 
@@ -833,7 +838,7 @@ function exportarExcel(token, mes) {
     var n = datos.filas.length;
     var marca = marca_(p.marca);
     hoja.getRange('A1:G2').setValues([
-      ['Mes:', datos.etiqueta, '', 'Área:', 'Parasitología', '', ''],
+      ['Mes y año:', datos.etiqueta, '', 'Área:', 'Parasitología', '', ''],
       ['Laboratorio:', marca ? marca.nombre : p.laboratorio, '', '', '', '', '']
     ]);
     hoja.getRange('B1:C1').merge(); hoja.getRange('B2:C2').merge(); hoja.getRange('E1:G1').merge();
@@ -949,7 +954,7 @@ function exportarExcel(token, mes) {
       .setFontFamily('Arial').setFontSize(10).setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(false);
     hoja.autoResizeColumns(9, 4);
     for (var c2 = 9; c2 <= 12; c2++) hoja.setColumnWidth(c2, hoja.getColumnWidth(c2) + 18);
-    hoja.getRange(ti - 1, 9).setValue('Intervalo de confianza 95 % (acumulado desde el inicio del control, máximo 12 meses)')
+    hoja.getRange(ti - 1, 9).setValue('Intervalo de confianza 95 %')
       .setFontFamily('Arial').setFontSize(10).setFontWeight('bold');
     SpreadsheetApp.flush();
     var url = 'https://docs.google.com/spreadsheets/d/' + libro.getId() + '/export?format=xlsx';

@@ -173,7 +173,7 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .hola .nom{background:linear-gradient(100deg,#eef0ff 40%,#c7d2fe 50%,#eef0ff 60%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sal .7s cubic-bezier(.2,.8,.2,1) .15s both,brilla 7s ease-in-out 1.2s infinite}
 @keyframes sal{from{opacity:0;transform:translateY(6px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
 @keyframes brilla{0%,70%{background-position:-120% 0}100%{background-position:220% 0}}
-.resumen{display:grid;grid-template-columns:300px minmax(0,1fr);gap:32px;align-items:center;padding:18px 20px;cursor:pointer;transition:border-color .3s,box-shadow .3s}
+.resumen{display:grid;grid-template-columns:350px minmax(0,1fr);gap:32px;align-items:stretch;padding:18px 20px;cursor:pointer;transition:border-color .3s,box-shadow .3s}
 .resumen:hover{border-color:#2e2c70;box-shadow:0 14px 34px -18px rgba(79,70,229,.7)}
 /* ayuda de cada indicador */
 .ayuda{width:14px;height:14px;border-radius:50%;border:1px solid #34327a;background:transparent;color:var(--sub);font-family:var(--mono);font-size:9.5px;line-height:1;display:inline-flex;align-items:center;justify-content:center;margin-left:6px;vertical-align:1px;transition:border-color .2s,color .2s,background .2s}
@@ -191,7 +191,21 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .graf .pt:hover circle.v{r:6}
 .graf .pt:hover text{opacity:1}
 .graf .pt .zona{fill:transparent;cursor:default}
-.cifras{display:grid;grid-template-columns:1fr 1fr;gap:18px 20px}
+.cifras{display:grid;grid-template-columns:1fr 1fr;gap:20px 20px;align-content:center}
+/* títulos de las tarjetas como chips pequeños */
+.cifras .k{white-space:nowrap}
+.kpi{min-width:0}
+.cifras .k,.kpi .k{letter-spacing:.06em;max-width:100%;display:inline-flex;align-items:center;gap:2px;padding:3px 4px 3px 8px;border-radius:7px;background:rgba(79,70,229,.1);border:1px solid #24225a;color:#a5b4fc}
+.cifras .kv,.kpi .kv{margin-top:9px}
+.graf-con-panel{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start;margin-top:14px}
+.graf-con-panel.abierto{grid-template-columns:minmax(0,1fr) minmax(0,38%)}
+.graf-panel{border-radius:12px;background:var(--bg-2);border:1px solid #24225a;display:flex;flex-direction:column;max-height:300px;animation:entrar .3s ease both}
+.graf-panel header{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);font-size:13px;font-weight:700}
+.graf-panel .lista{overflow-y:auto;padding:4px 12px 8px}
+.graf-panel .fila{display:grid;grid-template-columns:56px 58px minmax(0,1fr) 96px;gap:8px;align-items:center;font-size:12px;padding:7px 0;border-bottom:1px solid #12112e}
+.graf-panel .fila:last-child{border-bottom:none}
+.graf-panel .fila .p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.graf .pt{cursor:pointer}
 .kv{font-size:22px;font-weight:700;letter-spacing:-.03em;margin-top:6px;line-height:1}
 .kv small{font-size:13px;color:var(--mute);font-weight:600}
 .dl{font-family:var(--mono);font-size:10.5px;color:#6f72a8;margin-top:6px}
@@ -226,7 +240,8 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 @media(max-width:900px){.int{grid-template-columns:70px 40px minmax(0,1fr) minmax(0,1fr) 76px}.int .u{display:none}}
 
 /* ---------- estadísticas ---------- */
-.fila-kpi{display:flex;flex-wrap:wrap;padding:16px 20px}
+.fila-kpi{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:16px 20px}
+@media(max-width:1100px){.fila-kpi{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:16px}}
 .kpi{padding:2px 22px 0;border-left:1px solid var(--line)}
 .kpi:first-child{padding-left:0;border-left:none}
 .kpi .kv{font-size:26px}
@@ -492,7 +507,7 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
       <div class="card fila-kpi" id="est-kpis"></div>
       <div class="card" style="padding:18px 20px">
         <div class="cab-pane" style="align-items:flex-start"><div style="max-width:640px"><div style="font-size:15px;font-weight:700" id="graf-titulo">Concordancia mensual</div><div class="sub" style="font-size:13px;line-height:1.55;margin-top:5px" id="graf-desc"></div></div><div class="chips" id="graf-tabs"></div></div>
-        <div id="est-grafica" style="margin-top:14px"></div>
+        <div class="graf-con-panel" id="graf-contenedor"><div id="est-grafica"></div><aside class="graf-panel oculto" id="graf-panel"></aside></div>
       </div>
       <div class="secciones" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
         <div class="card"><div class="k" style="margin-bottom:14px">ERRORES, PRIMER INTENTO<button class="ayuda" type="button" data-ayuda="errores">?</button></div><div style="display:flex;flex-direction:column;gap:14px" id="est-errores"></div></div>
@@ -1357,7 +1372,7 @@ function grafica(serie, alto, id) {
   var puntos = pts.map(function (p) {
     if (!p) return '';
     var bajo = p[2].valor < 90;
-    return '<g class="pt"><circle class="zona" cx="' + p[0] + '" cy="' + p[1] + '" r="14"></circle>' +
+    return '<g class="pt" data-k="' + esc(p[2].clave || '') + '"><circle class="zona" cx="' + p[0] + '" cy="' + p[1] + '" r="14"></circle>' +
       '<circle class="v" cx="' + p[0] + '" cy="' + p[1] + '" r="4" fill="' + (bajo ? '#e57373' : '#93c5fd') + '" stroke="#05060f" stroke-width="2"></circle>' +
       '<text x="' + p[0] + '" y="' + (p[1] - 11) + '" text-anchor="middle" font-family="DM Mono" font-size="11" fill="#eef0ff">' + (p[2].titulo ? esc(p[2].titulo) + ': ' : '') + p[2].valor + '%</text></g>';
   }).join('');
@@ -1382,7 +1397,7 @@ function datosMes(mes) {
 }
 function serieGrafica() {
   var est = DATOS.estadisticas;
-  return (est && est.serieMensual || []).map(function (s) { return { etiqueta: mesTexto(s.mes), titulo: mesTexto(s.mes), valor: s.valor }; });
+  return (est && est.serieMensual || []).map(function (s) { return { etiqueta: mesTexto(s.mes), titulo: mesTexto(s.mes), valor: s.valor, clave: s.mes }; });
 }
 // Mes del que hablan las ayudas: el elegido en Estadísticas o el mes en curso.
 function mesDeAyuda() {
@@ -1496,24 +1511,61 @@ function rangoIC(ic) { return Math.round(ic.inferior) + '<small>%</small> <span 
 var GRAF = 'mensual';
 var GRAFICAS = {
   mensual: ['Concordancia mensual', 'Porcentaje de muestras identificadas correctamente al primer intento en cada mes. Cada punto es un mes con controles; la línea roja punteada es la meta de 90 %. Sirve para ver la tendencia del desempeño de un mes a otro.'],
-  acumulada: ['Concordancia acumulada del mes', 'Cómo evolucionó la concordancia dentro del mes elegido. Cada punto suma todas las muestras desde el día 1 hasta ese día, así que al inicio cambia mucho y se estabiliza con más muestras. El último punto es la concordancia del mes.'],
+  acumulada: ['Concordancia acumulada mensual', 'Cómo evolucionó la concordancia dentro del mes elegido. Cada punto suma todas las muestras desde el día 1 hasta ese día, así que al inicio cambia mucho y se estabiliza con más muestras. El último punto es la concordancia del mes.'],
   intervalo: ['Intervalo de confianza 95 %', 'Rango dentro del que probablemente está la concordancia real, calculado con todas las muestras acumuladas desde el inicio del control (máximo 12 meses) al cierre de cada mes. La barra es el rango y el punto la concordancia acumulada; la línea roja marca el criterio de 80 % para el límite inferior.']
 };
 function pintarGraficaEst(est) {
   chips('graf-tabs', [['mensual', 'Mensual'], ['acumulada', 'Acumulada'], ['intervalo', 'Intervalo']], GRAF, function (v) { GRAF = v; pintarGraficaEst(datosMes(MES_SEL)); });
-  $('graf-titulo').textContent = GRAFICAS[GRAF][0] + (GRAF === 'acumulada' ? ', ' + mesTexto(MES_SEL, true).toLowerCase() : '');
-  $('graf-desc').textContent = GRAFICAS[GRAF][1];
+  $('graf-titulo').textContent = GRAFICAS[GRAF][0];
+  $('graf-desc').textContent = GRAFICAS[GRAF][1] + (GRAF !== 'intervalo' ? ' Haz clic en un punto para ver sus respuestas.' : '');
+  cerrarPanelGrafica();
   var el = $('est-grafica');
+  el.onclick = function (e) {
+    var g = e.target.closest('.pt'); if (!g || !g.dataset.k) return;
+    if (GRAF === 'mensual') abrirPanelMes(g.dataset.k); else if (GRAF === 'acumulada') abrirPanelDia(est, Number(g.dataset.k));
+  };
   if (GRAF === 'mensual') { el.innerHTML = grafica(serieGrafica(), 260, 'e'); return; }
   if (GRAF === 'acumulada') {
     var bien = 0, total = 0;
     var serie = est.dias.filter(function (d) { return d.concordancia != null; }).map(function (d) {
       bien += d.concordancia / 50; total += 2;
-      return { etiqueta: String(d.dia), titulo: 'Día ' + d.dia, valor: Math.round(bien * 100 / total) };
+      return { etiqueta: String(d.dia), titulo: 'Día ' + d.dia, valor: Math.round(bien * 100 / total), clave: String(d.dia) };
     });
     el.innerHTML = grafica(serie, 260, 'a'); return;
   }
   el.innerHTML = graficaIntervalo(DATOS.estadisticas.meses.filter(function (m) { return m.intervalo; }).slice().reverse(), 260);
+}
+
+// Panel a la derecha de la gráfica con las respuestas del punto elegido.
+function cerrarPanelGrafica() { $('graf-panel').classList.add('oculto'); $('graf-contenedor').classList.remove('abierto'); }
+function panelGrafica(titulo, filas) {
+  var p = $('graf-panel');
+  p.innerHTML = '<header><span>' + esc(titulo) + '</span><button class="icon-btn" type="button" aria-label="Cerrar" onclick="cerrarPanelGrafica()" style="width:26px;height:26px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9497c4" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></header>' +
+    '<div class="lista">' + (filas.length ? filas.join('') : '<div class="sub" style="padding:12px 0;font-size:12px">Sin respuestas.</div>') + '</div>';
+  p.classList.remove('oculto'); $('graf-contenedor').classList.add('abierto');
+  p.style.animation = 'none'; void p.offsetWidth; p.style.animation = '';
+}
+function filaPanel(col1, usuario, parasito, ok) {
+  return '<div class="fila"><span class="mono" style="color:var(--sub)">' + col1 + '</span><span class="mono" style="color:var(--sub)">' + esc(usuario) + '</span><span class="p" title="' + esc(parasito) + '">' + esc(parasito || '—') + '</span><span>' + badgeIntento(ok ? 'Aprobado' : 'Rechazado') + '</span></div>';
+}
+// Mes: cada muestra del primer intento de cada día (lo que cuenta para la concordancia).
+function abrirPanelMes(mes) {
+  var m = datosMes(mes); if (!m) return;
+  var filas = [];
+  m.dias.slice().reverse().forEach(function (d) {
+    var r = d.intentos && d.intentos[0]; if (!r) return;
+    filas.push(filaPanel('Día ' + d.dia, r.usuario, r.r1, r.c1), filaPanel('', r.usuario, r.r2, r.c2));
+  });
+  panelGrafica(mesTexto(mes, true) + ', primer intento', filas);
+}
+// Día: todos los intentos con sus dos muestras.
+function abrirPanelDia(m, dia) {
+  var d = m.dias.filter(function (x) { return x.dia === dia; })[0]; if (!d) return;
+  var filas = [];
+  (d.intentos || []).forEach(function (r) {
+    filas.push(filaPanel('Int. ' + r.intento, r.usuario, r.r1, r.c1), filaPanel('', r.usuario, r.r2, r.c2));
+  });
+  panelGrafica('Día ' + dia + ' de ' + mesTexto(m.mes, true).toLowerCase(), filas);
 }
 
 // Barras de intervalo por mes: rango del IC 95 % y su punto central.
@@ -1556,10 +1608,10 @@ function pintarEstadisticas() {
   var est = datosMes(MES_SEL), a = est.actual, b = est.anterior, ev = est.evaluacion, cr = todo.criterios, ic = est.intervalo;
   var kpi = function (tipo, k, clave, v, extra) { return '<div class="kpi' + (tipo === 'SEGUIMIENTO' ? ' seg' : '') + '"><div class="k">' + k + ayuda(clave) + '</div><div class="kv">' + v + '</div>' + extra + '</div>'; };
   $('est-kpis').innerHTML =
-    kpi('EVALUABLE', 'CONCORDANCIA', 'concordancia', valor(a.concordancia, '%'), delta(a.concordancia, b.concordancia, cr.concordancia)) +
+    kpi('EVALUABLE', 'CONCORDANCIA', 'concordancia', valor(a.concordancia, '%'), '') +
     kpi('EVALUABLE', 'FALSOS NEGATIVOS', 'fn', a.realizados ? a.errores.falsoNegativo : valor(null), '<div class="dl">de ' + a.positivas + ' muestras positivas</div>') +
     kpi('EVALUABLE', 'IC 95 %', 'ic', ic ? rangoIC(ic) : valor(null), '<div class="dl">' + (ic ? 'Acumulado desde ' + mesTexto(ic.desde, true).toLowerCase() : 'sin muestras') + '</div>') +
-    kpi('SEGUIMIENTO', 'RENDIMIENTO A LA PRIMERA', 'fpy', valor(a.aprobacionDirecta, '%'), delta(a.aprobacionDirecta, b.aprobacionDirecta)) +
+    kpi('SEGUIMIENTO', 'RENDIMIENTO A LA PRIMERA', 'fpy', valor(a.aprobacionDirecta, '%'), '') +
     kpi('SEGUIMIENTO', 'CUMPLIMIENTO', 'cumplimiento', valor(a.cumplimiento, '%'), '<div class="dl">' + a.realizados + ' de ' + a.controles + ' días</div>');
   pintarGraficaEst(est);
 
