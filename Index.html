@@ -350,19 +350,28 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 
 /* ---------- atlas ---------- */
 .atlas-cuerpo{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:18px;align-items:start}
-.atlas{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
-.ficha{border-radius:12px;background:linear-gradient(160deg,#0f0e2e,#0a0a1f);border:1px solid #1a1942;overflow:hidden;text-align:left;padding:0;color:var(--text);transition:border-color .3s,transform .3s,box-shadow .3s;animation:entrar .4s ease both}
-.ficha:hover{border-color:#2e2c70;transform:translateY(-2px);box-shadow:0 12px 30px -16px rgba(79,70,229,.6)}
-.ficha.sel{border-color:rgba(129,140,248,.6);box-shadow:0 0 0 1px rgba(99,102,241,.3),0 14px 34px -16px rgba(79,70,229,.8)}
-.ficha.pendiente{background:transparent;border-style:dashed;cursor:default}
-.ficha.pendiente:hover{transform:none;box-shadow:none;border-color:#1a1942}
-.ficha .foto{height:108px;position:relative;overflow:hidden;background:var(--bg-2);display:flex;align-items:center;justify-content:center}
-.ficha .foto img{width:100%;height:100%;object-fit:cover;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
-.ficha:hover .foto img{transform:scale(1.06)}
-.ficha.pendiente .foto{background:transparent;border-bottom:1px dashed #1a1942}
-.ficha .info{padding:9px 11px;display:flex;flex-direction:column;gap:7px}
-.ficha .n{font-size:12.5px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atlas{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:26px 14px;align-content:start}
+.leyenda-atlas{display:flex;gap:18px;font-size:12px;color:var(--sub)}
+.leyenda-atlas span{display:inline-flex;align-items:center;gap:7px}
+.leyenda-atlas i{width:11px;height:11px;border-radius:50%;border:2px solid}
+.ficha{display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;padding:6px 4px;border:none;background:none;color:var(--text);border-radius:14px;animation:entrar .4s ease both;transition:background .3s}
+.ficha:hover{background:rgba(255,255,255,.02)}
+.anillo-a{padding:5px;border-radius:50%;border:2px solid #34327a;transition:transform .3s,box-shadow .3s}
+.anillo-a.ok{border-color:#6366f1;box-shadow:0 0 18px -6px rgba(99,102,241,.7)}
+.anillo-a.re{border-color:#fbbf24;box-shadow:0 0 18px -6px rgba(251,191,36,.6)}
+.anillo-a.vacio{border:1px dashed #24225a}
+.ficha:hover .anillo-a{transform:scale(1.04)}
+.ficha.sel .anillo-a{box-shadow:0 0 0 4px rgba(129,140,248,.25),0 0 26px -4px rgba(99,102,241,.9)}
+.lente-a{width:118px;height:118px;border-radius:50%;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;background:var(--bg-2);color:#2e2c70;font-family:var(--mono);font-size:19px;box-shadow:inset 0 0 18px 4px rgba(0,0,0,.75)}
+.lente-a img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:-1}
+.lente-a{isolation:isolate}
+.ficha .n{font-size:13px;font-weight:600;line-height:1.3;min-height:34px;max-width:150px}
+.ficha.sel .n{color:#c7d2fe}
+.ficha .fr{font-family:var(--mono);font-size:11px;color:#8487b8}
+.ficha.pendiente{cursor:default}
+.ficha.pendiente .lente-a{background:transparent;box-shadow:none}
 .ficha.pendiente .n{color:#4a4d78;font-weight:400}
+.ficha.pendiente .fr{color:#4a4d78}
 .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:rgba(5,6,15,.55);border:1px solid rgba(165,180,252,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;pointer-events:none}
 .panel-atlas{position:sticky;top:20px;padding:16px;display:flex;flex-direction:column;gap:14px;animation:entrar .35s ease both}
 .panel-atlas .visor{padding:4px 0 2px}
@@ -540,7 +549,7 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
         </div>
       </div>
       <div class="atlas-cuerpo">
-        <div class="atlas" id="atlas-grid"></div>
+        <div style="display:flex;flex-direction:column;gap:16px"><div class="leyenda-atlas"><span><i style="border-color:#6366f1"></i>Identificada</span><span><i style="border-color:#fbbf24"></i>Pendiente de reforzar</span><span><i style="border-color:#34327a;border-style:dashed;border-width:1px"></i>Aún no aparece</span></div><div class="atlas" id="atlas-grid"></div></div>
         <div class="card panel-atlas" id="atlas-panel"></div>
       </div>
     </section>
@@ -1674,13 +1683,14 @@ function renderAtlas() {
   if (!visibles.some(function (a) { return a.nombre === ATLAS.sel; })) ATLAS.sel = visibles[0] ? visibles[0].nombre : null;
 
   var html = visibles.map(function (a, i) {
-    return '<button type="button" class="ficha' + (a.nombre === ATLAS.sel ? ' sel' : '') + '" data-n="' + esc(a.nombre) + '" style="animation-delay:' + Math.min(i * 30, 300) + 'ms">' +
-      '<div class="foto">' + (a.url ? '<img src="' + esc(a.url.replace(/sz=w\d+/, 'sz=w400')) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + (a.medio === 'video' ? PLAY : '') + '</div>' +
-      '<div class="info"><span class="n" title="' + esc(a.nombre) + '">' + esc(a.nombre) + '</span>' +
-      estadoAtlas(a) + '</div></button>';
+    // Lente con anillo: azul si se identificó a la primera la última vez; ámbar si hay que reforzarla.
+    var ok = a.ultimoResultado === 2;
+    return '<button type="button" class="ficha' + (a.nombre === ATLAS.sel ? ' sel' : '') + '" data-n="' + esc(a.nombre) + '" style="animation-delay:' + Math.min(i * 30, 300) + 'ms" title="' + (ok ? 'Identificada' : 'Pendiente de reforzar') + '">' +
+      '<span class="anillo-a ' + (ok ? 'ok' : 're') + '"><span class="lente-a">' + (a.url ? '<img src="' + esc(a.url.replace(/sz=w\d+/, 'sz=w500')) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + (a.medio === 'video' ? PLAY : '') + '</span></span>' +
+      '<span class="n">' + esc(a.nombre) + '</span><span class="fr">' + (a.primeras || 0) + ' de ' + a.veces + ' a la primera</span></button>';
   }).join('');
   html += pendientes.filter(ok).map(function (n) {
-    return '<div class="ficha pendiente"><div class="foto"><span class="mono" style="font-size:16px;color:#2e2c70">?</span></div><div class="info"><span class="n" title="' + esc(n) + '">' + esc(n) + '</span><span class="mono" style="font-size:10.5px;color:#4a4d78">Aún no aparece</span></div></div>';
+    return '<div class="ficha pendiente"><span class="anillo-a vacio"><span class="lente-a">?</span></span><span class="n">' + esc(n) + '</span><span class="fr">Aún no aparece</span></div>';
   }).join('');
   $('atlas-grid').innerHTML = html || '<div class="vacio">Sin coincidencias.</div>';
   // Al elegir otra especie solo cambia el panel de la derecha.
