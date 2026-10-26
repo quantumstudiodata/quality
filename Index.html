@@ -153,6 +153,7 @@ table.tabla{width:100%;border-collapse:collapse;font-size:11px}
 .contenido{flex:1;min-width:0}
 main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .pane{display:none;flex-direction:column;gap:20px}
+.migas{margin:-8px 0 -10px}
 .pane.on{display:flex;animation:entrar .25s ease-out}
 .titulo{font-size:17px;font-weight:700;letter-spacing:-.01em}
 .cab-pane{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
@@ -172,8 +173,19 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .hola .nom{background:linear-gradient(100deg,#eef0ff 40%,#c7d2fe 50%,#eef0ff 60%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sal .7s cubic-bezier(.2,.8,.2,1) .15s both,brilla 7s ease-in-out 1.2s infinite}
 @keyframes sal{from{opacity:0;transform:translateY(6px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
 @keyframes brilla{0%,70%{background-position:-120% 0}100%{background-position:220% 0}}
-.resumen{display:grid;grid-template-columns:300px minmax(0,1fr);gap:32px;align-items:center;padding:12px;margin:0 -12px;border-radius:12px;cursor:pointer;transition:background .25s}
-.resumen:hover{background:rgba(255,255,255,.02)}
+.resumen{display:grid;grid-template-columns:300px minmax(0,1fr);gap:32px;align-items:center;padding:18px 20px;cursor:pointer;transition:border-color .3s,box-shadow .3s}
+.resumen:hover{border-color:#2e2c70;box-shadow:0 14px 34px -18px rgba(79,70,229,.7)}
+/* ayuda de cada indicador */
+.ayuda{width:14px;height:14px;border-radius:50%;border:1px solid #34327a;background:transparent;color:var(--sub);font-family:var(--mono);font-size:8.5px;line-height:1;display:inline-flex;align-items:center;justify-content:center;margin-left:6px;vertical-align:1px;transition:border-color .2s,color .2s,background .2s}
+.ayuda:hover,.ayuda.on{border-color:var(--mid);color:var(--text);background:rgba(79,70,229,.2)}
+.globo{position:fixed;z-index:99000;max-width:270px;padding:10px 12px;border-radius:10px;background:#141245;border:1px solid #34327a;box-shadow:0 16px 36px -12px rgba(0,0,0,.9);font-size:11px;line-height:1.55;color:#d6d8f5;animation:subir .2s ease-out}
+.globo b{display:block;color:var(--text);margin-bottom:3px}
+/* gráfica */
+.graf .pt circle.v{transition:r .2s}
+.graf .pt text{opacity:0;transition:opacity .2s}
+.graf .pt:hover circle.v{r:6}
+.graf .pt:hover text{opacity:1}
+.graf .pt .zona{fill:transparent;cursor:default}
 .cifras{display:grid;grid-template-columns:1fr 1fr;gap:18px 20px}
 .kv{font-size:22px;font-weight:700;letter-spacing:-.03em;margin-top:6px;line-height:1}
 .kv small{font-size:12px;color:var(--mute);font-weight:600}
@@ -206,12 +218,12 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 @media(max-width:900px){.int{grid-template-columns:70px 40px minmax(0,1fr) minmax(0,1fr) 76px}.int .u{display:none}}
 
 /* ---------- estadísticas ---------- */
-.fila-kpi{display:flex;flex-wrap:wrap;padding:4px 0 18px;border-bottom:1px solid var(--line)}
+.fila-kpi{display:flex;flex-wrap:wrap;padding:16px 20px}
 .kpi{padding:2px 22px 0;border-left:1px solid var(--line)}
 .kpi:first-child{padding-left:0;border-left:none}
 .kpi .kv{font-size:26px}
-.secciones{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:36px}
-.secciones+.secciones{padding-top:18px;border-top:1px solid var(--line)}
+.secciones{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px}
+.secciones>.card{padding:16px 18px}
 .er{display:grid;grid-template-columns:minmax(0,1fr) 34px;gap:6px 10px;align-items:center;font-size:11px}
 .er .bar{grid-column:1 / -1}
 .bar{height:3px;border-radius:3px;background:var(--line);overflow:hidden}
@@ -237,10 +249,20 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .icon-btn:hover{border-color:var(--mid);background:rgba(79,70,229,.1)}
 .muestra{display:flex;flex-direction:column;gap:10px;min-width:0}
 .muestra .etq{font-family:var(--mono);font-size:9.5px;color:var(--accent);letter-spacing:.1em}
-.visor{height:clamp(200px,38vh,320px);border-radius:12px;background:var(--bg-2);border:1px solid var(--border);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.visor img{max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in;position:absolute;inset:0;margin:auto}
-.visor iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.visor .icon-btn{position:absolute;right:8px;top:8px;background:rgba(5,6,15,.7);z-index:1}
+.visor{position:relative;display:flex;align-items:center;justify-content:center;padding:6px 0}
+.visor>.icon-btn{position:absolute;right:0;top:0;z-index:3}
+.visor>div:first-child,#lightbox-micro{width:100%;display:flex;justify-content:center}
+/* visor tipo microscopio: campo circular con zoom de la rueda del mouse */
+.micro{position:relative;aspect-ratio:1;width:min(100%,var(--tam,330px));border-radius:50%;overflow:hidden;background:#020208;cursor:grab;touch-action:none;user-select:none;
+  box-shadow:0 0 0 1px #2e2c70,0 0 0 7px #0b0b22,0 0 0 8px #24225a,0 24px 50px -20px rgba(0,0,0,.95),0 0 60px -20px rgba(79,70,229,.35)}
+.micro.arrastrando{cursor:grabbing}
+.micro .capa{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0;will-change:transform}
+.micro .capa img,.micro .capa video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none}
+.micro::after{content:'';position:absolute;inset:0;border-radius:50%;pointer-events:none;box-shadow:inset 0 0 38px 8px rgba(0,0,0,.8)}
+.micro .zoom{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:2;font-family:var(--mono);font-size:9.5px;padding:2px 8px;border-radius:10px;background:rgba(5,6,15,.65);color:#c7d2fe;pointer-events:none;opacity:0;transition:opacity .3s}
+.micro.con-zoom .zoom{opacity:1}
+.micro .espera{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--sub);font-size:10.5px;z-index:1}
+.ayuda-zoom{text-align:center;font-size:9.5px;color:var(--mute);margin-top:8px}
 .agregar{align-self:flex-start;border:none;background:none;color:var(--sub);font-size:11px;transition:color .2s}
 .agregar:hover{color:var(--text)}
 .msg-ventana{font-size:11.5px}
@@ -313,15 +335,18 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .ficha.pendiente .n{color:#4a4d78;font-weight:400}
 .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:rgba(5,6,15,.55);border:1px solid rgba(165,180,252,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;pointer-events:none}
 .panel-atlas{position:sticky;top:20px;padding:16px;display:flex;flex-direction:column;gap:14px;animation:entrar .35s ease both}
-.panel-atlas .foto{height:210px;border-radius:10px;overflow:hidden;background:var(--bg-2);position:relative;cursor:zoom-in}
-.panel-atlas .foto img{width:100%;height:100%;object-fit:cover}
+.panel-atlas .visor{padding:4px 0 2px}
 .datos3{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .datos3>div{padding:10px 0 10px 12px;border-left:1px solid var(--border)}
 .datos3>div:first-child{padding-left:0;border-left:none}
 .datos3 b{display:block;font-size:17px;margin-top:3px}
 .cel{width:10px;height:10px;border-radius:3px;border:1px solid #2d2c66}
-.cel.ok{background:rgba(79,70,229,.5);border-color:rgba(129,140,248,.6)}
+.cel.ok{background:rgba(79,70,229,.55);border-color:rgba(129,140,248,.7)}
+.cel.re{background:rgba(79,70,229,.12);border-color:rgba(129,140,248,.6)}
 .cel.no{background:rgba(229,83,83,.12);border-color:rgba(229,83,83,.45)}
+.leyenda{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;font-size:9.5px;color:var(--sub)}
+.leyenda span{display:inline-flex;align-items:center;gap:5px}
+.leyenda i{display:inline-block}
 .contador{font-family:var(--mono);font-size:10.5px;color:var(--accent);padding:3px 8px;border-radius:6px;background:rgba(79,70,229,.12);border:1px solid rgba(99,102,241,.3)}
 @media(max-width:1000px){.atlas-cuerpo{grid-template-columns:1fr}.panel-atlas{position:relative;top:0}}
 
@@ -347,8 +372,7 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .dato span:last-child{font-size:12.5px}
 .lightbox{position:fixed;inset:0;z-index:99999;background:rgba(3,3,12,.94);display:none;align-items:center;justify-content:center}
 .lightbox.on{display:flex}
-.lightbox img{max-width:92vw;max-height:88vh;border-radius:12px}
-.lightbox iframe{width:min(92vw,1100px);height:min(80vh,620px);border:0;border-radius:12px;background:#000}
+.lightbox .micro{--tam:min(86vh,86vw)}
 </style>
 </head>
 <body>
@@ -360,7 +384,7 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
     <form onsubmit="event.preventDefault();doLogin()">
       <div class="login-titulo">Inicia sesión</div>
       <div class="sub" style="font-size:11.5px;line-height:1.5;margin-bottom:10px">Al entrar se abrirá el control de calidad del día.</div>
-      <div class="campo"><label for="login-usuario">Usuario</label><input class="input mono" id="login-usuario" autocomplete="username" placeholder="Ej. MPWN1" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="campo"><label for="login-usuario">Usuario</label><input class="input mono" id="login-usuario" autocomplete="username" placeholder="Ej. MPWN1" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter'){event.preventDefault();$('login-pass').focus();}"></div>
       <div class="campo"><label for="login-pass">Contraseña</label><input class="input mono" id="login-pass" type="password" maxlength="12" autocomplete="current-password"></div>
       <div class="login-err" id="login-err"></div>
       <button class="btn" id="login-btn" type="submit" style="height:40px;display:flex;align-items:center;justify-content:center;gap:8px">Entrar <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
@@ -420,9 +444,9 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
         <div><div class="mono" style="font-size:10px;color:#8487b8" id="inicio-fecha"></div><div class="hola" id="inicio-hola"></div></div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div class="chips" id="inicio-periodo"></div><button class="lnk" type="button" onclick="irA('estadisticas')">Ver estadísticas <i data-flecha></i></button></div>
       </div>
-      <div class="resumen" id="inicio-resumen" onclick="irA('estadisticas')" title="Ver estadísticas">
+      <div class="card resumen" id="inicio-resumen" onclick="if(!event.target.closest('.ayuda')) irA('estadisticas')" title="Ver estadísticas">
         <div class="cifras" id="inicio-cifras"></div>
-        <div><div class="k" style="margin-bottom:6px">CONCORDANCIA POR SEMANA</div><div id="inicio-grafica"></div></div>
+        <div><div class="k" style="margin-bottom:6px">CONCORDANCIA MENSUAL<button class="ayuda" type="button" data-ayuda="grafica">?</button></div><div id="inicio-grafica"></div></div>
       </div>
       <div>
         <div class="cab-pane"><span style="font-size:12.5px;font-weight:700">Últimas respuestas</span><button class="lnk" type="button" onclick="irA('historial')">Ver historial <i data-flecha></i></button></div>
@@ -432,25 +456,27 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 
     <!-- Estadísticas -->
     <section class="pane" id="pane-estadisticas">
+      <div class="migas"><button class="volver" type="button" onclick="irA('inicio')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>Inicio</button></div>
       <div class="cab-pane">
         <span class="titulo">Estadísticas</span>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div class="chips" id="est-periodo"></div><button class="btn-sec" type="button" onclick="exportarCSV()">Exportar</button></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div class="chips" id="est-periodo"></div><button class="btn-sec" type="button" id="btn-exportar" onclick="exportarExcel()">Exportar</button></div>
       </div>
-      <div class="fila-kpi" id="est-kpis"></div>
+      <div class="card fila-kpi" id="est-kpis"></div>
       <div class="secciones">
-        <div><div class="k" style="margin-bottom:8px">CONCORDANCIA POR SEMANA</div><div id="est-grafica"></div></div>
-        <div><div class="k" style="margin-bottom:14px">ERRORES</div><div style="display:flex;flex-direction:column;gap:14px" id="est-errores"></div></div>
+        <div class="card"><div class="k" style="margin-bottom:8px">CONCORDANCIA MENSUAL<button class="ayuda" type="button" data-ayuda="grafica">?</button></div><div id="est-grafica"></div></div>
+        <div class="card"><div class="k" style="margin-bottom:14px">ERRORES<button class="ayuda" type="button" data-ayuda="errores">?</button></div><div style="display:flex;flex-direction:column;gap:14px" id="est-errores"></div></div>
       </div>
       <div class="secciones" id="est-abajo">
-        <div id="est-analistas"><div class="k" style="margin-bottom:4px">POR ANALISTA</div><div id="est-tabla"></div></div>
-        <div><div class="k" style="margin-bottom:14px">ESPECIES CON MÁS DIFICULTAD</div><div style="display:flex;flex-direction:column;gap:13px" id="est-especies"></div></div>
+        <div class="card" id="est-analistas"><div class="k" style="margin-bottom:4px">POR ANALISTA</div><div id="est-tabla"></div></div>
+        <div class="card"><div class="k" style="margin-bottom:14px">ESPECIES CON MÁS DIFICULTAD<button class="ayuda" type="button" data-ayuda="especies">?</button></div><div style="display:flex;flex-direction:column;gap:13px" id="est-especies"></div></div>
       </div>
     </section>
 
     <!-- Historial (se abre desde Inicio) -->
     <section class="pane" id="pane-historial">
+      <div class="migas"><button class="volver" type="button" onclick="irA('inicio')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>Inicio</button></div>
       <div class="cab-pane">
-        <div style="display:flex;align-items:center;gap:14px"><button class="volver" type="button" onclick="irA('inicio')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>Inicio</button><span class="titulo">Historial</span></div>
+        <span class="titulo">Historial</span>
         <div class="chips" id="hist-filtros"></div>
       </div>
       <div class="card" style="overflow:hidden">
@@ -597,7 +623,7 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
     </div>
   </div>
 </div>
-<div class="lightbox" id="lightbox" onclick="cerrarLightbox()"><img id="lightbox-img" alt="Imagen ampliada"><iframe id="lightbox-video" class="oculto" allow="autoplay" title="Video"></iframe></div>
+<div class="lightbox" id="lightbox" onclick="if(event.target===this) cerrarLightbox()"><div id="lightbox-micro"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -703,7 +729,7 @@ function hora5(h) { return String(h || '').slice(0, 5); }
 function iniciales2(p) { return String(p.iniciales || p.usuario || '?').replace(/[^A-Za-zÑñ]/g, '').slice(0, 2).toUpperCase(); }
 function combinar(a, b) { return [a, b].filter(function (v) { return v; }).sort().join(' + '); }
 function badge(estado) {
-  var cls = estado === 'Aprobado' ? 'b-ok' : (estado === 'Rechazado' || estado === 'No aprobado') ? 'b-fail' : estado === 'Sin respuesta' ? 'b-none' : 'b-warn';
+  var cls = estado === 'Aprobado' ? 'b-ok' : (estado === 'Rechazado' || estado === 'Rechazado') ? 'b-fail' : estado === 'Sin respuesta' ? 'b-none' : 'b-warn';
   return '<span class="badge ' + cls + '">' + esc(estado) + '</span>';
 }
 function numIntento(n) { return '<span class="pal">Intento <span class="num">' + esc(n) + '</span></span>'; }
@@ -738,20 +764,109 @@ function chips(id, opciones, actual, fn) {
   el.querySelectorAll('button').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); fn(this.dataset.v); }; });
 }
 
-// Muestra una imagen o un video en grande.
-function abrirLightbox(src, esVideo) {
-  $('lightbox-img').classList.toggle('oculto', !!esVideo);
-  $('lightbox-video').classList.toggle('oculto', !esVideo);
-  if (esVideo) $('lightbox-video').src = src; else $('lightbox-img').src = src;
+/* ======================= visor tipo microscopio ======================= */
+
+// Videos ya descargados (fileId -> dirección local), para reproducirlos al instante.
+var VIDEOS = {};
+function cargarVideo(fileId) {
+  if (!VIDEOS[fileId]) {
+    VIDEOS[fileId] = new Promise(function (ok, mal) {
+      api('getVideo', [fileId], function (r) {
+        if (!r || !r.success) { delete VIDEOS[fileId]; mal(); return; }
+        var bin = atob(r.data), bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        ok(URL.createObjectURL(new Blob([bytes], { type: r.mime })));
+      }, function () { delete VIDEOS[fileId]; mal(); });
+    });
+  }
+  return VIDEOS[fileId];
+}
+
+// Campo circular con zoom sin límite (rueda del mouse), arrastre para moverse
+// y doble clic para volver al inicio. medio: { medio, url, fileId }.
+function microscopio(el, medio, tam) {
+  var esVideo = medio.medio === 'video';
+  el.innerHTML = '<div class="micro"' + (tam ? ' style="--tam:' + tam + '"' : '') + '><div class="capa">' +
+    (esVideo ? '<video muted loop playsinline autoplay disablepictureinpicture></video>' : '<img alt="Muestra" src="' + esc(medio.url) + '">') +
+    '</div><span class="zoom">1x</span>' + (esVideo ? '<div class="espera"><div class="spinner" style="margin:0"></div>Cargando video</div>' : '') + '</div>';
+  var campo = el.querySelector('.micro'), capa = campo.querySelector('.capa'), etiqueta = campo.querySelector('.zoom');
+  var z = 1, x = 0, y = 0, arrastre = null;
+  campo.oncontextmenu = function (e) { e.preventDefault(); };
+  function limitar() {
+    var w = campo.clientWidth, h = campo.clientHeight;
+    x = Math.min(0, Math.max(w - w * z, x)); y = Math.min(0, Math.max(h - h * z, y));
+  }
+  function aplicar() {
+    limitar();
+    capa.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + z + ')';
+    etiqueta.textContent = (z < 10 ? z.toFixed(1) : Math.round(z)) + 'x';
+    campo.classList.toggle('con-zoom', z > 1.01);
+  }
+  campo.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var r = campo.getBoundingClientRect(), cx = e.clientX - r.left, cy = e.clientY - r.top;
+    var nz = Math.max(1, z * Math.exp(-e.deltaY * 0.0018));
+    x = cx - (cx - x) * nz / z; y = cy - (cy - y) * nz / z; z = nz;
+    aplicar();
+  }, { passive: false });
+  campo.addEventListener('pointerdown', function (e) { arrastre = { x: e.clientX - x, y: e.clientY - y }; campo.setPointerCapture(e.pointerId); campo.classList.add('arrastrando'); });
+  campo.addEventListener('pointermove', function (e) { if (!arrastre) return; x = e.clientX - arrastre.x; y = e.clientY - arrastre.y; aplicar(); });
+  campo.addEventListener('pointerup', function () { arrastre = null; campo.classList.remove('arrastrando'); });
+  campo.addEventListener('dblclick', function () { z = 1; x = 0; y = 0; aplicar(); });
+  if (esVideo) {
+    var v = campo.querySelector('video');
+    cargarVideo(medio.fileId).then(function (url) {
+      v.src = url; v.play().catch(function () {});
+      var esp = campo.querySelector('.espera'); if (esp) esp.remove();
+    }, function () { var esp = campo.querySelector('.espera'); if (esp) esp.textContent = 'No se pudo cargar el video'; });
+  }
+}
+
+function abrirLightbox(medio) {
+  if (typeof medio === 'string') medio = { medio: 'imagen', url: medio };
+  microscopio($('lightbox-micro'), medio, 'min(86vh,86vw)');
   $('lightbox').classList.add('on');
 }
-function cerrarLightbox() { $('lightbox').classList.remove('on'); $('lightbox-video').src = ''; }
+function cerrarLightbox() { $('lightbox').classList.remove('on'); $('lightbox-micro').innerHTML = ''; }
 document.addEventListener('keydown', function (e) {
   if (e.key !== 'Escape') return;
-  cerrarLightbox();
+  cerrarLightbox(); cerrarGlobo();
   $('modal-perfil').classList.remove('on');
   if (VENTANA.modo !== 'responder' && $('ventana').classList.contains('on')) cerrarVentana();
 });
+
+/* ======================= ayuda de los indicadores ======================= */
+
+var AYUDA = {
+  concordancia: ['Concordancia', 'Porcentaje de muestras identificadas correctamente en el primer intento, del total de muestras evaluadas. Mide la exactitud de la identificación.'],
+  fpy: ['Rendimiento a la primera', 'Porcentaje de controles aprobados en el primer intento, sin necesidad de repetir. En control de calidad se conoce como First Pass Yield (FPY).'],
+  cumplimiento: ['Cumplimiento', 'Días en que se respondió el control, de los días en que hubo control asignado.'],
+  rechazados: ['Rechazados', 'Controles que no se aprobaron después de los 3 intentos.'],
+  aprobados: ['Aprobados', 'Controles aprobados en cualquiera de los 3 intentos, de los controles realizados.'],
+  grafica: ['Concordancia mensual', 'Concordancia de cada mes. Cada punto es un mes; pasa el cursor para ver su valor. La línea punteada es la meta de 90 % y la línea tenue es el promedio de los meses mostrados.'],
+  errores: ['Errores', 'Falso negativo: se respondió negativo y había parásito. Falso positivo: se reportó parásito y la muestra era negativa. Especie equivocada: había parásito, pero se identificó otro. Se cuentan en todos los intentos.'],
+  especies: ['Especies con más dificultad', 'Parásitos con menos aciertos en el primer intento durante el periodo.']
+};
+var GLOBO = null;
+function cerrarGlobo() { if (GLOBO) { GLOBO.el.remove(); GLOBO.btn.classList.remove('on'); GLOBO = null; } }
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('.ayuda');
+  if (!b) { if (GLOBO && !GLOBO.el.contains(e.target)) cerrarGlobo(); return; }
+  e.stopPropagation();
+  var mismo = GLOBO && GLOBO.btn === b;
+  cerrarGlobo();
+  if (mismo) return;
+  var t = AYUDA[b.dataset.ayuda]; if (!t) return;
+  var el = document.createElement('div');
+  el.className = 'globo'; el.innerHTML = '<b>' + esc(t[0]) + '</b>' + esc(t[1]);
+  document.body.appendChild(el);
+  var r = b.getBoundingClientRect();
+  el.style.left = Math.max(10, Math.min(window.innerWidth - el.offsetWidth - 10, r.left - 12)) + 'px';
+  el.style.top = (r.bottom + 8 + el.offsetHeight > window.innerHeight ? r.top - el.offsetHeight - 8 : r.bottom + 8) + 'px';
+  b.classList.add('on');
+  GLOBO = { el: el, btn: b };
+}, true);
+function ayuda(clave) { return '<button class="ayuda" type="button" data-ayuda="' + clave + '">?</button>'; }
 
 /* ======================= selector desplegable ======================= */
 
@@ -899,7 +1014,9 @@ window.onload = function () {
 function usarDatos(datos) {
   DATOS = datos;
   guardar('cci_cache', JSON.stringify({ token: TOKEN, perfil: PERFIL, datos: DATOS }));
-  if (DATOS.hoy && DATOS.hoy.imagenes) DATOS.hoy.imagenes.forEach(function (i) { new Image().src = i.url; });
+  if (DATOS.hoy && DATOS.hoy.imagenes) DATOS.hoy.imagenes.forEach(function (i) {
+    if (i.medio === 'video') cargarVideo(i.fileId).catch(function () {}); else new Image().src = i.url;
+  });
 }
 
 // Actualiza en segundo plano, sin bloquear la pantalla.
@@ -957,7 +1074,7 @@ function pendiente() {
 function pintarEstado() {
   var h = DATOS.hoy, e = h.estado, val, det;
   if (e.aprobado) { val = '<span class="punto ok"></span>Aprobado'; det = 'Respondido a las ' + esc(hora5(e.hora)); }
-  else if (e.agotado) { val = '<span class="punto mal"></span>No aprobado'; det = 'Intentos agotados'; }
+  else if (e.agotado) { val = '<span class="punto mal"></span>Rechazado'; det = 'Intentos agotados'; }
   else if (!h.hay) { val = '<span class="punto"></span>Sin imágenes'; det = PERFIL.rol === 'supervisor' ? 'Agrega imágenes al banco' : 'Avisa a tu supervisor'; }
   else { val = '<span class="punto pend"></span>Pendiente'; det = 'Intento ' + (e.intentosUsados + 1) + ' de ' + MAX_INTENTOS; }
   $('estado-hoy').innerHTML = '<span class="etq">ESTADO DE HOY</span><span class="val">' + val + '</span><span class="det">' + det + '</span>';
@@ -978,13 +1095,17 @@ var VENTANA = { modo: null, fecha: null };
 
 function revisarVentana() { if (PERFIL.rol === 'analista' && pendiente()) continuarControl(); }
 
+// Muestra del control: campo de microscopio y botón para verlo en grande.
 function visor(img, i) {
-  var n = i + 1;
-  if (img.medio === 'video') return '<div class="visor"><iframe src="' + esc(img.video) + '" allow="autoplay" title="Video ' + n + ' del control"></iframe>' +
-    '<button class="icon-btn" type="button" aria-label="Ampliar video ' + n + '" onclick="abrirLightbox(\'' + esc(img.video) + '\', true)">' + AMPLIAR + '</button></div>';
-  return '<div class="visor"><img src="' + esc(img.url) + '" alt="Imagen ' + n + ' del control" onclick="abrirLightbox(this.src)" onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{className:\'sub\',textContent:\'No se pudo cargar la imagen\'}))">' +
-    '<button class="icon-btn" type="button" aria-label="Ampliar imagen ' + n + '" onclick="abrirLightbox(this.parentNode.querySelector(\'img\').src)">' + AMPLIAR + '</button></div>';
+  return '<div class="visor"><div id="campo-' + i + '"></div><button class="icon-btn" type="button" aria-label="Ver en grande" title="Ver en grande" data-ampliar="' + i + '">' + AMPLIAR + '</button></div>';
 }
+function activarVisores() {
+  DATOS.hoy.imagenes.forEach(function (img, i) {
+    microscopio($('campo-' + i), img);
+    $('v-cuerpo').querySelector('[data-ampliar="' + i + '"]').onclick = function () { abrirLightbox(img); };
+  });
+}
+var AYUDA_ZOOM = '<div class="ayuda-zoom">Rueda del mouse para acercar, arrastra para moverte y doble clic para regresar.</div>';
 
 function modoVentana(modo) {
   VENTANA.modo = modo;
@@ -1025,7 +1146,8 @@ function construirControl() {
       '<div class="campo oculto" style="margin:0" id="wrap-' + i + '-b"><label>Segundo hallazgo</label><div id="sel-' + i + '-b"></div></div>' +
       '<button type="button" class="agregar" id="agregar-' + i + '" onclick="alternarSegundo(' + i + ')">+ Agregar otro hallazgo</button>' +
       '</section>';
-  }).join('');
+  }).join('') + '<div style="grid-column:1/-1;margin-top:-6px">' + AYUDA_ZOOM + '</div>';
+  activarVisores();
   SELS = [0, 1].map(function (i) {
     var a = new Selector($('sel-' + i + '-a'), {
       placeholder: 'Selecciona el hallazgo', items: function () { return CATALOGO; },
@@ -1043,7 +1165,7 @@ function abrirConsulta() {
   var ultima = resp[resp.length - 1];
   modoVentana('consulta');
   $('v-titulo').textContent = 'Control de hoy';
-  var estado = e.aprobado ? 'Aprobado' : e.agotado ? 'No aprobado' : 'Pendiente';
+  var estado = e.aprobado ? 'Aprobado' : e.agotado ? 'Rechazado' : 'Pendiente';
   $('v-extra').innerHTML = badge(estado) + (ultima ? numIntento(ultima.intento) + '<span class="mono" style="font-size:10px;color:#6f72a8">' + esc(hora5(ultima.hora)) + '  ' + esc(ultima.usuario) + '</span>' : '');
   $('v-cuerpo').innerHTML = h.imagenes.map(function (img, i) {
     var r = ultima ? (i === 0 ? ultima.respuesta1 : ultima.respuesta2) : '';
@@ -1052,7 +1174,8 @@ function abrirConsulta() {
       '<div class="bloqueada"><span><span class="k">RESPUESTA</span><b>' + (r ? esc(r) : '<span style="color:var(--mute)">Sin respuesta todavía</span>') + '</b></span>' + CANDADO + '</div>' +
       (esSup ? '<div class="bloqueada" style="background:transparent;border-style:dashed"><span><span class="k">ESPERADO</span><b>' + esc(img.parasito) + '</b>' + (img.fuente ? '<span class="sub" style="font-size:10px">Fuente: ' + esc(img.fuente) + '</span>' : '') + '</span></div>' : '') +
       '</section>';
-  }).join('');
+  }).join('') + '<div style="grid-column:1/-1;margin-top:-6px">' + AYUDA_ZOOM + '</div>';
+  activarVisores();
   mostrarVentana();
 }
 
@@ -1088,7 +1211,7 @@ function cerrarVentana(despues) {
   caja.classList.add('cerrando');
   setTimeout(function () {
     $('ventana').classList.remove('on'); caja.classList.remove('cerrando');
-    $('v-cuerpo').querySelectorAll('iframe').forEach(function (f) { if (VENTANA.modo !== 'responder') f.src = 'about:blank'; });
+    if (VENTANA.modo !== 'responder') $('v-cuerpo').querySelectorAll('video').forEach(function (v) { v.pause(); });
     if (typeof despues === 'function') despues();
   }, 280);
 }
@@ -1137,43 +1260,46 @@ function mostrarResultado(ok) {
 
 /* ============================ gráfica ============================ */
 
-// Línea de concordancia por semana, con la meta de 90 %.
+// Gráfica tipo control: concordancia de cada mes con su punto, la meta (90 %)
+// y el promedio de los meses con datos.
 function grafica(serie, alto, id) {
   var w = 600, h = alto, n = serie.length;
   var vals = serie.map(function (s) { return s.valor; }).filter(function (v) { return v != null; });
   if (!vals.length) return '<div class="sub" style="font-size:11px;padding:18px 0">Aún no hay datos suficientes.</div>';
-  var min = Math.min(60, Math.min.apply(null, vals) - 5), max = 100;
-  var x = function (i) { return n > 1 ? Math.round(i * w / (n - 1)) : 0; };
-  var y = function (v) { return Math.round(8 + (max - v) / (max - min) * (h - 30)); };
-  var tramos = [], actual = [];
-  serie.forEach(function (s, i) {
-    if (s.valor == null) { if (actual.length) tramos.push(actual); actual = []; }
-    else actual.push([x(i), y(s.valor)]);
-  });
-  if (actual.length) tramos.push(actual);
-  var linea = tramos.map(function (t) { return t.map(function (p, j) { return (j ? 'L' : 'M') + p[0] + ' ' + p[1]; }).join(' '); }).join(' ');
-  var area = tramos.filter(function (t) { return t.length > 1; }).map(function (t) {
-    return t.map(function (p, j) { return (j ? 'L' : 'M') + p[0] + ' ' + p[1]; }).join(' ') + ' L' + t[t.length - 1][0] + ' ' + (h - 22) + ' L' + t[0][0] + ' ' + (h - 22) + ' Z';
-  }).join(' ');
-  var ult = tramos[tramos.length - 1]; ult = ult[ult.length - 1];
-  var etiquetas = [0, Math.floor((n - 1) / 2), n - 1].filter(function (v, i, a) { return a.indexOf(v) === i; }).map(function (i) {
-    return '<text x="' + x(i) + '" y="' + (h - 4) + '" text-anchor="' + (i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle') + '">' + fechaCorta(serie[i].desde) + '</text>';
+  var min = Math.max(0, Math.min(60, Math.min.apply(null, vals) - 10)), max = 100;
+  var pad = 24;
+  var x = function (i) { return n > 1 ? Math.round(pad + i * (w - 2 * pad) / (n - 1)) : w / 2; };
+  var y = function (v) { return Math.round(14 + (max - v) / (max - min) * (h - 40)); };
+  var prom = Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / vals.length);
+  var pts = serie.map(function (s, i) { return s.valor == null ? null : [x(i), y(s.valor), s]; });
+  var linea = '', previo = false;
+  pts.forEach(function (p) { if (!p) { previo = false; return; } linea += (previo ? 'L' : 'M') + p[0] + ' ' + p[1] + ' '; previo = true; });
+  var conDatos = pts.filter(function (p) { return p; });
+  var area = conDatos.length > 1 ? linea.replace(/M/g, 'L').replace(/^L/, 'M') + 'L' + conDatos[conDatos.length - 1][0] + ' ' + (h - 26) + ' L' + conDatos[0][0] + ' ' + (h - 26) + ' Z' : '';
+  var mesTxt = function (m) { var p = m.split('-'); return MESES_CORTOS[Number(p[1]) - 1]; };
+  var puntos = pts.map(function (p) {
+    if (!p) return '';
+    var bajo = p[2].valor < 90;
+    return '<g class="pt"><circle class="zona" cx="' + p[0] + '" cy="' + p[1] + '" r="14"></circle>' +
+      '<circle class="v" cx="' + p[0] + '" cy="' + p[1] + '" r="4" fill="' + (bajo ? '#e57373' : '#93c5fd') + '" stroke="#05060f" stroke-width="2"></circle>' +
+      '<text x="' + p[0] + '" y="' + (p[1] - 11) + '" text-anchor="middle" font-family="DM Mono" font-size="10" fill="#eef0ff">' + p[2].valor + '%</text></g>';
   }).join('');
-  var puntos = serie.map(function (s, i) { return s.valor == null ? '' : '<circle cx="' + x(i) + '" cy="' + y(s.valor) + '" r="7" fill="transparent"><title>Semana del ' + fechaCorta(s.desde) + ': ' + s.valor + '%</title></circle>'; }).join('');
-  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" style="overflow:visible;display:block">' +
-    '<defs><linearGradient id="ar' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f46e5" stop-opacity=".32"></stop><stop offset="1" stop-color="#4f46e5" stop-opacity="0"></stop></linearGradient>' +
+  var etiquetas = serie.map(function (s, i) { return '<text x="' + x(i) + '" y="' + (h - 6) + '" text-anchor="middle">' + mesTxt(s.mes) + '</text>'; }).join('');
+  return '<svg class="graf" viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" style="overflow:visible;display:block">' +
+    '<defs><linearGradient id="ar' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f46e5" stop-opacity=".28"></stop><stop offset="1" stop-color="#4f46e5" stop-opacity="0"></stop></linearGradient>' +
     '<linearGradient id="ln' + id + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b5cf6"></stop><stop offset="1" stop-color="#3b82f6"></stop></linearGradient></defs>' +
-    '<line x1="0" x2="' + w + '" y1="' + y(90) + '" y2="' + y(90) + '" stroke="#2e2c70" stroke-dasharray="3 5"></line>' +
-    '<text x="' + w + '" y="' + (y(90) - 5) + '" text-anchor="end" font-family="DM Mono" font-size="9" fill="#585b88">meta 90%</text>' +
-    '<path d="' + area + '" fill="url(#ar' + id + ')"></path>' +
-    '<path d="' + linea + '" fill="none" stroke="url(#ln' + id + ')" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>' +
-    '<circle cx="' + ult[0] + '" cy="' + ult[1] + '" r="3.5" fill="#93c5fd"></circle>' + puntos +
-    '<g font-family="DM Mono" font-size="9" fill="#585b88">' + etiquetas + '</g></svg>';
+    '<line x1="0" x2="' + w + '" y1="' + y(90) + '" y2="' + y(90) + '" stroke="#34327a" stroke-dasharray="4 5"></line>' +
+    '<text x="' + w + '" y="' + (y(90) - 5) + '" text-anchor="end" font-family="DM Mono" font-size="9" fill="#6f72a8">meta 90%</text>' +
+    (Math.abs(prom - 90) > 3 ? '<line x1="0" x2="' + w + '" y1="' + y(prom) + '" y2="' + y(prom) + '" stroke="#24225a" stroke-dasharray="1 4"></line><text x="0" y="' + (y(prom) - 5) + '" font-family="DM Mono" font-size="9" fill="#585b88">promedio ' + prom + '%</text>' : '') +
+    (area ? '<path d="' + area + '" fill="url(#ar' + id + ')"></path>' : '') +
+    '<path d="' + linea + '" fill="none" stroke="url(#ln' + id + ')" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>' + puntos +
+    '<g font-family="DM Mono" font-size="9.5" fill="#6f72a8">' + etiquetas + '</g></svg>';
 }
 
 function estadisticaActual() { return DATOS.estadisticas && DATOS.estadisticas[PERIODO]; }
 
-function cambiarPeriodo(v) { PERIODO = v; pintarInicio(); pintarEstadisticas(); }
+// Cambiar el periodo solo actualiza las cifras, no la lista de respuestas.
+function cambiarPeriodo(v) { PERIODO = v; pintarResumenInicio(); pintarEstadisticas(); }
 
 /* ================================ inicio ================================ */
 
@@ -1185,18 +1311,21 @@ function pintarInicio() {
     $('inicio-hola').dataset.nombre = nombre;
     $('inicio-hola').innerHTML = '<span>Bienvenido,</span> <span class="nom">' + esc(nombre) + '</span>';
   }
-  chips('inicio-periodo', PERIODOS, PERIODO, cambiarPeriodo);
-
-  var est = estadisticaActual(), a = est ? est.actual : null;
-  var cifra = function (k, v) { return '<div><div class="k">' + k + '</div><div class="kv">' + v + '</div></div>'; };
-  $('inicio-cifras').innerHTML = a
-    ? cifra('CONCORDANCIA', valor(a.concordancia, '%')) + cifra('APROBACIÓN DIRECTA', valor(a.aprobacionDirecta, '%')) +
-      cifra('CUMPLIMIENTO', a.controles ? a.realizados + '<small>/' + a.controles + '</small>' : valor(null)) + cifra('NO APROBADOS', a.realizados ? a.noAprobados : valor(null))
-    : '<div class="sub">Cargando</div>';
-  $('inicio-grafica').innerHTML = est ? grafica(est.serie, 104, 'i') : '';
-
-  var fechas = ultimosDias(DATOS.historial, 3);
+  pintarResumenInicio();
+  var fechas = ultimosDias(DATOS.historial, 7);
   $('inicio-lista').innerHTML = fechas.length ? bitacora(filasDeDias(DATOS.historial, fechas), esSup) : '<div class="vacio">Aún no hay respuestas registradas.</div>';
+}
+
+function pintarResumenInicio() {
+  chips('inicio-periodo', PERIODOS, PERIODO, cambiarPeriodo);
+  var est = estadisticaActual(), a = est ? est.actual : null;
+  var cifra = function (k, clave, v) { return '<div><div class="k">' + k + ayuda(clave) + '</div><div class="kv">' + v + '</div></div>'; };
+  $('inicio-cifras').innerHTML = a
+    ? cifra('CONCORDANCIA', 'concordancia', valor(a.concordancia, '%')) + cifra('RENDIMIENTO A LA PRIMERA', 'fpy', valor(a.aprobacionDirecta, '%')) +
+      cifra('CUMPLIMIENTO', 'cumplimiento', a.controles ? a.realizados + '<small>/' + a.controles + '</small>' : valor(null)) + cifra('RECHAZADOS', 'rechazados', a.realizados ? a.noAprobados : valor(null))
+    : '<div class="sub">Cargando</div>';
+  var serie = DATOS.estadisticas && DATOS.estadisticas.serieMensual;
+  $('inicio-grafica').innerHTML = serie ? grafica(serie, 120, 'i') : '';
 }
 
 /* ======================== bitácora de respuestas ======================== */
@@ -1204,7 +1333,7 @@ function pintarInicio() {
 function resultadoDia(regs) {
   if (regs.some(function (r) { return r.estado === 'Aprobado'; })) return 'Aprobado';
   if (regs.length === 1 && regs[0].estado === 'Sin respuesta') return 'Sin respuesta';
-  return regs.length >= MAX_INTENTOS ? 'No aprobado' : 'En curso';
+  return regs.length >= MAX_INTENTOS ? 'Rechazado' : 'En curso';
 }
 
 // Un bloque por día, del más reciente al más antiguo; dentro, el último intento arriba.
@@ -1217,8 +1346,8 @@ function bitacora(filas, esSup) {
   return dias.map(function (fecha, i) {
     var regs = porFecha[fecha].slice().sort(function (a, b) { return Number(b.intento || 0) - Number(a.intento || 0); });
     var res = resultadoDia(regs);
-    var pill = res === 'Aprobado' ? 'ok' : res === 'No aprobado' ? 'mal' : res === 'Sin respuesta' ? 'sin' : 'curso';
-    var nodo = fecha === hoy ? ' hoy' : res === 'No aprobado' ? ' mal' : '';
+    var pill = res === 'Aprobado' ? 'ok' : res === 'Rechazado' ? 'mal' : res === 'Sin respuesta' ? 'sin' : 'curso';
+    var nodo = fecha === hoy ? ' hoy' : res === 'Rechazado' ? ' mal' : '';
     var titulo = (fecha === hoy ? 'Hoy, ' : '') + fechaLarga(fecha);
     var cuerpo;
     if (res === 'Sin respuesta') cuerpo = '<div class="sin-resp">Nadie respondió el control de este día.</div>';
@@ -1249,7 +1378,7 @@ function filasDeDias(filas, fechas) { return filas.filter(function (r) { return 
 
 function pintarHistorial() {
   var esSup = PERFIL.rol === 'supervisor';
-  chips('hist-filtros', [['todos', 'Todos'], ['Aprobado', 'Aprobados'], ['No aprobado', 'No aprobados'], ['Sin respuesta', 'Sin respuesta']], HIST.filtro, function (v) { HIST.filtro = v; HIST.pagina = 1; pintarHistorial(); });
+  chips('hist-filtros', [['todos', 'Todos'], ['Aprobado', 'Aprobados'], ['Rechazado', 'Rechazados'], ['Sin respuesta', 'Sin respuesta']], HIST.filtro, function (v) { HIST.filtro = v; HIST.pagina = 1; pintarHistorial(); });
   var fechas = ultimosDias(DATOS.historial).filter(function (f) {
     return HIST.filtro === 'todos' || resultadoDia(filasDeDias(DATOS.historial, [f])) === HIST.filtro;
   });
@@ -1263,11 +1392,11 @@ function pintarHistorial() {
 
 /* ============================== estadísticas ============================== */
 
-function delta(act, ant, unidad) {
+function delta(act, ant) {
   if (act == null || ant == null) return '<div class="dl">sin comparación</div>';
   var d = act - ant;
   if (!d) return '<div class="dl">igual que el ' + ANTERIOR[PERIODO] + '</div>';
-  return '<div class="dl ' + (d > 0 ? 'up' : 'down') + '">' + (d > 0 ? '+' : '') + d + (unidad || '') + ' vs ' + ANTERIOR[PERIODO] + '</div>';
+  return '<div class="dl ' + (d > 0 ? 'up' : 'down') + '">' + (d > 0 ? '+' : '') + d + '% vs ' + ANTERIOR[PERIODO] + '</div>';
 }
 
 function filaBarra(nombre, texto, pctBarra, rojo) {
@@ -1279,14 +1408,14 @@ function pintarEstadisticas() {
   var est = estadisticaActual();
   if (!est) { $('est-kpis').innerHTML = '<div class="sub">Cargando</div>'; return; }
   var a = est.actual, b = est.anterior;
-  var kpi = function (k, v, d) { return '<div class="kpi"><div class="k">' + k + '</div><div class="kv">' + v + '</div>' + d + '</div>'; };
+  var kpi = function (k, clave, v, d) { return '<div class="kpi"><div class="k">' + k + ayuda(clave) + '</div><div class="kv">' + v + '</div>' + d + '</div>'; };
   $('est-kpis').innerHTML =
-    kpi('CONCORDANCIA', valor(a.concordancia, '%'), delta(a.concordancia, b.concordancia, ' pts')) +
-    kpi('APROBACIÓN DIRECTA', valor(a.aprobacionDirecta, '%'), delta(a.aprobacionDirecta, b.aprobacionDirecta, ' pts')) +
-    kpi('CUMPLIMIENTO', valor(a.cumplimiento, '%'), '<div class="dl">' + a.realizados + ' de ' + a.controles + ' días</div>') +
-    kpi('APROBADOS', a.realizados ? a.aprobados + '<small>/' + a.realizados + '</small>' : valor(null), '<div class="dl">' + a.noAprobados + (a.noAprobados === 1 ? ' no aprobado' : ' no aprobados') + '</div>') +
-    kpi('INTENTOS PROMEDIO', valor(a.intentosPromedio), '<div class="dl">por control</div>');
-  $('est-grafica').innerHTML = grafica(est.serie, 150, 'e');
+    kpi('CONCORDANCIA', 'concordancia', valor(a.concordancia, '%'), delta(a.concordancia, b.concordancia)) +
+    kpi('RENDIMIENTO A LA PRIMERA', 'fpy', valor(a.aprobacionDirecta, '%'), delta(a.aprobacionDirecta, b.aprobacionDirecta)) +
+    kpi('CUMPLIMIENTO', 'cumplimiento', valor(a.cumplimiento, '%'), '<div class="dl">' + a.realizados + ' de ' + a.controles + ' días</div>') +
+    kpi('APROBADOS', 'aprobados', a.realizados ? a.aprobados + '<small>/' + a.realizados + '</small>' : valor(null), '<div class="dl">de los controles realizados</div>') +
+    kpi('RECHAZADOS', 'rechazados', a.realizados ? a.noAprobados : valor(null), '<div class="dl">después de 3 intentos</div>');
+  $('est-grafica').innerHTML = DATOS.estadisticas.serieMensual ? grafica(DATOS.estadisticas.serieMensual, 170, 'e') : '';
 
   var er = a.errores, maxErr = Math.max(1, er.falsoNegativo, er.falsoPositivo, er.especie);
   $('est-errores').innerHTML = filaBarra('Falso negativo', er.falsoNegativo, er.falsoNegativo * 100 / maxErr, true) +
@@ -1299,7 +1428,7 @@ function pintarEstadisticas() {
   if (esSup) {
     var filas = est.porAnalista || [];
     $('est-tabla').innerHTML = filas.length
-      ? '<div class="tb mono" style="font-size:9px;color:var(--mute)"><span>USUARIO</span><span>CONTROLES</span><span>CONCORDANCIA</span><span>APROB. DIRECTA</span><span>NO APROBADOS</span></div>' +
+      ? '<div class="tb mono" style="font-size:9px;color:var(--mute)"><span>USUARIO</span><span>CONTROLES</span><span>CONCORDANCIA</span><span>RENDIMIENTO 1.ª</span><span>RECHAZADOS</span></div>' +
         filas.map(function (f) {
           return '<div class="tb"><span style="font-weight:600">' + esc(f.usuario) + '</span><span class="mono">' + f.controles + '</span><span style="display:flex;align-items:center;gap:8px"><span class="mono" style="width:34px">' + valor(f.concordancia, '%') + '</span><span class="bar" style="flex:1"><span style="width:' + (f.concordancia || 0) + '%"></span></span></span><span class="mono">' + valor(f.aprobacionDirecta, '%') + '</span><span class="mono"' + (f.noAprobados ? ' style="color:var(--fail)"' : '') + '>' + f.noAprobados + '</span></div>';
         }).join('')
@@ -1310,19 +1439,20 @@ function pintarEstadisticas() {
     : '<div class="sub" style="font-size:11px">Sin muestras positivas en este periodo.</div>';
 }
 
-// Descarga las respuestas del periodo elegido en un archivo CSV.
-function exportarCSV() {
-  var est = estadisticaActual(); if (!est) return;
-  var filas = DATOS.historial.filter(function (r) { return r.fecha >= est.desde; }).slice().reverse();
-  var esSup = PERFIL.rol === 'supervisor';
-  var cab = ['Fecha', 'Hora', 'Analista', 'Intento', 'Muestra A', 'Muestra B', 'Resultado'].concat(esSup ? ['Esperado A', 'Esperado B'] : []);
-  var csv = [cab].concat(filas.map(function (r) {
-    return [r.fecha, hora5(r.hora), r.usuario, r.intento, r.respuesta1, r.respuesta2, r.estado].concat(esSup ? [r.correcta1 || '', r.correcta2 || ''] : []);
-  })).map(function (f) { return f.map(function (c) { return '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"'; }).join(','); }).join('\r\n');
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
-  a.download = 'control-calidad-' + PERFIL.marca + '-' + PERIODO + '.csv';
-  document.body.appendChild(a); a.click(); a.remove();
+// Descarga un Excel con el resultado final de cada día y la gráfica.
+function exportarExcel() {
+  var b = $('btn-exportar');
+  b.disabled = true; b.textContent = 'Preparando';
+  api('exportarExcel', [PERIODO], function (r) {
+    b.disabled = false; b.textContent = 'Exportar';
+    if (!r || !r.success) { toast((r && r.error) || 'No se pudo exportar', 'err'); return; }
+    var bin = atob(r.data), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    a.download = r.nombre;
+    document.body.appendChild(a); a.click(); a.remove();
+  }, function () { b.disabled = false; b.textContent = 'Exportar'; });
 }
 
 /* ================================ atlas ================================ */
@@ -1334,11 +1464,12 @@ function grupo(n) { return /huevo|larva|progl/i.test(n) ? 'Helminto' : 'Protozoa
 function renderAtlas() {
   if (!DATOS) return;
   chips('atlas-filtros', [['todos', 'Todos'], ['Protozoario', 'Protozoarios'], ['Helminto', 'Helmintos']], ATLAS.filtro, function (v) { ATLAS.filtro = v; renderAtlas(); });
-  // Solo cuentan los parásitos que tienen imagen en el banco de la marca
-  // (más los que ya aparecieron, aunque su imagen se haya eliminado).
-  var vistos = {}; DATOS.atlas.forEach(function (a) { vistos[a.nombre] = a; });
-  var pendientes = (DATOS.especiesBanco || []).filter(function (n) { return !vistos[n]; }).sort();
-  $('atlas-contador').textContent = DATOS.atlas.length + ' / ' + (DATOS.atlas.length + pendientes.length);
+  // Faltan los parásitos del catálogo que todavía no han salido en el control.
+  var vistos = {}, vistasEspecies = {};
+  DATOS.atlas.forEach(function (a) { vistos[a.nombre] = a; a.nombre.split(' + ').forEach(function (n) { vistasEspecies[n] = true; }); });
+  var catalogo = CATALOGO.slice(1);
+  var pendientes = catalogo.filter(function (n) { return !vistasEspecies[n]; });
+  $('atlas-contador').textContent = (catalogo.length - pendientes.length) + ' / ' + catalogo.length;
 
   var q = sinAcentos($('atlas-buscar').value.trim());
   var ok = function (n) { return (ATLAS.filtro === 'todos' || grupo(n) === ATLAS.filtro) && (!q || sinAcentos(n).indexOf(q) !== -1); };
@@ -1348,27 +1479,41 @@ function renderAtlas() {
   var html = visibles.map(function (a, i) {
     var p = Math.round(a.correctas * 100 / a.veces);
     return '<button type="button" class="ficha' + (a.nombre === ATLAS.sel ? ' sel' : '') + '" data-n="' + esc(a.nombre) + '" style="animation-delay:' + Math.min(i * 30, 300) + 'ms">' +
-      '<div class="foto">' + (a.url ? '<img src="' + esc(a.url) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + (a.medio === 'video' ? PLAY : '') + '</div>' +
+      '<div class="foto">' + (a.url ? '<img src="' + esc(a.url.replace(/sz=w\d+/, 'sz=w400')) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + (a.medio === 'video' ? PLAY : '') + '</div>' +
       '<div class="info"><span class="n" title="' + esc(a.nombre) + '">' + esc(a.nombre) + '</span>' +
-      '<span style="display:flex;align-items:center;gap:8px"><span class="bar" style="flex:1"><span style="width:' + p + '%"></span></span><span class="mono" style="font-size:9.5px;color:#8487b8">' + p + '%</span></span></div></button>';
+      '<span style="display:flex;align-items:center;gap:8px" title="Identificado correctamente al final del control"><span class="bar" style="flex:1"><span style="width:' + p + '%"></span></span><span class="mono" style="font-size:9.5px;color:#8487b8">' + p + '%</span></span></div></button>';
   }).join('');
   html += pendientes.filter(ok).map(function (n) {
     return '<div class="ficha pendiente"><div class="foto"><span class="mono" style="font-size:16px;color:#2e2c70">?</span></div><div class="info"><span class="n" title="' + esc(n) + '">' + esc(n) + '</span><span class="mono" style="font-size:9.5px;color:#4a4d78">Aún no aparece</span></div></div>';
   }).join('');
   $('atlas-grid').innerHTML = html || '<div class="vacio">Sin coincidencias.</div>';
-  $('atlas-grid').querySelectorAll('.ficha[data-n]').forEach(function (b) { b.onclick = function () { ATLAS.sel = this.dataset.n; renderAtlas(); }; });
+  // Al elegir otra especie solo cambia el panel de la derecha.
+  $('atlas-grid').querySelectorAll('.ficha[data-n]').forEach(function (b) {
+    b.onclick = function () {
+      ATLAS.sel = this.dataset.n;
+      $('atlas-grid').querySelectorAll('.ficha.sel').forEach(function (f) { f.classList.remove('sel'); });
+      this.classList.add('sel');
+      pintarPanelAtlas(vistos[ATLAS.sel]);
+    };
+  });
   pintarPanelAtlas(vistos[ATLAS.sel]);
 }
 
 function pintarPanelAtlas(a) {
   var panel = $('atlas-panel');
   if (!a) { panel.innerHTML = '<div class="sub" style="font-size:11px;line-height:1.6">Cuando un parásito aparezca en el control, aquí verás su imagen y cómo se ha identificado.</div>'; return; }
+  if (panel.dataset.n === a.nombre && panel.innerHTML) return;
+  panel.dataset.n = a.nombre;
   panel.style.animation = 'none'; void panel.offsetWidth; panel.style.animation = '';
-  panel.innerHTML = '<div class="foto" id="atlas-foto">' + (a.url ? '<img src="' + esc(a.url) + '" alt="" onerror="this.remove()">' : '') + (a.medio === 'video' ? PLAY : '') + '</div>' +
+  var estados = ['no', 're', 'ok'], textos = ['No se identificó', 'Bien en un reintento', 'Bien a la primera'];
+  panel.innerHTML = '<div class="visor"><div id="atlas-campo"></div><button class="icon-btn" type="button" id="atlas-ampliar" aria-label="Ver en grande" title="Ver en grande">' + AMPLIAR + '</button></div>' +
     '<div><div class="k" style="color:#8487b8">' + esc(String(a.grupo || grupo(a.nombre)).toUpperCase()) + '</div><div style="font-size:15px;font-weight:700;line-height:1.25;margin-top:4px">' + esc(a.nombre) + '</div></div>' +
-    '<div class="datos3"><div><span class="k">VECES</span><b>' + a.veces + '</b></div><div><span class="k">ACIERTOS</span><b>' + a.correctas + '<span style="font-size:11px;color:var(--mute)">/' + a.veces + '</span></b></div><div><span class="k">ÚLTIMA</span><b>' + fechaCorta(a.ultima) + '</b></div></div>' +
-    '<div><div class="k" style="margin-bottom:8px">PRIMER INTENTO, DE LA MÁS ANTIGUA A LA MÁS RECIENTE</div><div style="display:flex;gap:4px;flex-wrap:wrap">' + (a.hist || []).map(function (x) { return '<span class="cel ' + (x ? 'ok' : 'no') + '" title="' + (x ? 'Correcta' : 'Incorrecta') + '"></span>'; }).join('') + '</div></div>';
-  $('atlas-foto').onclick = function () { if (a.medio === 'video' && a.video) abrirLightbox(a.video, true); else if (a.url) abrirLightbox(a.url.replace(/sz=w\d+/, 'sz=w1400')); };
+    '<div class="datos3"><div><span class="k">VECES</span><b>' + a.veces + '</b></div><div><span class="k">IDENTIFICADO</span><b>' + a.correctas + '<span style="font-size:11px;color:var(--mute)">/' + a.veces + '</span></b></div><div><span class="k">ÚLTIMA</span><b>' + fechaCorta(a.ultima) + '</b></div></div>' +
+    '<div><div class="k" style="margin-bottom:8px">RESULTADO EN CADA APARICIÓN</div><div style="display:flex;gap:4px;flex-wrap:wrap">' + (a.hist || []).map(function (x) { return '<span class="cel ' + estados[x] + '" title="' + textos[x] + '"></span>'; }).join('') + '</div>' +
+    '<div class="leyenda"><span><i class="cel ok"></i>A la primera</span><span><i class="cel re"></i>En reintento</span><span><i class="cel no"></i>No se identificó</span></div></div>';
+  var medio = { medio: a.medio, url: a.url, fileId: a.fileId };
+  if (a.url || a.fileId) microscopio($('atlas-campo'), medio, '250px');
+  $('atlas-ampliar').onclick = function () { abrirLightbox(medio); };
 }
 
 /* ============================ confirmación ============================ */
@@ -1406,7 +1551,7 @@ function abrirPerfil() {
 /* ================================ banco ================================ */
 
 var BANCO = { tipo: 'Positiva', listaTipo: 'Positiva', pagina: 1, archivo: null, sel1: null, sel2: null };
-var TEXTO_UPLOAD = '<b style="color:var(--text)">Clic o arrastra el archivo</b><br>Imagen JPG o PNG, o video MP4 de hasta ' + MAX_MB_VIDEO + ' MB';
+var TEXTO_UPLOAD = '<b style="color:var(--text)">Clic o arrastra el archivo</b><br>Imagen JPG o PNG, o video. Si el video pesa más de ' + MAX_MB_VIDEO + ' MB se reduce solo.';
 
 function pintarBanco() {
   if (!BANCO.sel1) {
@@ -1424,12 +1569,14 @@ function pintarBanco() {
   var items = res[BANCO.listaTipo].items, porPagina = 8, total = Math.max(1, Math.ceil(items.length / porPagina));
   BANCO.pagina = Math.min(BANCO.pagina, total);
   $('banco-lista').innerHTML = items.length ? items.slice((BANCO.pagina - 1) * porPagina, BANCO.pagina * porPagina).map(function (b) {
-    return '<div class="banco-item"><span class="miniatura" data-grande="' + esc(b.urlGrande || b.url) + '" data-video="' + (b.medio === 'video' ? '1' : '') + '"><img src="' + esc(b.url) + '" alt="Ver" loading="lazy">' + (b.medio === 'video' ? PLAY : '') + '</span>' +
+    return '<div class="banco-item"><span class="miniatura" data-grande="' + esc(b.urlGrande || b.url) + '" data-video="' + (b.medio === 'video' ? esc(b.fileId) : '') + '"><img src="' + esc(b.url) + '" alt="Ver" loading="lazy">' + (b.medio === 'video' ? PLAY : '') + '</span>' +
       '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:11.5px">' + esc(b.parasito) + '</div>' +
       '<div class="meta"><span>' + esc(b.fuente || 'Sin fuente') + '</span><span>' + fechaCorta(b.fechaSubida) + '</span><span>' + b.diasEnRotacion + ' días más en rotación</span></div></div>' +
       '<button class="btn-sec peligro" type="button" data-id="' + esc(b.id) + '">Quitar</button></div>';
   }).join('') : '<div class="vacio">Sin archivos.</div>';
-  $('banco-lista').querySelectorAll('.miniatura').forEach(function (i) { i.onclick = function () { abrirLightbox(this.dataset.grande, !!this.dataset.video); }; });
+  $('banco-lista').querySelectorAll('.miniatura').forEach(function (i) {
+    i.onclick = function () { abrirLightbox(this.dataset.video ? { medio: 'video', fileId: this.dataset.video } : { medio: 'imagen', url: this.dataset.grande }); };
+  });
   $('banco-lista').querySelectorAll('button[data-id]').forEach(function (b) { b.onclick = function () { eliminarImagen(this.dataset.id); }; });
   paginar('banco-pag', BANCO.pagina, total, function (p) { BANCO.pagina = p; pintarBanco(); });
 }
@@ -1464,26 +1611,63 @@ function leerArchivo(file) {
   reader.readAsDataURL(file);
 }
 
-// El video se sube tal cual; la miniatura sale de un cuadro al inicio del video.
+// El video se sube tal cual si pesa hasta el límite; si pesa más, se comprime
+// en el navegador antes de subirlo. La miniatura sale de un cuadro del inicio.
 function leerVideo(file) {
-  if (file.size > MAX_MB_VIDEO * 1024 * 1024) { toast('El video pesa más de ' + MAX_MB_VIDEO + ' MB', 'err'); return; }
   $('upload-txt').innerHTML = '<div class="spinner"></div>';
   var url = URL.createObjectURL(file);
   var v = document.createElement('video');
-  v.muted = true; v.preload = 'auto'; v.src = url;
+  v.muted = true; v.preload = 'auto'; v.playsInline = true; v.src = url;
+  v.onerror = function () { toast('No se pudo leer el video', 'err'); $('upload-txt').innerHTML = TEXTO_UPLOAD; };
   v.onloadeddata = function () { v.currentTime = Math.min(0.5, (v.duration || 1) / 2); };
   v.onseeked = function () {
+    v.onseeked = null;
     var thumb = redimensionar(v, 320, 0.7);
-    var reader = new FileReader();
-    reader.onload = function (ev) {
-      BANCO.archivo = { base64: ev.target.result, thumb: thumb, mime: file.type || 'video/mp4' };
-      $('upload-txt').innerHTML = '<span style="position:relative;display:inline-block"><img src="' + thumb + '" alt="">' + PLAY + '</span><br><span class="mono" style="font-size:10px">Video, ' + Math.round(v.duration || 0) + ' s</span>';
-      URL.revokeObjectURL(url);
-      actualizarBtnSubir();
+    var listo = function (blob, mime) {
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        BANCO.archivo = { base64: ev.target.result, thumb: thumb, mime: mime };
+        $('upload-txt').innerHTML = '<span style="position:relative;display:inline-block"><img src="' + thumb + '" alt="">' + PLAY + '</span><br><span class="mono" style="font-size:10px">Video de ' + Math.round(v.duration || 0) + ' s, ' + (blob.size / 1048576).toFixed(1) + ' MB</span>';
+        URL.revokeObjectURL(url);
+        actualizarBtnSubir();
+      };
+      reader.readAsDataURL(blob);
     };
-    reader.readAsDataURL(file);
+    if (file.size <= MAX_MB_VIDEO * 1048576) { listo(file, file.type || 'video/mp4'); return; }
+    comprimirVideo(v, MAX_MB_VIDEO * 0.85 * 1048576, function (p) {
+      $('upload-txt').innerHTML = '<div class="spinner"></div><span class="mono" style="font-size:10px">Reduciendo el peso del video ' + Math.round(p * 100) + '%</span>';
+    }).then(function (r) {
+      if (r.blob.size > MAX_MB_VIDEO * 1048576) { toast('El video sigue pesando más de ' + MAX_MB_VIDEO + ' MB; usa uno más corto', 'err'); $('upload-txt').innerHTML = TEXTO_UPLOAD; return; }
+      listo(r.blob, r.mime);
+    }, function () { toast('No se pudo reducir el video', 'err'); $('upload-txt').innerHTML = TEXTO_UPLOAD; });
   };
-  v.onerror = function () { toast('No se pudo leer el video', 'err'); $('upload-txt').innerHTML = TEXTO_UPLOAD; };
+}
+
+// Vuelve a grabar el video (máximo 1280 px) con la calidad que cabe en el peso objetivo.
+function comprimirVideo(v, bytesObjetivo, progreso) {
+  return new Promise(function (ok, mal) {
+    if (!window.MediaRecorder) { mal(); return; }
+    var tipos = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+    var mime = tipos.filter(function (t) { return MediaRecorder.isTypeSupported(t); })[0];
+    if (!mime) { mal(); return; }
+    var escala = Math.min(1, 1280 / Math.max(v.videoWidth, v.videoHeight));
+    var c = document.createElement('canvas');
+    c.width = Math.round(v.videoWidth * escala / 2) * 2; c.height = Math.round(v.videoHeight * escala / 2) * 2;
+    var ctx = c.getContext('2d');
+    var bits = Math.max(300000, Math.floor(bytesObjetivo * 8 / Math.max(1, v.duration)));
+    var rec = new MediaRecorder(c.captureStream(30), { mimeType: mime, videoBitsPerSecond: bits });
+    var partes = [];
+    rec.ondataavailable = function (e) { if (e.data.size) partes.push(e.data); };
+    rec.onstop = function () { ok({ blob: new Blob(partes, { type: 'video/webm' }), mime: 'video/webm' }); };
+    var timer = setInterval(function () {
+      ctx.drawImage(v, 0, 0, c.width, c.height);
+      progreso(v.duration ? v.currentTime / v.duration : 0);
+      if (v.ended) { clearInterval(timer); rec.stop(); }
+    }, 33);
+    v.currentTime = 0;
+    rec.start(1000);
+    v.play().catch(function () { clearInterval(timer); mal(); });
+  });
 }
 
 function subirArchivo() {

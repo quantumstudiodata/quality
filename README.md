@@ -67,3 +67,10 @@ Al iniciar sesión, la aplicación descarga en **una sola llamada** todo lo que 
 - La sesión dura 6 horas. Al desactivar a un usuario, el cambio se aplica a más tardar al terminar su sesión actual.
 - Las imágenes se publican en Drive como “cualquier persona con el enlace” para que carguen rápido. Los archivos se nombran con un código, no con el nombre del parásito.
 - Si se cambia `Code.gs`, hay que crear una **nueva versión** de la implementación (Implementar → Administrar implementaciones → Editar → Nueva versión).
+
+## Unificar cuentas de la versión anterior
+
+Si en la versión anterior alguien respondió con un usuario sin número (por
+ejemplo `EMAR` o `MPWN`), ejecuta una vez `unificarUsuariosAnteriores` desde el
+editor de Apps Script. Sus respuestas pasan a la cuenta actual (`EMAR1`,
+`MPWN1`). La lista está en `CUENTAS_ANTERIORES`, dentro de `Code.gs`.

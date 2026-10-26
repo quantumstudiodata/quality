@@ -307,14 +307,25 @@ function hacerPublico_(file) {
 function urlImagen_(fileId, ancho) {
   return 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w' + (ancho || 1400);
 }
-function urlVideo_(fileId) { return 'https://drive.google.com/file/d/' + fileId + '/preview'; }
 
 // Datos para mostrar una imagen o un video del banco (o de una asignación).
 function medio_(x, ancho) {
   var esVideo = x.medio === 'video';
   var m = { medio: esVideo ? 'video' : 'imagen', url: urlImagen_(esVideo && x.thumbId ? x.thumbId : x.fileId, ancho) };
-  if (esVideo) m.video = urlVideo_(x.fileId);
+  if (esVideo) m.fileId = x.fileId;
   return m;
+}
+
+// El video se entrega como datos (no como enlace de Drive) para que el
+// navegador lo reproduzca de inmediato, en bucle y sin opción de descarga.
+function getVideo(token, fileId) {
+  var p = sesion_(token);
+  var fila = leer_('BancoImagenes').filter(function (b) {
+    return b.fileId === fileId && b.medio === 'video' && (b.marca === p.marca || b.compartida === 'SI');
+  })[0];
+  if (!fila) return { success: false, error: 'Video no disponible' };
+  var blob = DriveApp.getFileById(fileId).getBlob();
+  return { success: true, mime: blob.getContentType() || 'video/mp4', data: Utilities.base64Encode(blob.getBytes()) };
 }
 
 /* ===================== selección de imágenes ===================== */
@@ -433,7 +444,7 @@ function controlHoy_(p) {
   out.hay = true;
   out.imagenes = ['A', 'B'].map(function (orden) {
     var a = asignacion[orden];
-    var img = medio_(a, 1400);
+    var img = medio_(a, 2400);
     if (esSup) { img.parasito = a.parasito; img.tipo = a.tipo; img.fuente = a.fuente; }
     return img;
   });
@@ -602,7 +613,18 @@ function getIndicadores(token) {
 
 /* ========================= estadísticas ========================= */
 
-var PERIODOS = { semana: 7, mes: 30, trimestre: 90 };
+var PERIODOS = ['semana', 'mes', 'trimestre'];
+
+function inicioDeMes_(fecha, meses) { return sumarMeses_(fecha.substring(0, 8) + '01', meses || 0); }
+
+// Rango de fechas de un periodo y del periodo anterior. El mes y el
+// trimestre son de calendario (el trimestre: el mes actual y los dos previos).
+function rangoPeriodo_(clave, hoy) {
+  if (clave === 'semana') return { desde: sumarDias_(hoy, -6), hasta: hoy, antDesde: sumarDias_(hoy, -13), antHasta: sumarDias_(hoy, -7) };
+  var n = clave === 'mes' ? 1 : 3;
+  var desde = inicioDeMes_(hoy, -(n - 1));
+  return { desde: desde, hasta: hoy, antDesde: sumarMeses_(desde, -n), antHasta: sumarDias_(desde, -1) };
+}
 
 // Días con control entre dos fechas, con sus imágenes y sus respuestas en
 // orden de intento. Hoy solo cuenta cuando el control ya terminó.
@@ -675,23 +697,19 @@ function especiesDificiles_(dias) {
 
 function estadisticas_(p) {
   var hoy = hoy_(p);
-  var todos = diasControl_(p, sumarDias_(hoy, -179), hoy);
+  var todos = diasControl_(p, inicioDeMes_(hoy, -5), hoy);
   var entre = function (desde, hasta) { return todos.filter(function (d) { return d.fecha >= desde && d.fecha <= hasta; }); };
-  var out = {};
-  Object.keys(PERIODOS).forEach(function (clave) {
-    var n = PERIODOS[clave];
-    var desde = sumarDias_(hoy, -(n - 1));
-    var actuales = entre(desde, hoy);
-    var r = {
-      desde: desde, actual: metricas_(actuales), anterior: metricas_(entre(sumarDias_(hoy, -(2 * n - 1)), sumarDias_(hoy, -n))),
-      especies: especiesDificiles_(actuales), serie: []
-    };
-    // Concordancia por semana (de la más antigua a la actual).
-    var semanas = Math.max(8, Math.ceil(n / 7));
-    for (var i = semanas - 1; i >= 0; i--) {
-      var fin = sumarDias_(hoy, -7 * i), ini = sumarDias_(fin, -6);
-      r.serie.push({ desde: ini, valor: metricas_(entre(ini, fin)).concordancia });
-    }
+  var out = { serieMensual: [] };
+  // Concordancia de cada uno de los últimos 6 meses.
+  for (var i = 5; i >= 0; i--) {
+    var ini = inicioDeMes_(hoy, -i), fin = sumarDias_(inicioDeMes_(hoy, -i + 1), -1);
+    var mm = metricas_(entre(ini, fin));
+    out.serieMensual.push({ mes: ini.substring(0, 7), valor: mm.concordancia, muestras: mm.muestras });
+  }
+  PERIODOS.forEach(function (clave) {
+    var rango = rangoPeriodo_(clave, hoy);
+    var actuales = entre(rango.desde, rango.hasta);
+    var r = { desde: rango.desde, actual: metricas_(actuales), anterior: metricas_(entre(rango.antDesde, rango.antHasta)), especies: especiesDificiles_(actuales) };
     if (p.rol === 'supervisor') {
       var porUsuario = {};
       actuales.forEach(function (d) {
@@ -709,6 +727,111 @@ function estadisticas_(p) {
   return out;
 }
 
+/* ========================= exportación ========================= */
+
+var MESES_NOMBRE = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+function etiquetaPeriodo_(clave, desde, hasta) {
+  var mes = function (f) { return MESES_NOMBRE[Number(f.substring(5, 7)) - 1]; };
+  var dm = function (f) { return f.substring(8, 10) + '/' + f.substring(5, 7); };
+  if (clave === 'mes') return mes(desde) + ' ' + desde.substring(0, 4);
+  if (clave === 'trimestre') return mes(desde) + ' a ' + mes(hasta).toLowerCase() + ' ' + hasta.substring(0, 4);
+  return dm(desde) + ' al ' + dm(hasta) + '/' + hasta.substring(0, 4);
+}
+
+// Un renglón por día con el resultado final (el intento aprobado o el último),
+// más la concordancia acumulada para la gráfica.
+function filasExportacion_(p, clave) {
+  var hoy = hoy_(p);
+  var rango = rangoPeriodo_(clave, hoy);
+  var dias = diasControl_(p, rango.desde, rango.hasta);
+  var muestras = 0, correctas = 0;
+  var filas = dias.map(function (d) {
+    var f = d.fecha.substring(8, 10) + '/' + d.fecha.substring(5, 7) + '/' + d.fecha.substring(0, 4);
+    if (!d.regs.length) return { dia: f, hora: '', a: '', b: '', intento: '', analista: '', resultado: 'Sin respuesta', acumulada: muestras ? Math.round(correctas * 100 / muestras) : null };
+    var final = d.regs.filter(function (r) { return r.estado === 'Aprobado'; })[0] || d.regs[d.regs.length - 1];
+    [[d.A, d.regs[0].respuesta1], [d.B, d.regs[0].respuesta2]].forEach(function (par) {
+      muestras++;
+      if (normalizarRespuesta_(par[1]) === normalizarRespuesta_(par[0].parasito)) correctas++;
+    });
+    return {
+      dia: f, hora: String(final.hora).substring(0, 5), a: final.respuesta1, b: final.respuesta2, intento: Number(final.intento),
+      analista: final.usuario, resultado: final.estado === 'Aprobado' ? 'Aprobado' : 'Rechazado',
+      acumulada: Math.round(correctas * 100 / muestras)
+    };
+  });
+  return { rango: rango, etiqueta: etiquetaPeriodo_(clave, rango.desde, rango.hasta), filas: filas };
+}
+
+// Crea una hoja con formato y gráfica, la descarga como Excel y la borra.
+function exportarExcel(token, clave) {
+  var p = sesion_(token);
+  if (PERIODOS.indexOf(clave) === -1) clave = 'mes';
+  var datos = filasExportacion_(p, clave);
+  var libro = SpreadsheetApp.create('Control de calidad ' + p.marca + ' ' + datos.etiqueta);
+  try {
+    var hoja = libro.getSheets()[0];
+    hoja.setName('Control diario');
+    var n = datos.filas.length;
+    hoja.getRange('A1:H2').setValues([
+      ['Mes:', datos.etiqueta, '', '', 'Área:', 'Parasitología', '', ''],
+      ['Laboratorio:', p.laboratorio, '', '', 'Exportado por:', p.usuario, '', '']
+    ]);
+    hoja.getRange('B1:D1').merge(); hoja.getRange('B2:D2').merge();
+    hoja.getRange('F1:H1').merge(); hoja.getRange('F2:H2').merge();
+    hoja.getRange('A1:A2').setFontWeight('bold'); hoja.getRange('E1:E2').setFontWeight('bold');
+    hoja.getRange('B1:D2').setBorder(null, null, true, null, null, null);
+    hoja.getRange('F1:H2').setBorder(null, null, true, null, null, null);
+
+    var cab = ['No.', 'Día', 'Hora', 'Muestra A', 'Muestra B', 'Intento', 'Analista', 'Resultado'];
+    hoja.getRange(4, 1, 1, 8).setValues([cab]).setFontWeight('bold').setFontColor('#ffffff').setBackground('#312e81');
+    if (n) {
+      hoja.getRange(5, 1, n, 8).setValues(datos.filas.map(function (f, i) { return [i + 1, f.dia, f.hora, f.a, f.b, f.intento, f.analista, f.resultado]; }));
+      hoja.getRange(5, 2, n, 1).setBackground('#e5e7eb');
+      var res = hoja.getRange(5, 8, n, 1);
+      hoja.setConditionalFormatRules([
+        SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Aprobado').setBackground('#d1fae5').setFontColor('#065f46').setRanges([res]).build(),
+        SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Rechazado').setBackground('#fee2e2').setFontColor('#991b1b').setRanges([res]).build(),
+        SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Sin respuesta').setBackground('#f3f4f6').setFontColor('#6b7280').setRanges([res]).build()
+      ]);
+    }
+    var tabla = hoja.getRange(4, 1, Math.max(n, 1) + 1, 8);
+    tabla.setBorder(true, true, true, true, true, true, '#9ca3af', SpreadsheetApp.BorderStyle.SOLID);
+    hoja.getRange(1, 1, Math.max(n + 4, 4), 8).setFontFamily('Arial').setFontSize(10)
+      .setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(true);
+    [44, 84, 54, 190, 190, 56, 76, 92].forEach(function (w, i) { hoja.setColumnWidth(i + 1, w); });
+
+    // Datos de la gráfica en una hoja aparte; la gráfica queda a la derecha de la tabla.
+    var g = libro.insertSheet('Datos de la gráfica');
+    var puntos = datos.filas.filter(function (f) { return f.acumulada != null; });
+    g.getRange(1, 1, 1, 3).setValues([['Día', 'Concordancia acumulada (%)', 'Meta (%)']]);
+    if (puntos.length) g.getRange(2, 1, puntos.length, 3).setValues(puntos.map(function (f) { return [f.dia.substring(0, 5), f.acumulada, 90]; }));
+    g.getRange(1, 1, Math.max(puntos.length, 1) + 1, 3).setFontFamily('Arial').setFontSize(10).setHorizontalAlignment('center');
+    if (puntos.length) {
+      var grafica = hoja.newChart().asLineChart()
+        .addRange(g.getRange(1, 1, puntos.length + 1, 3))
+        .setTitle('Concordancia acumulada del periodo')
+        .setPointStyle(Charts.PointStyle.MEDIUM)
+        .setColors(['#4f46e5', '#9ca3af'])
+        .setOption('vAxis.viewWindow.min', 0).setOption('vAxis.viewWindow.max', 100)
+        .setOption('legend', { position: 'bottom' })
+        .setOption('width', 560).setOption('height', 320)
+        .setPosition(4, 10, 0, 0)
+        .build();
+      hoja.insertChart(grafica);
+    }
+    SpreadsheetApp.flush();
+    var url = 'https://docs.google.com/spreadsheets/d/' + libro.getId() + '/export?format=xlsx';
+    var archivo = UrlFetchApp.fetch(url, { headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() } }).getBlob();
+    return {
+      success: true, nombre: 'Control de calidad ' + p.marca + ' ' + datos.etiqueta.replace(/\//g, '-') + '.xlsx',
+      data: Utilities.base64Encode(archivo.getBytes())
+    };
+  } finally {
+    DriveApp.getFileById(libro.getId()).setTrashed(true);
+  }
+}
+
 /* ========================= atlas ========================= */
 
 function grupoParasito_(nombre) {
@@ -724,26 +847,28 @@ function atlas_(p) {
   var registros = registrosPorFecha_(p.marca);
   var mapa = {};
   Object.keys(asignaciones).forEach(function (fecha) {
-    var regs = registros[fecha];
-    if (!regs || !regs.length) return;
-    if (fecha === hoy) {
-      var e = estadoDeRegistros_(regs);
-      if (!e.aprobado && !e.agotado) return;
-    }
-    var primero = regs.filter(function (r) { return r.intento === '1'; })[0] || regs[0];
+    var regs = (registros[fecha] || []).slice().sort(function (x, y) { return Number(x.intento) - Number(y.intento); });
+    if (!regs.length) return;
+    var e = estadoDeRegistros_(regs);
+    if (fecha === hoy && !e.aprobado && !e.agotado) return;
+    var primero = regs[0];
+    var final = regs.filter(function (r) { return r.estado === 'Aprobado'; })[0] || regs[regs.length - 1];
     ['A', 'B'].forEach(function (orden) {
       var a = asignaciones[fecha][orden];
       if (!a || a.tipo !== 'Positiva') return;
-      var resp = orden === 'A' ? primero.respuesta1 : primero.respuesta2;
+      var campo = orden === 'A' ? 'respuesta1' : 'respuesta2';
+      var esperada = normalizarRespuesta_(a.parasito);
+      var alPrimero = normalizarRespuesta_(primero[campo]) === esperada;
+      var alFinal = normalizarRespuesta_(final[campo]) === esperada;
       var item = mapa[a.parasito] = mapa[a.parasito] || { nombre: a.parasito, grupo: grupoParasito_(a.parasito), veces: 0, correctas: 0, ultima: '', url: '', hist: [] };
-      var bien = normalizarRespuesta_(resp) === normalizarRespuesta_(a.parasito);
       item.veces++;
-      if (bien) item.correctas++;
-      item.hist.push([fecha, bien ? 1 : 0]);
+      if (alFinal) item.correctas++;
+      // 2: bien a la primera, 1: bien en un reintento, 0: no se identificó.
+      item.hist.push([fecha, alPrimero ? 2 : alFinal ? 1 : 0]);
       if (fecha > item.ultima) {
         item.ultima = fecha;
-        var m = medio_(a, 600);
-        item.url = m.url; item.medio = m.medio; item.video = m.video || '';
+        var m = medio_(a, 1600);
+        item.url = m.url; item.medio = m.medio; item.fileId = m.fileId || '';
       }
     });
   });
@@ -754,8 +879,6 @@ function atlas_(p) {
   }).sort(function (a, b) { return b.ultima > a.ultima ? 1 : -1; });
 }
 
-// Parásitos que de verdad pueden salir en el control de la marca: los que
-// tienen al menos una imagen positiva activa en su banco (propio + general).
 function especiesBanco_(p) {
   var vistos = {};
   poolMarca_(leer_('BancoImagenes'), p, 'Positiva').forEach(function (b) { if (b.parasito) vistos[b.parasito] = true; });
@@ -808,7 +931,7 @@ function banco_(p, tipo) {
         id: b.id, parasito: b.parasito, fuente: b.fuente, fechaSubida: b.fechaSubida,
         diasEnRotacion: Math.max(0, diasEntre_(hoy, sumarMeses_(b.fechaSubida, CONFIG.MESES_ROTACION))),
         url: urlImagen_(b.thumbId || b.fileId, 200),
-        urlGrande: b.medio === 'video' ? urlVideo_(b.fileId) : urlImagen_(b.fileId, 1400),
+        urlGrande: urlImagen_(b.fileId, 2400), fileId: b.fileId,
         medio: b.medio === 'video' ? 'video' : 'imagen'
       };
     }),
@@ -1073,6 +1196,25 @@ function configurarInicial() {
   var tieneDisparador = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'mantenimientoDiario'; });
   if (!tieneDisparador) ScriptApp.newTrigger('mantenimientoDiario').timeBased().everyDays(1).atHour(3).create();
 
+  Logger.log(mensaje);
+  return mensaje;
+}
+
+/* ============ unificación de cuentas de la versión anterior ============ */
+
+// Antes de esta versión algunas personas respondían con su usuario sin número.
+// Ejecutar desde el editor para que sus respuestas pasen a la cuenta actual.
+var CUENTAS_ANTERIORES = { 'EMAR': 'EMAR1', 'MPWN': 'MPWN1' };
+
+function unificarUsuariosAnteriores() {
+  var cambios = 0;
+  conBloqueo_(function () {
+    leer_('Registros').forEach(function (r) {
+      var nuevo = CUENTAS_ANTERIORES[String(r.usuario).trim().toUpperCase()];
+      if (nuevo && r.usuario !== nuevo) { actualizar_('Registros', r._fila, { usuario: nuevo }); cambios++; }
+    });
+  });
+  var mensaje = 'Respuestas actualizadas: ' + cambios;
   Logger.log(mensaje);
   return mensaje;
 }
