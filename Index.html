@@ -168,7 +168,7 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 }
 
 /* ---------- inicio ---------- */
-.hola{font-size:20px;font-weight:700;letter-spacing:-.02em;margin-top:6px}
+.hola{font-size:24px;font-weight:700;letter-spacing:-.02em;margin-top:6px}
 .hola span{display:inline-block;animation:sal .7s cubic-bezier(.2,.8,.2,1) both}
 .hola .nom{background:linear-gradient(100deg,#eef0ff 40%,#c7d2fe 50%,#eef0ff 60%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sal .7s cubic-bezier(.2,.8,.2,1) .15s both,brilla 7s ease-in-out 1.2s infinite}
 @keyframes sal{from{opacity:0;transform:translateY(6px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
@@ -178,8 +178,13 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 /* ayuda de cada indicador */
 .ayuda{width:14px;height:14px;border-radius:50%;border:1px solid #34327a;background:transparent;color:var(--sub);font-family:var(--mono);font-size:8.5px;line-height:1;display:inline-flex;align-items:center;justify-content:center;margin-left:6px;vertical-align:1px;transition:border-color .2s,color .2s,background .2s}
 .ayuda:hover,.ayuda.on{border-color:var(--mid);color:var(--text);background:rgba(79,70,229,.2)}
-.globo{position:fixed;z-index:99000;max-width:270px;padding:10px 12px;border-radius:10px;background:#141245;border:1px solid #34327a;box-shadow:0 16px 36px -12px rgba(0,0,0,.9);font-size:11px;line-height:1.55;color:#d6d8f5;animation:subir .2s ease-out}
+.globo{position:fixed;z-index:99000;max-width:330px;padding:10px 12px;border-radius:10px;background:#141245;border:1px solid #34327a;box-shadow:0 16px 36px -12px rgba(0,0,0,.9);font-size:11px;line-height:1.55;color:#d6d8f5;animation:subir .2s ease-out}
 .globo b{display:block;color:var(--text);margin-bottom:3px}
+.globo h4{font-size:12px;color:var(--text);margin-bottom:6px}
+.globo p{margin:0 0 7px}.globo p:last-child{margin-bottom:0}
+.globo .et{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;color:var(--accent);margin:9px 0 3px}
+.globo .formula{display:block;font-family:var(--mono);font-size:10px;color:#c7d2fe;background:rgba(79,70,229,.12);border:1px solid #24225a;border-radius:7px;padding:6px 8px;margin:4px 0 6px}
+.globo ul{margin:0 0 6px;padding-left:16px}.globo li{margin-bottom:4px}
 /* gráfica */
 .graf .pt circle.v{transition:r .2s}
 .graf .pt text{opacity:0;transition:opacity .2s}
@@ -257,12 +262,19 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
   box-shadow:0 0 0 1px #2e2c70,0 0 0 7px #0b0b22,0 0 0 8px #24225a,0 24px 50px -20px rgba(0,0,0,.95),0 0 60px -20px rgba(79,70,229,.35)}
 .micro.arrastrando{cursor:grabbing}
 .micro .capa{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0;will-change:transform}
-.micro .capa img,.micro .capa video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none}
+.micro .capa img,.micro .capa video{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;-webkit-user-drag:none}
 .micro::after{content:'';position:absolute;inset:0;border-radius:50%;pointer-events:none;box-shadow:inset 0 0 38px 8px rgba(0,0,0,.8)}
 .micro .zoom{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:2;font-family:var(--mono);font-size:9.5px;padding:2px 8px;border-radius:10px;background:rgba(5,6,15,.65);color:#c7d2fe;pointer-events:none;opacity:0;transition:opacity .3s}
 .micro.con-zoom .zoom{opacity:1}
 .micro .espera{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--sub);font-size:10.5px;z-index:1}
 .ayuda-zoom{text-align:center;font-size:9.5px;color:var(--mute);margin-top:8px}
+/* guía breve para hacer zoom con la rueda del mouse */
+.guia{position:absolute;left:0;right:0;margin:auto;width:max-content;bottom:20%;z-index:3;display:flex;align-items:center;gap:8px;padding:7px 10px 7px 8px;border-radius:12px;background:rgba(13,12,40,.82);border:1px solid #34327a;backdrop-filter:blur(6px);color:#c7d2fe;font-size:10px;pointer-events:none;animation:guia 6s ease both}
+.guia .rueda{animation:rueda 1.1s ease-in-out infinite}
+@keyframes rueda{0%{transform:translateY(-2px);opacity:1}60%{transform:translateY(3px);opacity:.2}100%{transform:translateY(-2px);opacity:1}}
+@keyframes guia{0%{opacity:0;transform:translateY(6px)}10%,82%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-4px)}}
+.lightbox .cerrar-lb{position:fixed;top:18px;right:18px;width:38px;height:38px;border-radius:10px;border:1px solid #34327a;background:rgba(13,12,40,.8);display:flex;align-items:center;justify-content:center;z-index:2;transition:border-color .2s,background .2s}
+.lightbox .cerrar-lb:hover{border-color:var(--mid);background:rgba(79,70,229,.2)}
 .agregar{align-self:flex-start;border:none;background:none;color:var(--sub);font-size:11px;transition:color .2s}
 .agregar:hover{color:var(--text)}
 .msg-ventana{font-size:11.5px}
@@ -340,13 +352,17 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .datos3>div{padding:10px 0 10px 12px;border-left:1px solid var(--border)}
 .datos3>div:first-child{padding-left:0;border-left:none}
 .datos3 b{display:block;font-size:17px;margin-top:3px}
-.cel{width:10px;height:10px;border-radius:3px;border:1px solid #2d2c66}
-.cel.ok{background:rgba(79,70,229,.55);border-color:rgba(129,140,248,.7)}
-.cel.re{background:rgba(79,70,229,.12);border-color:rgba(129,140,248,.6)}
+.cel{width:16px;height:16px;border-radius:4px;border:1px solid #2d2c66}
+.cel.ok{background:linear-gradient(135deg,#6d28d9,#3b82f6);border-color:#818cf8}
+.cel.re{background:rgba(251,191,36,.28);border-color:rgba(251,191,36,.8)}
 .cel.no{background:rgba(229,83,83,.12);border-color:rgba(229,83,83,.45)}
 .leyenda{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;font-size:9.5px;color:var(--sub)}
 .leyenda span{display:inline-flex;align-items:center;gap:5px}
-.leyenda i{display:inline-block}
+.leyenda i{display:inline-block;width:11px;height:11px}
+.sel-mes{height:32px;width:auto;padding:0 30px 0 10px;appearance:none;-webkit-appearance:none;background:var(--bg-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239497c4' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;cursor:pointer}
+.sel-mes option{background:#0f0e2e}
+.tdia{display:grid;grid-template-columns:50px 110px 110px 90px minmax(0,1fr);gap:10px;align-items:center;font-size:11px;padding:7px 0;border-bottom:1px solid #12112e}
+.tdia:last-child{border-bottom:none}
 .contador{font-family:var(--mono);font-size:10.5px;color:var(--accent);padding:3px 8px;border-radius:6px;background:rgba(79,70,229,.12);border:1px solid rgba(99,102,241,.3)}
 @media(max-width:1000px){.atlas-cuerpo{grid-template-columns:1fr}.panel-atlas{position:relative;top:0}}
 
@@ -442,11 +458,11 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
     <section class="pane" id="pane-inicio">
       <div class="cab-pane" style="align-items:flex-end">
         <div><div class="mono" style="font-size:10px;color:#8487b8" id="inicio-fecha"></div><div class="hola" id="inicio-hola"></div></div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div class="chips" id="inicio-periodo"></div><button class="lnk" type="button" onclick="irA('estadisticas')">Ver estadísticas <i data-flecha></i></button></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div class="chips" id="inicio-vista"></div><button class="lnk" type="button" onclick="irA('estadisticas')">Ver estadísticas <i data-flecha></i></button></div>
       </div>
       <div class="card resumen" id="inicio-resumen" onclick="if(!event.target.closest('.ayuda')) irA('estadisticas')" title="Ver estadísticas">
         <div class="cifras" id="inicio-cifras"></div>
-        <div><div class="k" style="margin-bottom:6px">CONCORDANCIA MENSUAL<button class="ayuda" type="button" data-ayuda="grafica">?</button></div><div id="inicio-grafica"></div></div>
+        <div><div class="k" style="margin-bottom:6px"><span id="inicio-graf-titulo">CONCORDANCIA MENSUAL</span><button class="ayuda" type="button" data-ayuda="grafica">?</button></div><div id="inicio-grafica"></div></div>
       </div>
       <div>
         <div class="cab-pane"><span style="font-size:12.5px;font-weight:700">Últimas respuestas</span><button class="lnk" type="button" onclick="irA('historial')">Ver historial <i data-flecha></i></button></div>
@@ -459,13 +475,14 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
       <div class="migas"><button class="volver" type="button" onclick="irA('inicio')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>Inicio</button></div>
       <div class="cab-pane">
         <span class="titulo">Estadísticas</span>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div class="chips" id="est-periodo"></div><button class="btn-sec" type="button" id="btn-exportar" onclick="exportarExcel()">Exportar</button></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div class="chips" id="est-vista"></div><select class="input sel-mes" id="est-mes" aria-label="Mes" onchange="MES_SEL=this.value;pintarEstadisticas()"></select><button class="btn-sec" type="button" id="btn-exportar" onclick="exportarExcel()">Exportar mes</button></div>
       </div>
       <div class="card fila-kpi" id="est-kpis"></div>
       <div class="secciones">
-        <div class="card"><div class="k" style="margin-bottom:8px">CONCORDANCIA MENSUAL<button class="ayuda" type="button" data-ayuda="grafica">?</button></div><div id="est-grafica"></div></div>
+        <div class="card"><div class="k" style="margin-bottom:8px"><span id="est-graf-titulo">CONCORDANCIA MENSUAL</span><button class="ayuda" type="button" data-ayuda="grafica">?</button></div><div id="est-grafica"></div></div>
         <div class="card"><div class="k" style="margin-bottom:14px">ERRORES<button class="ayuda" type="button" data-ayuda="errores">?</button></div><div style="display:flex;flex-direction:column;gap:14px" id="est-errores"></div></div>
       </div>
+      <div class="card oculto" id="est-diario" style="padding:16px 18px"><div class="k" style="margin-bottom:6px">DATOS POR DÍA</div><div id="est-dias"></div></div>
       <div class="secciones" id="est-abajo">
         <div class="card" id="est-analistas"><div class="k" style="margin-bottom:4px">POR ANALISTA</div><div id="est-tabla"></div></div>
         <div class="card"><div class="k" style="margin-bottom:14px">ESPECIES CON MÁS DIFICULTAD<button class="ayuda" type="button" data-ayuda="especies">?</button></div><div style="display:flex;flex-direction:column;gap:13px" id="est-especies"></div></div>
@@ -623,7 +640,7 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
     </div>
   </div>
 </div>
-<div class="lightbox" id="lightbox" onclick="if(event.target===this) cerrarLightbox()"><div id="lightbox-micro"></div></div>
+<div class="lightbox" id="lightbox" onclick="if(event.target===this) cerrarLightbox()"><button class="cerrar-lb" type="button" aria-label="Cerrar" title="Cerrar" onclick="cerrarLightbox()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#eef0ff" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button><div id="lightbox-micro"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -702,9 +719,8 @@ function logo(tam, id) {
 }
 
 var TOKEN = '', PERFIL = null, DATOS = null, PANE = 'inicio';
-var PERIODO = 'mes';
-var PERIODOS = [['semana', 'Semana'], ['mes', 'Mes'], ['trimestre', 'Trimestre']];
-var ANTERIOR = { semana: 'semana anterior', mes: 'mes anterior', trimestre: 'trimestre anterior' };
+var VISTA = 'mensual', MES_SEL = null;
+var VISTAS = [['mensual', 'Mensual'], ['diario', 'Diario']];
 
 /* ============================== utilidades ============================== */
 
@@ -784,11 +800,12 @@ function cargarVideo(fileId) {
 
 // Campo circular con zoom sin límite (rueda del mouse), arrastre para moverse
 // y doble clic para volver al inicio. medio: { medio, url, fileId }.
-function microscopio(el, medio, tam) {
+function microscopio(el, medio, tam, guia) {
   var esVideo = medio.medio === 'video';
   el.innerHTML = '<div class="micro"' + (tam ? ' style="--tam:' + tam + '"' : '') + '><div class="capa">' +
     (esVideo ? '<video muted loop playsinline autoplay disablepictureinpicture></video>' : '<img alt="Muestra" src="' + esc(medio.url) + '">') +
-    '</div><span class="zoom">1x</span>' + (esVideo ? '<div class="espera"><div class="spinner" style="margin:0"></div>Cargando video</div>' : '') + '</div>';
+    '</div><span class="zoom">1x</span>' + (esVideo ? '<div class="espera"><div class="spinner" style="margin:0"></div>Cargando video</div>' : '') +
+    (guia ? '<div class="guia"><svg width="18" height="24" viewBox="0 0 18 24" fill="none" stroke="#c7d2fe" stroke-width="1.5"><rect x="1" y="1" width="16" height="22" rx="8"></rect><line class="rueda" x1="9" y1="5" x2="9" y2="9" stroke-linecap="round" stroke-width="2"></line></svg>Gira la rueda para acercar</div>' : '') + '</div>';
   var campo = el.querySelector('.micro'), capa = campo.querySelector('.capa'), etiqueta = campo.querySelector('.zoom');
   var z = 1, x = 0, y = 0, arrastre = null;
   campo.oncontextmenu = function (e) { e.preventDefault(); };
@@ -804,6 +821,7 @@ function microscopio(el, medio, tam) {
   }
   campo.addEventListener('wheel', function (e) {
     e.preventDefault();
+    var g = campo.querySelector('.guia'); if (g) g.remove();
     var r = campo.getBoundingClientRect(), cx = e.clientX - r.left, cy = e.clientY - r.top;
     var nz = Math.max(1, z * Math.exp(-e.deltaY * 0.0018));
     x = cx - (cx - x) * nz / z; y = cy - (cy - y) * nz / z; z = nz;
@@ -838,14 +856,38 @@ document.addEventListener('keydown', function (e) {
 /* ======================= ayuda de los indicadores ======================= */
 
 var AYUDA = {
-  concordancia: ['Concordancia', 'Porcentaje de muestras identificadas correctamente en el primer intento, del total de muestras evaluadas. Mide la exactitud de la identificación.'],
-  fpy: ['Rendimiento a la primera', 'Porcentaje de controles aprobados en el primer intento, sin necesidad de repetir. En control de calidad se conoce como First Pass Yield (FPY).'],
-  cumplimiento: ['Cumplimiento', 'Días en que se respondió el control, de los días en que hubo control asignado.'],
-  rechazados: ['Rechazados', 'Controles que no se aprobaron después de los 3 intentos.'],
-  aprobados: ['Aprobados', 'Controles aprobados en cualquiera de los 3 intentos, de los controles realizados.'],
-  grafica: ['Concordancia mensual', 'Concordancia de cada mes. Cada punto es un mes; pasa el cursor para ver su valor. La línea punteada es la meta de 90 % y la línea tenue es el promedio de los meses mostrados.'],
-  errores: ['Errores', 'Falso negativo: se respondió negativo y había parásito. Falso positivo: se reportó parásito y la muestra era negativa. Especie equivocada: había parásito, pero se identificó otro. Se cuentan en todos los intentos.'],
-  especies: ['Especies con más dificultad', 'Parásitos con menos aciertos en el primer intento durante el periodo.']
+  concordancia: ['Concordancia',
+    '<span class="et">EN CONTROL DE CALIDAD</span><p>Grado de acuerdo entre el resultado que emite el analista y el valor de referencia asignado a una muestra control. Es la medida básica de exactitud en pruebas cualitativas, como la identificación de parásitos.</p>' +
+    '<span class="et">EN ESTE CONTROL</span><p>Cada muestra tiene un resultado esperado: el parásito, o negativo, con que se dio de alta.</p><p>Se compara contra la respuesta del primer intento, porque refleja el desempeño sin retroalimentación.</p>' +
+    '<span class="formula">muestras correctas al 1.er intento ÷ muestras evaluadas × 100</span>'],
+  fpy: ['Rendimiento a la primera (First Pass Yield)',
+    '<span class="et">EN CONTROL DE CALIDAD</span><p>Proporción de unidades que completan un proceso cumpliendo la especificación desde la primera vez, sin reproceso ni corrección.</p><p>Un FPY bajo indica variabilidad o fallas en el proceso.</p>' +
+    '<span class="et">EN ESTE CONTROL</span><p>La unidad es el control diario (dos muestras). Cada reintento se considera un reproceso.</p>' +
+    '<span class="formula">controles aprobados en el intento 1 ÷ controles realizados × 100</span>'],
+  cumplimiento: ['Cumplimiento',
+    '<span class="et">EN CONTROL DE CALIDAD</span><p>Indicador de adherencia al programa de control de calidad interno: proporción de controles ejecutados respecto a los programados en el periodo.</p><p>Evalúa el proceso, no el resultado.</p>' +
+    '<span class="et">EN ESTE CONTROL</span><p>Un día con control asignado y sin respuesta cuenta como incumplimiento.</p>' +
+    '<span class="formula">días con control realizado ÷ días con control programado × 100</span>'],
+  rechazados: ['Rechazados',
+    '<span class="et">EN CONTROL DE CALIDAD</span><p>Control que no cumple el criterio de aceptación después de agotar las oportunidades permitidas.</p><p>Requiere registro, análisis de causa y acción correctiva.</p>' +
+    '<span class="et">EN ESTE CONTROL</span><p>Control no aprobado tras los 3 intentos del día.</p>'],
+  aprobados: ['Aprobados',
+    '<span class="et">EN CONTROL DE CALIDAD</span><p>Control que cumple el criterio de aceptación: todos sus resultados coinciden con el valor de referencia.</p>' +
+    '<span class="et">EN ESTE CONTROL</span><p>Control aprobado en cualquiera de los 3 intentos.</p>' +
+    '<span class="formula">controles aprobados ÷ controles realizados</span>'],
+  grafica: ['Gráfica de concordancia',
+    '<span class="et">QUÉ ES</span><p>Gráfica de tendencia del indicador de concordancia, del mismo tipo que una gráfica de control. Permite ver si el desempeño se mantiene estable o se desvía con el tiempo.</p>' +
+    '<span class="et">VISTAS</span><ul><li>Mensual: un punto por cada mes con datos.</li><li>Diario: un punto por día del mes elegido (0, 50 o 100 %).</li></ul>' +
+    '<span class="et">POR QUÉ LA META ES 90 %</span><p>En los programas de evaluación externa de la competencia (por ejemplo, CLIA y CAP), el desempeño mínimo aceptable es de 80 % de concordancia.</p><p>La meta interna se fija en 90 % para tener margen y detectar una desviación antes de llegar a ese mínimo.</p>'],
+  errores: ['Errores de identificación',
+    '<span class="et">EN CONTROL DE CALIDAD</span><p>Resultados que no coinciden con el valor de referencia, clasificados según su efecto diagnóstico.</p>' +
+    '<span class="et">TIPOS</span><ul><li>Falso negativo: se informa negativo en una muestra positiva. Es el error de mayor riesgo, porque deja al paciente sin diagnóstico ni tratamiento.</li>' +
+    '<li>Falso positivo: se informa un parásito en una muestra negativa. Puede llevar a un tratamiento innecesario.</li>' +
+    '<li>Especie equivocada: la muestra es positiva, pero se identifica otro organismo. Es un error de clasificación morfológica.</li></ul>' +
+    '<span class="et">EN ESTE CONTROL</span><p>Se cuentan las respuestas de todos los intentos.</p>'],
+  especies: ['Especies con más dificultad',
+    '<span class="et">QUÉ ES</span><p>Parásitos con menor proporción de aciertos al primer intento en el mes.</p>' +
+    '<span class="et">PARA QUÉ SIRVE</span><p>Orienta la capacitación hacia las morfologías que más se confunden.</p>']
 };
 var GLOBO = null;
 function cerrarGlobo() { if (GLOBO) { GLOBO.el.remove(); GLOBO.btn.classList.remove('on'); GLOBO = null; } }
@@ -858,7 +900,7 @@ document.addEventListener('click', function (e) {
   if (mismo) return;
   var t = AYUDA[b.dataset.ayuda]; if (!t) return;
   var el = document.createElement('div');
-  el.className = 'globo'; el.innerHTML = '<b>' + esc(t[0]) + '</b>' + esc(t[1]);
+  el.className = 'globo'; el.innerHTML = '<h4>' + esc(t[0]) + '</h4>' + t[1];
   document.body.appendChild(el);
   var r = b.getBoundingClientRect();
   el.style.left = Math.max(10, Math.min(window.innerWidth - el.offsetWidth - 10, r.left - 12)) + 'px';
@@ -1101,7 +1143,7 @@ function visor(img, i) {
 }
 function activarVisores() {
   DATOS.hoy.imagenes.forEach(function (img, i) {
-    microscopio($('campo-' + i), img);
+    microscopio($('campo-' + i), img, null, i === 0 && VENTANA.modo === 'responder');
     $('v-cuerpo').querySelector('[data-ampliar="' + i + '"]').onclick = function () { abrirLightbox(img); };
   });
 }
@@ -1260,8 +1302,8 @@ function mostrarResultado(ok) {
 
 /* ============================ gráfica ============================ */
 
-// Gráfica tipo control: concordancia de cada mes con su punto, la meta (90 %)
-// y el promedio de los meses con datos.
+// Gráfica tipo control: un punto por mes o por día, la meta (90 %) y el
+// promedio. serie: [{ etiqueta, titulo, valor }].
 function grafica(serie, alto, id) {
   var w = 600, h = alto, n = serie.length;
   var vals = serie.map(function (s) { return s.valor; }).filter(function (v) { return v != null; });
@@ -1276,15 +1318,15 @@ function grafica(serie, alto, id) {
   pts.forEach(function (p) { if (!p) { previo = false; return; } linea += (previo ? 'L' : 'M') + p[0] + ' ' + p[1] + ' '; previo = true; });
   var conDatos = pts.filter(function (p) { return p; });
   var area = conDatos.length > 1 ? linea.replace(/M/g, 'L').replace(/^L/, 'M') + 'L' + conDatos[conDatos.length - 1][0] + ' ' + (h - 26) + ' L' + conDatos[0][0] + ' ' + (h - 26) + ' Z' : '';
-  var mesTxt = function (m) { var p = m.split('-'); return MESES_CORTOS[Number(p[1]) - 1]; };
+  var cada = Math.max(1, Math.ceil(n / 12));
   var puntos = pts.map(function (p) {
     if (!p) return '';
     var bajo = p[2].valor < 90;
     return '<g class="pt"><circle class="zona" cx="' + p[0] + '" cy="' + p[1] + '" r="14"></circle>' +
       '<circle class="v" cx="' + p[0] + '" cy="' + p[1] + '" r="4" fill="' + (bajo ? '#e57373' : '#93c5fd') + '" stroke="#05060f" stroke-width="2"></circle>' +
-      '<text x="' + p[0] + '" y="' + (p[1] - 11) + '" text-anchor="middle" font-family="DM Mono" font-size="10" fill="#eef0ff">' + p[2].valor + '%</text></g>';
+      '<text x="' + p[0] + '" y="' + (p[1] - 11) + '" text-anchor="middle" font-family="DM Mono" font-size="10" fill="#eef0ff">' + (p[2].titulo ? esc(p[2].titulo) + ': ' : '') + p[2].valor + '%</text></g>';
   }).join('');
-  var etiquetas = serie.map(function (s, i) { return '<text x="' + x(i) + '" y="' + (h - 6) + '" text-anchor="middle">' + mesTxt(s.mes) + '</text>'; }).join('');
+  var etiquetas = serie.map(function (s, i) { return i % cada && i !== n - 1 ? '' : '<text x="' + x(i) + '" y="' + (h - 6) + '" text-anchor="middle">' + esc(s.etiqueta) + '</text>'; }).join('');
   return '<svg class="graf" viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" style="overflow:visible;display:block">' +
     '<defs><linearGradient id="ar' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f46e5" stop-opacity=".28"></stop><stop offset="1" stop-color="#4f46e5" stop-opacity="0"></stop></linearGradient>' +
     '<linearGradient id="ln' + id + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b5cf6"></stop><stop offset="1" stop-color="#3b82f6"></stop></linearGradient></defs>' +
@@ -1296,10 +1338,22 @@ function grafica(serie, alto, id) {
     '<g font-family="DM Mono" font-size="9.5" fill="#6f72a8">' + etiquetas + '</g></svg>';
 }
 
-function estadisticaActual() { return DATOS.estadisticas && DATOS.estadisticas[PERIODO]; }
+function mesTexto(mes, largo) { var p = mes.split('-'); var m = MESES[Number(p[1]) - 1]; return largo ? mayuscula(m) + ' ' + p[0] : MESES_CORTOS[Number(p[1]) - 1]; }
 
-// Cambiar el periodo solo actualiza las cifras, no la lista de respuestas.
-function cambiarPeriodo(v) { PERIODO = v; pintarResumenInicio(); pintarEstadisticas(); }
+// Datos de un mes (solo existen los meses con controles).
+function datosMes(mes) {
+  var est = DATOS.estadisticas; if (!est || !est.meses) return null;
+  return est.meses.filter(function (m) { return m.mes === mes; })[0] || null;
+}
+function serieGrafica(m) {
+  var est = DATOS.estadisticas;
+  if (VISTA === 'diario') {
+    return m ? m.dias.map(function (d) { return { etiqueta: String(d.dia), titulo: 'Día ' + d.dia, valor: d.concordancia }; }) : [];
+  }
+  return (est && est.serieMensual || []).map(function (s) { return { etiqueta: mesTexto(s.mes), titulo: mesTexto(s.mes), valor: s.valor }; });
+}
+// Cambiar la vista solo actualiza cifras y gráfica, no la lista de respuestas.
+function cambiarVista(v) { VISTA = v; pintarResumenInicio(); pintarEstadisticas(); }
 
 /* ================================ inicio ================================ */
 
@@ -1316,16 +1370,17 @@ function pintarInicio() {
   $('inicio-lista').innerHTML = fechas.length ? bitacora(filasDeDias(DATOS.historial, fechas), esSup) : '<div class="vacio">Aún no hay respuestas registradas.</div>';
 }
 
+// Cifras del mes en curso.
 function pintarResumenInicio() {
-  chips('inicio-periodo', PERIODOS, PERIODO, cambiarPeriodo);
-  var est = estadisticaActual(), a = est ? est.actual : null;
+  chips('inicio-vista', VISTAS, VISTA, cambiarVista);
+  var est = DATOS.estadisticas, listo = est && est.meses;
+  var m = listo ? datosMes(est.mesActual) : null, a = m ? m.actual : null;
   var cifra = function (k, clave, v) { return '<div><div class="k">' + k + ayuda(clave) + '</div><div class="kv">' + v + '</div></div>'; };
-  $('inicio-cifras').innerHTML = a
-    ? cifra('CONCORDANCIA', 'concordancia', valor(a.concordancia, '%')) + cifra('RENDIMIENTO A LA PRIMERA', 'fpy', valor(a.aprobacionDirecta, '%')) +
-      cifra('CUMPLIMIENTO', 'cumplimiento', a.controles ? a.realizados + '<small>/' + a.controles + '</small>' : valor(null)) + cifra('RECHAZADOS', 'rechazados', a.realizados ? a.noAprobados : valor(null))
-    : '<div class="sub">Cargando</div>';
-  var serie = DATOS.estadisticas && DATOS.estadisticas.serieMensual;
-  $('inicio-grafica').innerHTML = serie ? grafica(serie, 120, 'i') : '';
+  $('inicio-cifras').innerHTML = !listo ? '<div class="sub">Cargando</div>' :
+    cifra('CONCORDANCIA', 'concordancia', a ? valor(a.concordancia, '%') : valor(null)) + cifra('RENDIMIENTO A LA PRIMERA', 'fpy', a ? valor(a.aprobacionDirecta, '%') : valor(null)) +
+    cifra('CUMPLIMIENTO', 'cumplimiento', a && a.controles ? a.realizados + '<small>/' + a.controles + '</small>' : valor(null)) + cifra('RECHAZADOS', 'rechazados', a && a.realizados ? a.noAprobados : valor(null));
+  $('inicio-graf-titulo').textContent = VISTA === 'diario' && listo ? 'CONCORDANCIA DIARIA, ' + mesTexto(est.mesActual, true).toUpperCase() : 'CONCORDANCIA MENSUAL';
+  $('inicio-grafica').innerHTML = listo ? grafica(serieGrafica(m), 120, 'i') : '';
 }
 
 /* ======================== bitácora de respuestas ======================== */
@@ -1356,7 +1411,7 @@ function bitacora(filas, esSup) {
         return '<div class="int' + (j > 0 ? ' viejo' : '') + '">' + numIntento(r.intento) + '<span class="h">' + esc(hora5(r.hora)) + '</span><span class="u">' + esc(r.usuario) + '</span>' +
           '<span>' + esc(r.respuesta1 || '—') + '</span><span>' + esc(r.respuesta2 || '—') + '</span><span>' + badge(r.estado) + '</span></div>';
       }).join('');
-      if (esSup && regs[0].correcta1) cuerpo += '<div class="int esperado"><span>Esperado</span><span></span><span></span><span>' + esc(regs[0].correcta1) + '</span><span>' + esc(regs[0].correcta2) + '</span><span></span></div>';
+      if (esSup && res === 'Rechazado' && regs[0].correcta1) cuerpo += '<div class="int esperado"><span>Esperado</span><span></span><span></span><span>' + esc(regs[0].correcta1) + '</span><span>' + esc(regs[0].correcta2) + '</span><span></span></div>';
     }
     return '<div class="dia" style="animation-delay:' + Math.min(i * 50, 300) + 'ms"><span class="nodo' + nodo + '"></span>' +
       '<div class="dia-top"><b>' + esc(mayuscula(titulo)) + '</b><span class="pill ' + pill + '">' + res + '</span></div>' + cuerpo + '</div>';
@@ -1395,8 +1450,8 @@ function pintarHistorial() {
 function delta(act, ant) {
   if (act == null || ant == null) return '<div class="dl">sin comparación</div>';
   var d = act - ant;
-  if (!d) return '<div class="dl">igual que el ' + ANTERIOR[PERIODO] + '</div>';
-  return '<div class="dl ' + (d > 0 ? 'up' : 'down') + '">' + (d > 0 ? '+' : '') + d + '% vs ' + ANTERIOR[PERIODO] + '</div>';
+  if (!d) return '<div class="dl">igual que el mes anterior</div>';
+  return '<div class="dl ' + (d > 0 ? 'up' : 'down') + '">' + (d > 0 ? '+' : '') + d + '% vs mes anterior</div>';
 }
 
 function filaBarra(nombre, texto, pctBarra, rojo) {
@@ -1404,9 +1459,13 @@ function filaBarra(nombre, texto, pctBarra, rojo) {
 }
 
 function pintarEstadisticas() {
-  chips('est-periodo', PERIODOS, PERIODO, cambiarPeriodo);
-  var est = estadisticaActual();
-  if (!est) { $('est-kpis').innerHTML = '<div class="sub">Cargando</div>'; return; }
+  chips('est-vista', VISTAS, VISTA, cambiarVista);
+  var todo = DATOS.estadisticas;
+  if (!todo || !todo.meses) { $('est-kpis').innerHTML = '<div class="sub">Cargando</div>'; return; }
+  if (!todo.meses.length) { $('est-kpis').innerHTML = '<div class="sub">Todavía no hay controles registrados.</div>'; $('est-mes').innerHTML = ''; return; }
+  if (!datosMes(MES_SEL)) MES_SEL = todo.meses[0].mes;
+  $('est-mes').innerHTML = todo.meses.map(function (m) { return '<option value="' + m.mes + '"' + (m.mes === MES_SEL ? ' selected' : '') + '>' + mesTexto(m.mes, true) + '</option>'; }).join('');
+  var est = datosMes(MES_SEL);
   var a = est.actual, b = est.anterior;
   var kpi = function (k, clave, v, d) { return '<div class="kpi"><div class="k">' + k + ayuda(clave) + '</div><div class="kv">' + v + '</div>' + d + '</div>'; };
   $('est-kpis').innerHTML =
@@ -1415,7 +1474,15 @@ function pintarEstadisticas() {
     kpi('CUMPLIMIENTO', 'cumplimiento', valor(a.cumplimiento, '%'), '<div class="dl">' + a.realizados + ' de ' + a.controles + ' días</div>') +
     kpi('APROBADOS', 'aprobados', a.realizados ? a.aprobados + '<small>/' + a.realizados + '</small>' : valor(null), '<div class="dl">de los controles realizados</div>') +
     kpi('RECHAZADOS', 'rechazados', a.realizados ? a.noAprobados : valor(null), '<div class="dl">después de 3 intentos</div>');
-  $('est-grafica').innerHTML = DATOS.estadisticas.serieMensual ? grafica(DATOS.estadisticas.serieMensual, 170, 'e') : '';
+  $('est-graf-titulo').textContent = VISTA === 'diario' ? 'CONCORDANCIA DIARIA, ' + mesTexto(MES_SEL, true).toUpperCase() : 'CONCORDANCIA MENSUAL';
+  $('est-grafica').innerHTML = grafica(serieGrafica(est), 170, 'e');
+  $('est-diario').classList.toggle('oculto', VISTA !== 'diario');
+  if (VISTA === 'diario') {
+    $('est-dias').innerHTML = '<div class="tdia mono" style="font-size:9px;color:var(--mute)"><span>DÍA</span><span>CONCORDANCIA</span><span>RESULTADO</span><span>INTENTO</span><span>ANALISTA</span></div>' +
+      est.dias.slice().reverse().map(function (d) {
+        return '<div class="tdia"><span class="mono">' + d.dia + '</span><span class="mono">' + valor(d.concordancia, '%') + '</span><span>' + badge(d.resultado) + '</span><span>' + (d.intento ? numIntento(d.intento) : '—') + '</span><span class="mono" style="color:var(--sub)">' + esc(d.analista || '—') + '</span></div>';
+      }).join('');
+  }
 
   var er = a.errores, maxErr = Math.max(1, er.falsoNegativo, er.falsoPositivo, er.especie);
   $('est-errores').innerHTML = filaBarra('Falso negativo', er.falsoNegativo, er.falsoNegativo * 100 / maxErr, true) +
@@ -1443,8 +1510,8 @@ function pintarEstadisticas() {
 function exportarExcel() {
   var b = $('btn-exportar');
   b.disabled = true; b.textContent = 'Preparando';
-  api('exportarExcel', [PERIODO], function (r) {
-    b.disabled = false; b.textContent = 'Exportar';
+  api('exportarExcel', [MES_SEL || (DATOS.estadisticas && DATOS.estadisticas.mesActual)], function (r) {
+    b.disabled = false; b.textContent = 'Exportar mes';
     if (!r || !r.success) { toast((r && r.error) || 'No se pudo exportar', 'err'); return; }
     var bin = atob(r.data), bytes = new Uint8Array(bin.length);
     for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
@@ -1452,7 +1519,7 @@ function exportarExcel() {
     a.href = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
     a.download = r.nombre;
     document.body.appendChild(a); a.click(); a.remove();
-  }, function () { b.disabled = false; b.textContent = 'Exportar'; });
+  }, function () { b.disabled = false; b.textContent = 'Exportar mes'; });
 }
 
 /* ================================ atlas ================================ */
@@ -1481,7 +1548,7 @@ function renderAtlas() {
     return '<button type="button" class="ficha' + (a.nombre === ATLAS.sel ? ' sel' : '') + '" data-n="' + esc(a.nombre) + '" style="animation-delay:' + Math.min(i * 30, 300) + 'ms">' +
       '<div class="foto">' + (a.url ? '<img src="' + esc(a.url.replace(/sz=w\d+/, 'sz=w400')) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + (a.medio === 'video' ? PLAY : '') + '</div>' +
       '<div class="info"><span class="n" title="' + esc(a.nombre) + '">' + esc(a.nombre) + '</span>' +
-      '<span style="display:flex;align-items:center;gap:8px" title="Identificado correctamente al final del control"><span class="bar" style="flex:1"><span style="width:' + p + '%"></span></span><span class="mono" style="font-size:9.5px;color:#8487b8">' + p + '%</span></span></div></button>';
+      '<span style="display:flex;align-items:center;gap:8px" title="Veces que se identificó correctamente al cerrar el control (incluye reintentos)"><span class="bar" style="flex:1"><span style="width:' + p + '%"></span></span><span class="mono" style="font-size:9.5px;color:#8487b8">' + p + '%</span></span></div></button>';
   }).join('');
   html += pendientes.filter(ok).map(function (n) {
     return '<div class="ficha pendiente"><div class="foto"><span class="mono" style="font-size:16px;color:#2e2c70">?</span></div><div class="info"><span class="n" title="' + esc(n) + '">' + esc(n) + '</span><span class="mono" style="font-size:9.5px;color:#4a4d78">Aún no aparece</span></div></div>';

@@ -631,18 +631,8 @@ function getIndicadores(token) {
 
 /* ========================= estadísticas ========================= */
 
-var PERIODOS = ['semana', 'mes', 'trimestre'];
-
 function inicioDeMes_(fecha, meses) { return sumarMeses_(fecha.substring(0, 8) + '01', meses || 0); }
-
-// Rango de fechas de un periodo y del periodo anterior. El mes y el
-// trimestre son de calendario (el trimestre: el mes actual y los dos previos).
-function rangoPeriodo_(clave, hoy) {
-  if (clave === 'semana') return { desde: sumarDias_(hoy, -6), hasta: hoy, antDesde: sumarDias_(hoy, -13), antHasta: sumarDias_(hoy, -7) };
-  var n = clave === 'mes' ? 1 : 3;
-  var desde = inicioDeMes_(hoy, -(n - 1));
-  return { desde: desde, hasta: hoy, antDesde: sumarMeses_(desde, -n), antHasta: sumarDias_(desde, -1) };
-}
+function finDeMes_(mes) { return sumarDias_(sumarMeses_(mes + '-01', 1), -1); }
 
 // Días con control entre dos fechas, con sus imágenes y sus respuestas en
 // orden de intento. Hoy solo cuenta cuando el control ya terminó.
@@ -713,79 +703,87 @@ function especiesDificiles_(dias) {
     .slice(0, 5);
 }
 
+// Concordancia de un solo día (primer intento de sus dos muestras).
+function concordanciaDia_(d) {
+  if (!d.regs.length) return null;
+  var bien = 0;
+  [[d.A, d.regs[0].respuesta1], [d.B, d.regs[0].respuesta2]].forEach(function (par) {
+    if (normalizarRespuesta_(par[1]) === normalizarRespuesta_(par[0].parasito)) bien++;
+  });
+  return bien * 50;
+}
+
+// Resultado final de un día: el intento aprobado o, si no hubo, el último.
+function resultadoFinal_(d) {
+  if (!d.regs.length) return null;
+  return d.regs.filter(function (r) { return r.estado === 'Aprobado'; })[0] || d.regs[d.regs.length - 1];
+}
+
+// Estadísticas por mes de calendario (solo los meses con controles), con el
+// detalle de cada día para la vista diaria.
 function estadisticas_(p) {
   var hoy = hoy_(p);
-  var todos = diasControl_(p, inicioDeMes_(hoy, -5), hoy);
-  var entre = function (desde, hasta) { return todos.filter(function (d) { return d.fecha >= desde && d.fecha <= hasta; }); };
-  var out = { serieMensual: [] };
-  // Concordancia de cada uno de los últimos 6 meses.
-  for (var i = 5; i >= 0; i--) {
-    var ini = inicioDeMes_(hoy, -i), fin = sumarDias_(inicioDeMes_(hoy, -i + 1), -1);
-    var mm = metricas_(entre(ini, fin));
-    out.serieMensual.push({ mes: ini.substring(0, 7), valor: mm.concordancia, muestras: mm.muestras });
-  }
-  PERIODOS.forEach(function (clave) {
-    var rango = rangoPeriodo_(clave, hoy);
-    var actuales = entre(rango.desde, rango.hasta);
-    var r = { desde: rango.desde, actual: metricas_(actuales), anterior: metricas_(entre(rango.antDesde, rango.antHasta)), especies: especiesDificiles_(actuales) };
+  var todos = diasControl_(p, inicioDeMes_(hoy, -(CONFIG.MESES_ELIMINACION - 1)), hoy);
+  var porMes = {};
+  todos.forEach(function (d) { (porMes[d.fecha.substring(0, 7)] = porMes[d.fecha.substring(0, 7)] || []).push(d); });
+  var claves = Object.keys(porMes).sort();
+  var out = { mesActual: hoy.substring(0, 7), meses: [], serieMensual: [] };
+  claves.forEach(function (mes) {
+    var dias = porMes[mes];
+    var anterior = porMes[inicioDeMes_(mes + '-01', -1).substring(0, 7)] || [];
+    var m = {
+      mes: mes, actual: metricas_(dias), anterior: metricas_(anterior), especies: especiesDificiles_(dias),
+      dias: dias.map(function (d) {
+        var f = resultadoFinal_(d);
+        return { dia: Number(d.fecha.substring(8, 10)), concordancia: concordanciaDia_(d), resultado: f ? (f.estado === 'Aprobado' ? 'Aprobado' : 'Rechazado') : 'Sin respuesta',
+          intento: f ? Number(f.intento) : null, analista: f ? f.usuario : '' };
+      })
+    };
     if (p.rol === 'supervisor') {
       var porUsuario = {};
-      actuales.forEach(function (d) {
-        if (!d.regs.length) return;
-        var u = d.regs[0].usuario;
-        (porUsuario[u] = porUsuario[u] || []).push(d);
-      });
-      r.porAnalista = Object.keys(porUsuario).sort().map(function (u) {
-        var m = metricas_(porUsuario[u]);
-        return { usuario: u, controles: m.realizados, concordancia: m.concordancia, aprobacionDirecta: m.aprobacionDirecta, noAprobados: m.noAprobados };
+      dias.forEach(function (d) { if (d.regs.length) (porUsuario[d.regs[0].usuario] = porUsuario[d.regs[0].usuario] || []).push(d); });
+      m.porAnalista = Object.keys(porUsuario).sort().map(function (u) {
+        var x = metricas_(porUsuario[u]);
+        return { usuario: u, controles: x.realizados, concordancia: x.concordancia, aprobacionDirecta: x.aprobacionDirecta, noAprobados: x.noAprobados };
       });
     }
-    out[clave] = r;
+    out.meses.push(m);
+    if (m.actual.concordancia != null) out.serieMensual.push({ mes: mes, valor: m.actual.concordancia });
   });
+  out.meses.reverse();
   return out;
 }
 
-/* ========================= exportación ========================= */
-
 var MESES_NOMBRE = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-function etiquetaPeriodo_(clave, desde, hasta) {
-  var mes = function (f) { return MESES_NOMBRE[Number(f.substring(5, 7)) - 1]; };
-  var dm = function (f) { return f.substring(8, 10) + '/' + f.substring(5, 7); };
-  if (clave === 'mes') return mes(desde) + ' ' + desde.substring(0, 4);
-  if (clave === 'trimestre') return mes(desde) + ' a ' + mes(hasta).toLowerCase() + ' ' + hasta.substring(0, 4);
-  return dm(desde) + ' al ' + dm(hasta) + '/' + hasta.substring(0, 4);
-}
+function etiquetaMes_(mes) { return MESES_NOMBRE[Number(mes.substring(5, 7)) - 1] + ' ' + mes.substring(0, 4); }
 
-// Un renglón por día con el resultado final (el intento aprobado o el último),
-// más la concordancia acumulada para la gráfica.
-function filasExportacion_(p, clave) {
+// Un renglón por día del mes con el resultado final (el intento aprobado o el
+// último), más la concordancia acumulada para la gráfica.
+function filasExportacion_(p, mes) {
   var hoy = hoy_(p);
-  var rango = rangoPeriodo_(clave, hoy);
-  var dias = diasControl_(p, rango.desde, rango.hasta);
+  var dias = diasControl_(p, mes + '-01', finDeMes_(mes) < hoy ? finDeMes_(mes) : hoy);
   var muestras = 0, correctas = 0;
   var filas = dias.map(function (d) {
-    var f = d.fecha.substring(8, 10) + '/' + d.fecha.substring(5, 7) + '/' + d.fecha.substring(0, 4);
-    if (!d.regs.length) return { dia: f, hora: '', a: '', b: '', intento: '', analista: '', resultado: 'Sin respuesta', acumulada: muestras ? Math.round(correctas * 100 / muestras) : null };
-    var final = d.regs.filter(function (r) { return r.estado === 'Aprobado'; })[0] || d.regs[d.regs.length - 1];
-    [[d.A, d.regs[0].respuesta1], [d.B, d.regs[0].respuesta2]].forEach(function (par) {
-      muestras++;
-      if (normalizarRespuesta_(par[1]) === normalizarRespuesta_(par[0].parasito)) correctas++;
-    });
+    var dia = Number(d.fecha.substring(8, 10));
+    var final = resultadoFinal_(d);
+    if (!final) return { dia: dia, hora: '', a: '', b: '', intento: '', analista: '', resultado: 'Sin respuesta', acumulada: muestras ? Math.round(correctas * 100 / muestras) : null };
+    var c = concordanciaDia_(d);
+    muestras += 2; correctas += c / 50;
     return {
-      dia: f, hora: String(final.hora).substring(0, 5), a: final.respuesta1, b: final.respuesta2, intento: Number(final.intento),
+      dia: dia, hora: String(final.hora).substring(0, 5), a: final.respuesta1, b: final.respuesta2, intento: Number(final.intento),
       analista: final.usuario, resultado: final.estado === 'Aprobado' ? 'Aprobado' : 'Rechazado',
       acumulada: Math.round(correctas * 100 / muestras)
     };
   });
-  return { rango: rango, etiqueta: etiquetaPeriodo_(clave, rango.desde, rango.hasta), filas: filas };
+  return { etiqueta: etiquetaMes_(mes), filas: filas };
 }
 
 // Crea una hoja con formato y gráfica, la descarga como Excel y la borra.
-function exportarExcel(token, clave) {
+function exportarExcel(token, mes) {
   var p = sesion_(token);
-  if (PERIODOS.indexOf(clave) === -1) clave = 'mes';
-  var datos = filasExportacion_(p, clave);
+  if (!/^\d{4}-\d{2}$/.test(String(mes))) mes = hoy_(p).substring(0, 7);
+  var datos = filasExportacion_(p, mes);
   var libro = SpreadsheetApp.create('Control de calidad ' + p.marca + ' ' + datos.etiqueta);
   try {
     var hoja = libro.getSheets()[0];
@@ -823,15 +821,18 @@ function exportarExcel(token, clave) {
     var g = libro.insertSheet('Datos de la gráfica');
     var puntos = datos.filas.filter(function (f) { return f.acumulada != null; });
     g.getRange(1, 1, 1, 3).setValues([['Día', 'Concordancia acumulada (%)', 'Meta (%)']]);
-    if (puntos.length) g.getRange(2, 1, puntos.length, 3).setValues(puntos.map(function (f) { return [f.dia.substring(0, 5), f.acumulada, 90]; }));
+    if (puntos.length) g.getRange(2, 1, puntos.length, 3).setValues(puntos.map(function (f) { return [String(f.dia), f.acumulada, 90]; }));
     g.getRange(1, 1, Math.max(puntos.length, 1) + 1, 3).setFontFamily('Arial').setFontSize(10).setHorizontalAlignment('center');
     if (puntos.length) {
       var grafica = hoja.newChart().asLineChart()
         .addRange(g.getRange(1, 1, puntos.length + 1, 3))
-        .setTitle('Concordancia acumulada del periodo')
-        .setPointStyle(Charts.PointStyle.MEDIUM)
-        .setColors(['#4f46e5', '#9ca3af'])
-        .setOption('vAxis.viewWindow.min', 0).setOption('vAxis.viewWindow.max', 100)
+        .setTitle('Concordancia acumulada del mes')
+        .setOption('vAxis', { viewWindow: { min: 60, max: 150 }, title: 'Concordancia (%)' })
+        .setOption('hAxis', { title: 'Día' })
+        .setOption('series', {
+          0: { color: '#4f46e5', pointSize: 7, lineWidth: 2 },
+          1: { color: '#dc2626', pointSize: 0, lineWidth: 2, lineDashStyle: [8, 5] }
+        })
         .setOption('legend', { position: 'bottom' })
         .setOption('width', 560).setOption('height', 320)
         .setPosition(4, 10, 0, 0)
