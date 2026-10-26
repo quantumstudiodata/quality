@@ -78,8 +78,26 @@ function doGet() {
 var HOJAS_LISTAS = {};  // hojas ya verificadas en esta ejecución
 var LECTURAS = {};      // lecturas en memoria durante esta ejecución
 
-function hoja_(nombre) {
+// ID de la hoja de cálculo de la aplicación. Normalmente no hace falta
+// llenarlo: se guarda solo la primera vez que se abre la aplicación.
+var ID_HOJA = '';
+
+// Hoja de cálculo de la aplicación. Al ejecutar funciones desde el editor
+// puede no haber hoja activa; entonces se abre por su ID guardado.
+function libro_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var props = PropertiesService.getScriptProperties();
+  if (ss) {
+    if (props.getProperty('ID_HOJA') !== ss.getId()) props.setProperty('ID_HOJA', ss.getId());
+    return ss;
+  }
+  var id = ID_HOJA || props.getProperty('ID_HOJA');
+  if (!id) throw new Error('No se encontró la hoja de cálculo. Abre la aplicación una vez o escribe su ID en ID_HOJA (Code.gs) y vuelve a ejecutar.');
+  return SpreadsheetApp.openById(id);
+}
+
+function hoja_(nombre) {
+  var ss = libro_();
   var sh = ss.getSheetByName(nombre);
   var headers = HOJAS[nombre];
   if (!sh) {
@@ -1269,7 +1287,7 @@ var ID_HOJA_ANTERIOR = '';
 // ya usadas, que vuelven a rotar), el historial de imágenes del día y las
 // respuestas. Las imágenes migradas cuentan sus 6 meses desde hoy.
 function migrarDatosAnteriores() {
-  var ss = ID_HOJA_ANTERIOR ? SpreadsheetApp.openById(ID_HOJA_ANTERIOR) : SpreadsheetApp.getActiveSpreadsheet();
+  var ss = ID_HOJA_ANTERIOR ? SpreadsheetApp.openById(ID_HOJA_ANTERIOR) : libro_();
   var nombresViejos = ['Banco', 'ImagenDia', 'Respuestas'];
   var encontradas = nombresViejos.filter(function (n) { return ss.getSheetByName(n); });
   if (!encontradas.length) {
