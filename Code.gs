@@ -36,6 +36,10 @@ var CONFIG = {
   ITERACIONES_HASH: 200,
   LARGO_PASSWORD: 4,
   MAX_MB_VIDEO: 20,
+  // Criterios de aceptación de los indicadores evaluables (se definen en el IQCP).
+  META_CONCORDANCIA: 90,         // % mínimo de concordancia mensual, primer intento
+  MAX_FALSOS_NEGATIVOS: 0,       // falsos negativos tolerados por mes
+  MIN_IC_INFERIOR: 80,           // % mínimo del límite inferior del IC 95 % (12 meses)
   MAX_FALLOS_LOGIN: 5,
   MINUTOS_BLOQUEO: 15
 };
@@ -659,7 +663,7 @@ function pct_(n, d) { return d ? Math.round(n * 100 / d) : null; }
 // aprobacionDirecta: controles aprobados en el primer intento / controles realizados.
 // cumplimiento: controles realizados / días con control.
 function metricas_(dias) {
-  var m = { controles: dias.length, realizados: 0, aprobados: 0, directos: 0, muestras: 0, correctas: 0, intentos: 0,
+  var m = { controles: dias.length, realizados: 0, aprobados: 0, directos: 0, muestras: 0, correctas: 0, positivas: 0, intentos: 0,
     errores: { falsoNegativo: 0, falsoPositivo: 0, especie: 0 } };
   dias.forEach(function (d) {
     if (!d.regs.length) return;
@@ -667,23 +671,39 @@ function metricas_(dias) {
     if (d.aprobado) m.aprobados++;
     if (d.regs[0].estado === 'Aprobado') m.directos++;
     m.intentos += d.regs.length;
-    d.regs.forEach(function (r, i) {
-      [[d.A, r.respuesta1], [d.B, r.respuesta2]].forEach(function (par) {
-        var bien = normalizarRespuesta_(par[1]) === normalizarRespuesta_(par[0].parasito);
-        if (i === 0) { m.muestras++; if (bien) m.correctas++; }
-        if (bien) return;
-        if (par[0].tipo === 'Negativa') m.errores.falsoPositivo++;
-        else if (normalizarRespuesta_(par[1]) === normalizarRespuesta_(NEGATIVO)) m.errores.falsoNegativo++;
-        else m.errores.especie++;
-      });
+    // Concordancia y errores se miden en el primer intento.
+    [[d.A, d.regs[0].respuesta1], [d.B, d.regs[0].respuesta2]].forEach(function (par) {
+      m.muestras++;
+      if (par[0].tipo === 'Positiva') m.positivas++;
+      if (normalizarRespuesta_(par[1]) === normalizarRespuesta_(par[0].parasito)) { m.correctas++; return; }
+      if (par[0].tipo === 'Negativa') m.errores.falsoPositivo++;
+      else if (normalizarRespuesta_(par[1]) === normalizarRespuesta_(NEGATIVO)) m.errores.falsoNegativo++;
+      else m.errores.especie++;
     });
   });
   m.noAprobados = m.realizados - m.aprobados;
   m.concordancia = pct_(m.correctas, m.muestras);
   m.aprobacionDirecta = pct_(m.directos, m.realizados);
   m.cumplimiento = pct_(m.realizados, m.controles);
-  m.intentosPromedio = m.realizados ? Math.round(m.intentos * 10 / m.realizados) / 10 : null;
   return m;
+}
+
+// Intervalo de confianza 95 % (Wilson) de una proporción, en porcentaje.
+function intervaloWilson_(aciertos, n) {
+  if (!n) return null;
+  var z = 1.96, p = aciertos / n, z2 = z * z;
+  var centro = (p + z2 / (2 * n)) / (1 + z2 / n);
+  var margen = z * Math.sqrt(p * (1 - p) / n + z2 / (4 * n * n)) / (1 + z2 / n);
+  return { inferior: Math.round(Math.max(0, centro - margen) * 1000) / 10, superior: Math.round(Math.min(1, centro + margen) * 1000) / 10, n: n, aciertos: aciertos };
+}
+
+// Criterios de aceptación aplicados a un mes.
+function evaluacion_(m, ic) {
+  return {
+    concordancia: m.concordancia == null ? null : m.concordancia >= CONFIG.META_CONCORDANCIA,
+    falsosNegativos: m.realizados ? m.errores.falsoNegativo <= CONFIG.MAX_FALSOS_NEGATIVOS : null,
+    intervalo: ic ? ic.inferior >= CONFIG.MIN_IC_INFERIOR : null
+  };
 }
 
 // Parásitos con menos aciertos en el primer intento dentro del periodo.
@@ -723,16 +743,22 @@ function resultadoFinal_(d) {
 // detalle de cada día para la vista diaria.
 function estadisticas_(p) {
   var hoy = hoy_(p);
-  var todos = diasControl_(p, inicioDeMes_(hoy, -(CONFIG.MESES_ELIMINACION - 1)), hoy);
+  var todos = diasControl_(p, inicioDeMes_(hoy, -23), hoy);
   var porMes = {};
   todos.forEach(function (d) { (porMes[d.fecha.substring(0, 7)] = porMes[d.fecha.substring(0, 7)] || []).push(d); });
   var claves = Object.keys(porMes).sort();
-  var out = { mesActual: hoy.substring(0, 7), meses: [], serieMensual: [] };
-  claves.forEach(function (mes) {
+  var limite = inicioDeMes_(hoy, -11).substring(0, 7);
+  var out = { mesActual: hoy.substring(0, 7), meses: [], serieMensual: [],
+    criterios: { concordancia: CONFIG.META_CONCORDANCIA, falsosNegativos: CONFIG.MAX_FALSOS_NEGATIVOS, intervalo: CONFIG.MIN_IC_INFERIOR } };
+  claves.filter(function (mes) { return mes >= limite; }).forEach(function (mes) {
     var dias = porMes[mes];
     var anterior = porMes[inicioDeMes_(mes + '-01', -1).substring(0, 7)] || [];
+    var actual = metricas_(dias);
+    var acumulado = metricas_(todos.filter(function (d) { return d.fecha >= inicioDeMes_(mes + '-01', -11) && d.fecha <= finDeMes_(mes); }));
+    var ic = intervaloWilson_(acumulado.correctas, acumulado.muestras);
     var m = {
-      mes: mes, actual: metricas_(dias), anterior: metricas_(anterior), especies: especiesDificiles_(dias),
+      mes: mes, actual: actual, anterior: metricas_(anterior), especies: especiesDificiles_(dias),
+      intervalo: ic, evaluacion: evaluacion_(actual, ic),
       dias: dias.map(function (d) {
         var f = resultadoFinal_(d);
         return { dia: Number(d.fecha.substring(8, 10)), concordancia: concordanciaDia_(d), resultado: f ? (f.estado === 'Aprobado' ? 'Aprobado' : 'Rechazado') : 'Sin respuesta',
@@ -744,7 +770,7 @@ function estadisticas_(p) {
       dias.forEach(function (d) { if (d.regs.length) (porUsuario[d.regs[0].usuario] = porUsuario[d.regs[0].usuario] || []).push(d); });
       m.porAnalista = Object.keys(porUsuario).sort().map(function (u) {
         var x = metricas_(porUsuario[u]);
-        return { usuario: u, controles: x.realizados, concordancia: x.concordancia, aprobacionDirecta: x.aprobacionDirecta, noAprobados: x.noAprobados };
+        return { usuario: u, controles: x.realizados, concordancia: x.concordancia, aprobacionDirecta: x.aprobacionDirecta, noAprobados: x.noAprobados, falsosNegativos: x.errores.falsoNegativo };
       });
     }
     out.meses.push(m);
@@ -779,6 +805,22 @@ function filasExportacion_(p, mes) {
   return { etiqueta: etiquetaMes_(mes), filas: filas };
 }
 
+// Renglones de indicadores para el Excel: nombre, resultado, criterio, tipo y dictamen.
+function indicadoresExportacion_(est) {
+  var a = est ? est.actual : metricas_([]), ev = est ? est.evaluacion : {}, ic = est ? est.intervalo : null;
+  var dict = function (v) { return v == null ? 'Sin datos' : v ? 'Cumple' : 'No cumple'; };
+  var pct = function (v) { return v == null ? 'Sin datos' : v + ' %'; };
+  return [
+    ['Concordancia mensual, primer intento (acumulada del mes)', pct(a.concordancia) + ' (' + a.correctas + '/' + a.muestras + ' muestras)', '≥ ' + CONFIG.META_CONCORDANCIA + ' %', 'Evaluable', dict(ev.concordancia)],
+    ['Falsos negativos, primer intento', String(a.errores.falsoNegativo) + ' de ' + a.positivas + ' muestras positivas', '≤ ' + CONFIG.MAX_FALSOS_NEGATIVOS, 'Evaluable', dict(ev.falsosNegativos)],
+    ['IC 95 % de la concordancia (12 meses)', ic ? ic.inferior + ' a ' + ic.superior + ' % (n = ' + ic.n + ')' : 'Sin datos', 'Límite inferior ≥ ' + CONFIG.MIN_IC_INFERIOR + ' %', 'Evaluable', dict(ev.intervalo)],
+    ['Rendimiento a la primera (FPY)', pct(a.aprobacionDirecta) + ' (' + a.directos + '/' + a.realizados + ' controles)', 'Sin criterio', 'Seguimiento', '—'],
+    ['Cumplimiento', pct(a.cumplimiento) + ' (' + a.realizados + '/' + a.controles + ' días)', 'Sin criterio', 'Seguimiento', '—'],
+    ['Falsos positivos, primer intento', String(a.errores.falsoPositivo), 'Sin criterio', 'Seguimiento', '—'],
+    ['Especie equivocada, primer intento', String(a.errores.especie), 'Sin criterio', 'Seguimiento', '—']
+  ];
+}
+
 // Crea una hoja con formato y gráfica, la descarga como Excel y la borra.
 function exportarExcel(token, mes) {
   var p = sesion_(token);
@@ -799,29 +841,44 @@ function exportarExcel(token, mes) {
     hoja.getRange('B1:D2').setBorder(null, null, true, null, null, null);
     hoja.getRange('F1:H2').setBorder(null, null, true, null, null, null);
 
-    var cab = ['No.', 'Día', 'Hora', 'Muestra A', 'Muestra B', 'Intento', 'Analista', 'Resultado'];
-    hoja.getRange(4, 1, 1, 8).setValues([cab]).setFontWeight('bold').setFontColor('#ffffff').setBackground('#312e81');
+    // Indicadores del mes con su criterio de aceptación.
+    var est = estadisticas_(p).meses.filter(function (x) { return x.mes === mes; })[0];
+    var ind = indicadoresExportacion_(est);
+    hoja.getRange(4, 1, 1, 8).setValues([['Indicador', '', '', 'Resultado', 'Criterio de aceptación', 'Tipo', 'Dictamen', '']]);
+    hoja.getRange(5, 1, ind.length, 8).setValues(ind.map(function (r) { return [r[0], '', '', r[1], r[2], r[3], r[4], '']; }));
+    for (var i = 4; i < 5 + ind.length; i++) { hoja.getRange(i, 1, 1, 3).merge(); hoja.getRange(i, 7, 1, 2).merge(); }
+    hoja.getRange(4, 1, 1, 8).setFontWeight('bold').setFontColor('#ffffff').setBackground('#312e81');
+    hoja.getRange(4, 1, ind.length + 1, 8).setBorder(true, true, true, true, true, true, '#9ca3af', SpreadsheetApp.BorderStyle.SOLID);
+    var dictamen = hoja.getRange(5, 7, ind.length, 1);
+    var inicio = 6 + ind.length;   // la tabla diaria empieza después de los indicadores
+
+    var cab = ['No.', 'Día', 'Hora', 'Muestra 1', 'Muestra 2', 'Intento', 'Analista', 'Resultado'];
+    hoja.getRange(inicio, 1, 1, 8).setValues([cab]).setFontWeight('bold').setFontColor('#ffffff').setBackground('#312e81');
+    var reglas = [
+      SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Cumple').setBackground('#d1fae5').setFontColor('#065f46').setRanges([dictamen]).build(),
+      SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('No cumple').setBackground('#fee2e2').setFontColor('#991b1b').setRanges([dictamen]).build()
+    ];
     if (n) {
-      hoja.getRange(5, 1, n, 8).setValues(datos.filas.map(function (f, i) { return [i + 1, f.dia, f.hora, f.a, f.b, f.intento, f.analista, f.resultado]; }));
-      hoja.getRange(5, 2, n, 1).setBackground('#e5e7eb');
-      var res = hoja.getRange(5, 8, n, 1);
-      hoja.setConditionalFormatRules([
+      hoja.getRange(inicio + 1, 1, n, 8).setValues(datos.filas.map(function (f, i) { return [i + 1, f.dia, f.hora, f.a, f.b, f.intento, f.analista, f.resultado]; }));
+      hoja.getRange(inicio + 1, 2, n, 1).setBackground('#e5e7eb');
+      var res = hoja.getRange(inicio + 1, 8, n, 1);
+      reglas.push(
         SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Aprobado').setBackground('#d1fae5').setFontColor('#065f46').setRanges([res]).build(),
         SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Rechazado').setBackground('#fee2e2').setFontColor('#991b1b').setRanges([res]).build(),
-        SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Sin respuesta').setBackground('#f3f4f6').setFontColor('#6b7280').setRanges([res]).build()
-      ]);
+        SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('Sin respuesta').setBackground('#f3f4f6').setFontColor('#6b7280').setRanges([res]).build());
     }
-    var tabla = hoja.getRange(4, 1, Math.max(n, 1) + 1, 8);
+    hoja.setConditionalFormatRules(reglas);
+    var tabla = hoja.getRange(inicio, 1, Math.max(n, 1) + 1, 8);
     tabla.setBorder(true, true, true, true, true, true, '#9ca3af', SpreadsheetApp.BorderStyle.SOLID);
-    hoja.getRange(1, 1, Math.max(n + 4, 4), 8).setFontFamily('Arial').setFontSize(10)
+    hoja.getRange(1, 1, Math.max(inicio + n, inicio), 8).setFontFamily('Arial').setFontSize(10)
       .setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(true);
     [44, 84, 54, 190, 190, 56, 76, 92].forEach(function (w, i) { hoja.setColumnWidth(i + 1, w); });
 
     // Datos de la gráfica en una hoja aparte; la gráfica queda a la derecha de la tabla.
     var g = libro.insertSheet('Datos de la gráfica');
     var puntos = datos.filas.filter(function (f) { return f.acumulada != null; });
-    g.getRange(1, 1, 1, 3).setValues([['Día', 'Concordancia acumulada (%)', 'Meta (%)']]);
-    if (puntos.length) g.getRange(2, 1, puntos.length, 3).setValues(puntos.map(function (f) { return [String(f.dia), f.acumulada, 90]; }));
+    g.getRange(1, 1, 1, 3).setValues([['Día', 'Concordancia acumulada (%)', 'Meta (' + CONFIG.META_CONCORDANCIA + ' %)']]);
+    if (puntos.length) g.getRange(2, 1, puntos.length, 3).setValues(puntos.map(function (f) { return [String(f.dia), f.acumulada, CONFIG.META_CONCORDANCIA]; }));
     g.getRange(1, 1, Math.max(puntos.length, 1) + 1, 3).setFontFamily('Arial').setFontSize(10).setHorizontalAlignment('center');
     if (puntos.length) {
       var grafica = hoja.newChart().asLineChart()
@@ -835,7 +892,7 @@ function exportarExcel(token, mes) {
         })
         .setOption('legend', { position: 'bottom' })
         .setOption('width', 560).setOption('height', 320)
-        .setPosition(4, 10, 0, 0)
+        .setPosition(inicio, 10, 0, 0)
         .build();
       hoja.insertChart(grafica);
     }

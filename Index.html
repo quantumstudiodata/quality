@@ -195,7 +195,7 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .kv{font-size:22px;font-weight:700;letter-spacing:-.03em;margin-top:6px;line-height:1}
 .kv small{font-size:12px;color:var(--mute);font-weight:600}
 .dl{font-family:var(--mono);font-size:9.5px;color:#6f72a8;margin-top:6px}
-.dl.up{color:#93c5fd}.dl.down{color:var(--fail)}
+.dl.up,.dl.down{color:#6f72a8}.dl.alerta{color:var(--fail)}
 @media(max-width:900px){.resumen{grid-template-columns:1fr}}
 
 /* ---------- bitácora de respuestas ---------- */
@@ -203,7 +203,7 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .bitacora .dia:last-child{border-bottom:none}
 .bitacora .dia:hover{background:linear-gradient(90deg,rgba(79,70,229,.09),transparent 65%)}
 .bitacora .dia::before{content:'';position:absolute;left:21px;top:0;bottom:0;width:1px;background:linear-gradient(rgba(109,40,217,.35),var(--border))}
-.bitacora .dia:first-child::before{top:20px}
+.bitacora .cab-bit+.dia::before{top:20px}
 .bitacora .dia:last-child::before{bottom:calc(100% - 20px)}
 .nodo{position:absolute;left:17px;top:16px;width:9px;height:9px;border-radius:50%;background:var(--bg);border:1px solid var(--mute);transition:transform .25s,border-color .25s}
 .bitacora .dia:hover .nodo{transform:scale(1.3);border-color:#60a5fa}
@@ -215,6 +215,9 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .int:hover{background:rgba(255,255,255,.035)}
 .int.viejo{opacity:.55}.int.viejo:hover{opacity:1}
 .int .h{font-family:var(--mono);color:var(--sub)}
+.cab-bit{padding:10px 16px 8px 40px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.015)}
+.cab-bit .int{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--mute);text-transform:uppercase;padding-top:0;padding-bottom:0}
+.cab-bit .int:hover{background:none}
 .int .u{color:var(--sub)}
 .int.esperado{opacity:1;color:var(--mute);font-size:10px;border-top:1px dashed var(--line);border-radius:0;margin-top:3px;padding-top:7px}
 .pal{display:inline-flex;align-items:center;gap:6px;color:var(--sub);font-size:10px}
@@ -262,7 +265,7 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
   box-shadow:0 0 0 1px #2e2c70,0 0 0 7px #0b0b22,0 0 0 8px #24225a,0 24px 50px -20px rgba(0,0,0,.95),0 0 60px -20px rgba(79,70,229,.35)}
 .micro.arrastrando{cursor:grabbing}
 .micro .capa{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0;will-change:transform}
-.micro .capa img,.micro .capa video{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;-webkit-user-drag:none}
+.micro .capa img,.micro .capa video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none}
 .micro::after{content:'';position:absolute;inset:0;border-radius:50%;pointer-events:none;box-shadow:inset 0 0 38px 8px rgba(0,0,0,.8)}
 .micro .zoom{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:2;font-family:var(--mono);font-size:9.5px;padding:2px 8px;border-radius:10px;background:rgba(5,6,15,.65);color:#c7d2fe;pointer-events:none;opacity:0;transition:opacity .3s}
 .micro.con-zoom .zoom{opacity:1}
@@ -361,6 +364,12 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .leyenda i{display:inline-block;width:11px;height:11px}
 .sel-mes{height:32px;width:auto;padding:0 30px 0 10px;appearance:none;-webkit-appearance:none;background:var(--bg-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239497c4' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;cursor:pointer}
 .sel-mes option{background:#0f0e2e}
+.criterio{display:inline-flex;align-items:center;gap:5px;margin-top:7px;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:6px;border:1px solid var(--border);color:var(--sub)}
+.criterio.si{color:#c7d2fe;border-color:rgba(99,102,241,.45);background:rgba(79,70,229,.1)}
+.criterio.no{color:var(--fail);border-color:var(--fail-bd);background:var(--fail-bg)}
+.kpi.seg .kv{color:#c9cbf0}
+.tipo-kpi{font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:#6f72a8;margin-bottom:6px}
+.globo .tuyo{display:block;margin-top:9px;padding:7px 9px;border-radius:8px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);color:#f3e2b3}
 .tdia{display:grid;grid-template-columns:50px 110px 110px 90px minmax(0,1fr);gap:10px;align-items:center;font-size:11px;padding:7px 0;border-bottom:1px solid #12112e}
 .tdia:last-child{border-bottom:none}
 .contador{font-family:var(--mono);font-size:10.5px;color:var(--accent);padding:3px 8px;border-radius:6px;background:rgba(79,70,229,.12);border:1px solid rgba(99,102,241,.3)}
@@ -458,11 +467,11 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
     <section class="pane" id="pane-inicio">
       <div class="cab-pane" style="align-items:flex-end">
         <div><div class="mono" style="font-size:10px;color:#8487b8" id="inicio-fecha"></div><div class="hola" id="inicio-hola"></div></div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div class="chips" id="inicio-vista"></div><button class="lnk" type="button" onclick="irA('estadisticas')">Ver estadísticas <i data-flecha></i></button></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="lnk" type="button" onclick="irA('estadisticas')">Ver estadísticas <i data-flecha></i></button></div>
       </div>
       <div class="card resumen" id="inicio-resumen" onclick="if(!event.target.closest('.ayuda')) irA('estadisticas')" title="Ver estadísticas">
         <div class="cifras" id="inicio-cifras"></div>
-        <div><div class="k" style="margin-bottom:6px"><span id="inicio-graf-titulo">CONCORDANCIA MENSUAL</span><button class="ayuda" type="button" data-ayuda="grafica">?</button></div><div id="inicio-grafica"></div></div>
+        <div><div class="k" style="margin-bottom:6px"><span>CONCORDANCIA MENSUAL, PRIMER INTENTO</span><button class="ayuda" type="button" data-ayuda="grafica">?</button></div><div id="inicio-grafica"></div></div>
       </div>
       <div>
         <div class="cab-pane"><span style="font-size:12.5px;font-weight:700">Últimas respuestas</span><button class="lnk" type="button" onclick="irA('historial')">Ver historial <i data-flecha></i></button></div>
@@ -475,18 +484,15 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
       <div class="migas"><button class="volver" type="button" onclick="irA('inicio')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>Inicio</button></div>
       <div class="cab-pane">
         <span class="titulo">Estadísticas</span>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div class="chips" id="est-vista"></div><select class="input sel-mes" id="est-mes" aria-label="Mes" onchange="MES_SEL=this.value;pintarEstadisticas()"></select><button class="btn-sec" type="button" id="btn-exportar" onclick="exportarExcel()">Exportar mes</button></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><select class="input sel-mes" id="est-mes" aria-label="Mes" onchange="MES_SEL=this.value;pintarEstadisticas()"></select><button class="btn-sec" type="button" id="btn-exportar" onclick="exportarExcel()">Exportar mes</button></div>
       </div>
       <div class="card fila-kpi" id="est-kpis"></div>
-      <div class="secciones">
-        <div class="card"><div class="k" style="margin-bottom:8px"><span id="est-graf-titulo">CONCORDANCIA MENSUAL</span><button class="ayuda" type="button" data-ayuda="grafica">?</button></div><div id="est-grafica"></div></div>
-        <div class="card"><div class="k" style="margin-bottom:14px">ERRORES<button class="ayuda" type="button" data-ayuda="errores">?</button></div><div style="display:flex;flex-direction:column;gap:14px" id="est-errores"></div></div>
-      </div>
-      <div class="card oculto" id="est-diario" style="padding:16px 18px"><div class="k" style="margin-bottom:6px">DATOS POR DÍA</div><div id="est-dias"></div></div>
-      <div class="secciones" id="est-abajo">
-        <div class="card" id="est-analistas"><div class="k" style="margin-bottom:4px">POR ANALISTA</div><div id="est-tabla"></div></div>
+      <div class="card" style="padding:18px 20px"><div class="k" style="margin-bottom:10px">CONCORDANCIA MENSUAL, PRIMER INTENTO<button class="ayuda" type="button" data-ayuda="grafica">?</button></div><div id="est-grafica"></div></div>
+      <div class="secciones" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+        <div class="card"><div class="k" style="margin-bottom:14px">ERRORES, PRIMER INTENTO<button class="ayuda" type="button" data-ayuda="errores">?</button></div><div style="display:flex;flex-direction:column;gap:14px" id="est-errores"></div></div>
         <div class="card"><div class="k" style="margin-bottom:14px">ESPECIES CON MÁS DIFICULTAD<button class="ayuda" type="button" data-ayuda="especies">?</button></div><div style="display:flex;flex-direction:column;gap:13px" id="est-especies"></div></div>
       </div>
+      <div class="card" id="est-analistas" style="padding:16px 18px"><div class="k" style="margin-bottom:4px">POR ANALISTA</div><div id="est-tabla"></div></div>
     </section>
 
     <!-- Historial (se abre desde Inicio) -->
@@ -719,8 +725,7 @@ function logo(tam, id) {
 }
 
 var TOKEN = '', PERFIL = null, DATOS = null, PANE = 'inicio';
-var VISTA = 'mensual', MES_SEL = null;
-var VISTAS = [['mensual', 'Mensual'], ['diario', 'Diario']];
+var MES_SEL = null;
 
 /* ============================== utilidades ============================== */
 
@@ -747,6 +752,10 @@ function combinar(a, b) { return [a, b].filter(function (v) { return v; }).sort(
 function badge(estado) {
   var cls = estado === 'Aprobado' ? 'b-ok' : (estado === 'Rechazado' || estado === 'Rechazado') ? 'b-fail' : estado === 'Sin respuesta' ? 'b-none' : 'b-warn';
   return '<span class="badge ' + cls + '">' + esc(estado) + '</span>';
+}
+// Resultado de cada intento frente al valor de referencia.
+function badgeIntento(estado) {
+  return estado === 'Aprobado' ? '<span class="badge b-ok">Concordante</span>' : estado === 'Rechazado' ? '<span class="badge b-fail">Discrepante</span>' : badge(estado);
 }
 function numIntento(n) { return '<span class="pal">Intento <span class="num">' + esc(n) + '</span></span>'; }
 function valor(v, unidad) { return v == null ? '<span style="color:var(--mute)">—</span>' : v + (unidad ? '<small>' + unidad + '</small>' : ''); }
@@ -855,39 +864,50 @@ document.addEventListener('keydown', function (e) {
 
 /* ======================= ayuda de los indicadores ======================= */
 
+// Definiciones técnicas. El tercer elemento arma la lectura con los datos del mes.
 var AYUDA = {
   concordancia: ['Concordancia',
     '<span class="et">EN CONTROL DE CALIDAD</span><p>Grado de acuerdo entre el resultado que emite el analista y el valor de referencia asignado a una muestra control. Es la medida básica de exactitud en pruebas cualitativas, como la identificación de parásitos.</p>' +
-    '<span class="et">EN ESTE CONTROL</span><p>Cada muestra tiene un resultado esperado: el parásito, o negativo, con que se dio de alta.</p><p>Se compara contra la respuesta del primer intento, porque refleja el desempeño sin retroalimentación.</p>' +
-    '<span class="formula">muestras correctas al 1.er intento ÷ muestras evaluadas × 100</span>'],
+    '<span class="et">EN ESTE CONTROL</span><p>Concordancia mensual por muestra, primer intento. Cada muestra se compara contra su resultado esperado usando solo la respuesta del primer intento, porque refleja el desempeño sin retroalimentación.</p>' +
+    '<span class="formula">muestras correctas al 1.er intento ÷ muestras evaluadas × 100</span>' +
+    '<span class="et">CRITERIO DE ACEPTACIÓN</span><p>Mínimo de 90 % en el mes (definido en el IQCP).</p>',
+    function (m) { if (!m || !m.actual.muestras) return ''; var a = m.actual; return 'Concordancia ' + a.concordancia + ' %: ' + a.correctas + ' de ' + a.muestras + ' muestras correctas al primer intento; ' + (a.muestras - a.correctas) + ' no coincidieron.'; }],
+  fn: ['Falsos negativos',
+    '<span class="et">EN CONTROL DE CALIDAD</span><p>Muestra positiva que se informa como negativa. Es el error de mayor riesgo diagnóstico, porque deja al paciente sin diagnóstico ni tratamiento.</p>' +
+    '<span class="et">EN ESTE CONTROL</span><p>Muestras positivas respondidas como "Negativo a parásitos" en el primer intento.</p><p>Cada falso negativo requiere análisis de causa, aunque el control se haya aprobado en un reintento.</p>' +
+    '<span class="et">CRITERIO DE ACEPTACIÓN</span><p>Cero tolerados en el mes.</p>',
+    function (m) { if (!m || !m.actual.realizados) return ''; var a = m.actual; return a.errores.falsoNegativo + ' falso' + (a.errores.falsoNegativo === 1 ? '' : 's') + ' negativo' + (a.errores.falsoNegativo === 1 ? '' : 's') + ' en ' + a.positivas + ' muestras positivas evaluadas este mes.'; }],
+  ic: ['Intervalo de confianza 95 %',
+    '<span class="et">EN CONTROL DE CALIDAD</span><p>Rango dentro del que probablemente está la concordancia real, según el número de muestras evaluadas. Con pocas muestras el rango es amplio; con muchas, se estrecha.</p>' +
+    '<span class="et">EN ESTE CONTROL</span><p>Se calcula con el método de Wilson sobre las muestras acumuladas de los últimos 12 meses (primer intento). Hace defendible el dato cuando un mes tiene pocas muestras.</p>' +
+    '<span class="et">CRITERIO DE ACEPTACIÓN</span><p>El límite inferior debe ser de 80 % o más.</p>',
+    function (m) { if (!m || !m.intervalo) return ''; var ic = m.intervalo; return 'Con ' + ic.n + ' muestras en 12 meses (' + ic.aciertos + ' correctas), la concordancia real está entre ' + ic.inferior + ' % y ' + ic.superior + ' %.'; }],
   fpy: ['Rendimiento a la primera (First Pass Yield)',
-    '<span class="et">EN CONTROL DE CALIDAD</span><p>Proporción de unidades que completan un proceso cumpliendo la especificación desde la primera vez, sin reproceso ni corrección.</p><p>Un FPY bajo indica variabilidad o fallas en el proceso.</p>' +
-    '<span class="et">EN ESTE CONTROL</span><p>La unidad es el control diario (dos muestras). Cada reintento se considera un reproceso.</p>' +
-    '<span class="formula">controles aprobados en el intento 1 ÷ controles realizados × 100</span>'],
+    '<span class="et">EN CONTROL DE CALIDAD</span><p>Proporción de unidades que completan un proceso cumpliendo la especificación desde la primera vez, sin reproceso ni corrección.</p>' +
+    '<span class="et">EN ESTE CONTROL</span><p>La unidad es el control diario. Solo cuenta como aprobado a la primera si las dos muestras se acertaron en el primer intento; esto lo diferencia de la concordancia, que cuenta cada muestra por separado.</p><p>Un FPY bajo indica errores de identificación o poca consistencia del analista.</p>' +
+    '<span class="formula">controles con las 2 muestras correctas en el intento 1 ÷ controles realizados × 100</span>' +
+    '<span class="et">TIPO</span><p>Seguimiento, sin criterio de aceptación. Mide consistencia, no exactitud, y depende de la regla de reintentos.</p>',
+    function (m) { if (!m || !m.actual.realizados) return ''; var a = m.actual; return 'FPY ' + a.aprobacionDirecta + ' %: ' + (a.realizados - a.directos) + ' de ' + a.realizados + ' controles no salieron completos a la primera.'; }],
   cumplimiento: ['Cumplimiento',
-    '<span class="et">EN CONTROL DE CALIDAD</span><p>Indicador de adherencia al programa de control de calidad interno: proporción de controles ejecutados respecto a los programados en el periodo.</p><p>Evalúa el proceso, no el resultado.</p>' +
+    '<span class="et">EN CONTROL DE CALIDAD</span><p>Indicador de adherencia al programa de control de calidad interno: proporción de controles ejecutados respecto a los programados en el periodo. Evalúa el proceso, no el resultado.</p>' +
     '<span class="et">EN ESTE CONTROL</span><p>Un día con control asignado y sin respuesta cuenta como incumplimiento.</p>' +
-    '<span class="formula">días con control realizado ÷ días con control programado × 100</span>'],
-  rechazados: ['Rechazados',
-    '<span class="et">EN CONTROL DE CALIDAD</span><p>Control que no cumple el criterio de aceptación después de agotar las oportunidades permitidas.</p><p>Requiere registro, análisis de causa y acción correctiva.</p>' +
-    '<span class="et">EN ESTE CONTROL</span><p>Control no aprobado tras los 3 intentos del día.</p>'],
-  aprobados: ['Aprobados',
-    '<span class="et">EN CONTROL DE CALIDAD</span><p>Control que cumple el criterio de aceptación: todos sus resultados coinciden con el valor de referencia.</p>' +
-    '<span class="et">EN ESTE CONTROL</span><p>Control aprobado en cualquiera de los 3 intentos.</p>' +
-    '<span class="formula">controles aprobados ÷ controles realizados</span>'],
-  grafica: ['Gráfica de concordancia',
-    '<span class="et">QUÉ ES</span><p>Gráfica de tendencia del indicador de concordancia, del mismo tipo que una gráfica de control. Permite ver si el desempeño se mantiene estable o se desvía con el tiempo.</p>' +
-    '<span class="et">VISTAS</span><ul><li>Mensual: un punto por cada mes con datos.</li><li>Diario: un punto por día del mes elegido (0, 50 o 100 %).</li></ul>' +
-    '<span class="et">POR QUÉ LA META ES 90 %</span><p>En los programas de evaluación externa de la competencia (por ejemplo, CLIA y CAP), el desempeño mínimo aceptable es de 80 % de concordancia.</p><p>La meta interna se fija en 90 % para tener margen y detectar una desviación antes de llegar a ese mínimo.</p>'],
+    '<span class="formula">días con control realizado ÷ días con control programado × 100</span>' +
+    '<span class="et">TIPO</span><p>Seguimiento, sin criterio de aceptación. Indica si se hace el control, no si se hace bien.</p>',
+    function (m) { if (!m || !m.actual.controles) return ''; var a = m.actual; return 'Cumplimiento ' + a.cumplimiento + ' %: ' + a.realizados + ' de ' + a.controles + ' días con control se respondieron.'; }],
+  grafica: ['Concordancia mensual, primer intento',
+    '<span class="et">QUÉ ES</span><p>Gráfica de tendencia de la concordancia: un punto por cada mes con datos. Permite ver si el desempeño se mantiene estable o se desvía con el tiempo.</p>' +
+    '<span class="et">POR QUÉ LA META ES 90 %</span><p>El 80 % es el mínimo usado en evaluación externa; es el criterio del reporte semestral a la EMA descrito en el procedimiento 300-04-02-002.</p><p>La meta interna se fija en 90 % para tener margen y detectar una desviación antes de llegar a ese mínimo.</p>' +
+    '<span class="et">LÍNEAS</span><ul><li>Roja punteada: meta de 90 %.</li><li>Tenue: promedio de los meses mostrados.</li></ul>'],
   errores: ['Errores de identificación',
     '<span class="et">EN CONTROL DE CALIDAD</span><p>Resultados que no coinciden con el valor de referencia, clasificados según su efecto diagnóstico.</p>' +
-    '<span class="et">TIPOS</span><ul><li>Falso negativo: se informa negativo en una muestra positiva. Es el error de mayor riesgo, porque deja al paciente sin diagnóstico ni tratamiento.</li>' +
+    '<span class="et">TIPOS</span><ul><li>Falso negativo: se informa negativo en una muestra positiva. Es el error de mayor riesgo.</li>' +
     '<li>Falso positivo: se informa un parásito en una muestra negativa. Puede llevar a un tratamiento innecesario.</li>' +
     '<li>Especie equivocada: la muestra es positiva, pero se identifica otro organismo. Es un error de clasificación morfológica.</li></ul>' +
-    '<span class="et">EN ESTE CONTROL</span><p>Se cuentan las respuestas de todos los intentos.</p>'],
+    '<span class="et">EN ESTE CONTROL</span><p>Se cuentan en el primer intento. Los falsos positivos y las especies equivocadas son de seguimiento: explican por qué bajó la concordancia.</p>',
+    function (m) { if (!m || !m.actual.realizados) return ''; var e = m.actual.errores; return 'Este mes: ' + e.falsoNegativo + ' falsos negativos, ' + e.falsoPositivo + ' falsos positivos y ' + e.especie + ' especies equivocadas.'; }],
   especies: ['Especies con más dificultad',
     '<span class="et">QUÉ ES</span><p>Parásitos con menor proporción de aciertos al primer intento en el mes.</p>' +
-    '<span class="et">PARA QUÉ SIRVE</span><p>Orienta la capacitación hacia las morfologías que más se confunden.</p>']
+    '<span class="et">PARA QUÉ SIRVE</span><p>Seguimiento: orienta la capacitación hacia las morfologías que más se confunden.</p>']
 };
 var GLOBO = null;
 function cerrarGlobo() { if (GLOBO) { GLOBO.el.remove(); GLOBO.btn.classList.remove('on'); GLOBO = null; } }
@@ -900,7 +920,8 @@ document.addEventListener('click', function (e) {
   if (mismo) return;
   var t = AYUDA[b.dataset.ayuda]; if (!t) return;
   var el = document.createElement('div');
-  el.className = 'globo'; el.innerHTML = '<h4>' + esc(t[0]) + '</h4>' + t[1];
+  var tuyo = t[2] ? t[2](mesDeAyuda()) : '';
+  el.className = 'globo'; el.innerHTML = '<h4>' + esc(t[0]) + '</h4>' + t[1] + (tuyo ? '<span class="tuyo">' + tuyo + '</span>' : '');
   document.body.appendChild(el);
   var r = b.getBoundingClientRect();
   el.style.left = Math.max(10, Math.min(window.innerWidth - el.offsetWidth - 10, r.left - 12)) + 'px';
@@ -1183,7 +1204,7 @@ function construirControl() {
   $('v-enviar').disabled = false;
   $('v-cuerpo').innerHTML = h.imagenes.map(function (img, i) {
     return '<section class="muestra">' +
-      '<div class="etq">MUESTRA ' + 'AB'[i] + '</div>' + visor(img, i) +
+      '<div class="etq">MUESTRA ' + (i + 1) + '</div>' + visor(img, i) +
       '<div class="campo" style="margin:0"><label>Hallazgo</label><div id="sel-' + i + '-a"></div></div>' +
       '<div class="campo oculto" style="margin:0" id="wrap-' + i + '-b"><label>Segundo hallazgo</label><div id="sel-' + i + '-b"></div></div>' +
       '<button type="button" class="agregar" id="agregar-' + i + '" onclick="alternarSegundo(' + i + ')">+ Agregar otro hallazgo</button>' +
@@ -1212,9 +1233,9 @@ function abrirConsulta() {
   $('v-cuerpo').innerHTML = h.imagenes.map(function (img, i) {
     var r = ultima ? (i === 0 ? ultima.respuesta1 : ultima.respuesta2) : '';
     return '<section class="muestra">' +
-      '<div class="etq">MUESTRA ' + 'AB'[i] + '</div>' + visor(img, i) +
+      '<div class="etq">MUESTRA ' + (i + 1) + '</div>' + visor(img, i) +
       '<div class="bloqueada"><span><span class="k">RESPUESTA</span><b>' + (r ? esc(r) : '<span style="color:var(--mute)">Sin respuesta todavía</span>') + '</b></span>' + CANDADO + '</div>' +
-      (esSup ? '<div class="bloqueada" style="background:transparent;border-style:dashed"><span><span class="k">ESPERADO</span><b>' + esc(img.parasito) + '</b>' + (img.fuente ? '<span class="sub" style="font-size:10px">Fuente: ' + esc(img.fuente) + '</span>' : '') + '</span></div>' : '') +
+      (esSup ? '<div class="bloqueada" style="background:transparent;border-style:dashed"><span><span class="k">VALOR DE REFERENCIA</span><b>' + esc(img.parasito) + '</b>' + (img.fuente ? '<span class="sub" style="font-size:10px">Fuente: ' + esc(img.fuente) + '</span>' : '') + '</span></div>' : '') +
       '</section>';
   }).join('') + '<div style="grid-column:1/-1;margin-top:-6px">' + AYUDA_ZOOM + '</div>';
   activarVisores();
@@ -1294,7 +1315,7 @@ function mostrarResultado(ok) {
     '<div class="simbolo' + (ok ? '' : ' mal') + '"><span class="onda"></span><span class="onda"></span>' + logo(120, ok ? 'lgr' : 'lgm') + '</div>' +
     (ok
       ? '<div class="r1">Control aprobado</div><div class="r2">Las dos muestras coinciden con la referencia. Vuelve mañana para tu siguiente control diario.</div>' +
-        '<div class="r3"><span>Muestra A <span style="color:#c7d2fe">correcta</span></span><span>Muestra B <span style="color:#c7d2fe">correcta</span></span><span>' + esc(hora5(e.hora)) + '</span></div>'
+        '<div class="r3"><span>Muestra 1 <span style="color:#c7d2fe">concordante</span></span><span>Muestra 2 <span style="color:#c7d2fe">concordante</span></span><span>' + esc(hora5(e.hora)) + '</span></div>'
       : '<div class="r1">Control no aprobado</div><div class="r2">Se usaron los 3 intentos. El resultado quedó registrado para revisión del supervisor. Vuelve mañana para tu siguiente control diario.</div>') +
     '<div class="r4">Haz clic fuera de la ventana para cerrar</div></div>';
   $('mini').classList.remove('on');
@@ -1304,13 +1325,21 @@ function mostrarResultado(ok) {
 
 // Gráfica tipo control: un punto por mes o por día, la meta (90 %) y el
 // promedio. serie: [{ etiqueta, titulo, valor }].
+// Etiquetas de meta y promedio a la derecha; si quedan muy juntas se separan.
+function etiquetaLateral(x, yMeta, yProm, tMeta, tProm) {
+  var sep = 13;
+  if (Math.abs(yMeta - yProm) < sep) { var c = (yMeta + yProm) / 2; if (yMeta <= yProm) { yMeta = c - sep / 2; yProm = c + sep / 2; } else { yMeta = c + sep / 2; yProm = c - sep / 2; } }
+  return '<text x="' + x + '" y="' + (yMeta + 3) + '" font-family="DM Mono" font-size="9.5" fill="#e57373">' + tMeta + '</text>' +
+    '<text x="' + x + '" y="' + (yProm + 3) + '" font-family="DM Mono" font-size="9.5" fill="#8487b8">' + tProm + '</text>';
+}
+
 function grafica(serie, alto, id) {
   var w = 600, h = alto, n = serie.length;
   var vals = serie.map(function (s) { return s.valor; }).filter(function (v) { return v != null; });
   if (!vals.length) return '<div class="sub" style="font-size:11px;padding:18px 0">Aún no hay datos suficientes.</div>';
   var min = Math.max(0, Math.min(60, Math.min.apply(null, vals) - 10)), max = 100;
-  var pad = 24;
-  var x = function (i) { return n > 1 ? Math.round(pad + i * (w - 2 * pad) / (n - 1)) : w / 2; };
+  var pad = 24, der = 92;   // margen derecho para las etiquetas de meta y promedio
+  var x = function (i) { return n > 1 ? Math.round(pad + i * (w - pad - der) / (n - 1)) : (w - der) / 2; };
   var y = function (v) { return Math.round(14 + (max - v) / (max - min) * (h - 40)); };
   var prom = Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / vals.length);
   var pts = serie.map(function (s, i) { return s.valor == null ? null : [x(i), y(s.valor), s]; });
@@ -1330,9 +1359,9 @@ function grafica(serie, alto, id) {
   return '<svg class="graf" viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" style="overflow:visible;display:block">' +
     '<defs><linearGradient id="ar' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f46e5" stop-opacity=".28"></stop><stop offset="1" stop-color="#4f46e5" stop-opacity="0"></stop></linearGradient>' +
     '<linearGradient id="ln' + id + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b5cf6"></stop><stop offset="1" stop-color="#3b82f6"></stop></linearGradient></defs>' +
-    '<line x1="0" x2="' + w + '" y1="' + y(90) + '" y2="' + y(90) + '" stroke="#34327a" stroke-dasharray="4 5"></line>' +
-    '<text x="' + w + '" y="' + (y(90) - 5) + '" text-anchor="end" font-family="DM Mono" font-size="9" fill="#6f72a8">meta 90%</text>' +
-    (Math.abs(prom - 90) > 3 ? '<line x1="0" x2="' + w + '" y1="' + y(prom) + '" y2="' + y(prom) + '" stroke="#24225a" stroke-dasharray="1 4"></line><text x="0" y="' + (y(prom) - 5) + '" font-family="DM Mono" font-size="9" fill="#585b88">promedio ' + prom + '%</text>' : '') +
+    '<line x1="0" x2="' + (w - der + 8) + '" y1="' + y(90) + '" y2="' + y(90) + '" stroke="#e57373" stroke-opacity=".55" stroke-dasharray="5 5"></line>' +
+    '<line x1="0" x2="' + (w - der + 8) + '" y1="' + y(prom) + '" y2="' + y(prom) + '" stroke="#34327a" stroke-dasharray="1 4"></line>' +
+    etiquetaLateral(w - der + 14, y(90), y(prom), 'meta 90%', 'promedio ' + prom + '%') +
     (area ? '<path d="' + area + '" fill="url(#ar' + id + ')"></path>' : '') +
     '<path d="' + linea + '" fill="none" stroke="url(#ln' + id + ')" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>' + puntos +
     '<g font-family="DM Mono" font-size="9.5" fill="#6f72a8">' + etiquetas + '</g></svg>';
@@ -1345,15 +1374,15 @@ function datosMes(mes) {
   var est = DATOS.estadisticas; if (!est || !est.meses) return null;
   return est.meses.filter(function (m) { return m.mes === mes; })[0] || null;
 }
-function serieGrafica(m) {
+function serieGrafica() {
   var est = DATOS.estadisticas;
-  if (VISTA === 'diario') {
-    return m ? m.dias.map(function (d) { return { etiqueta: String(d.dia), titulo: 'Día ' + d.dia, valor: d.concordancia }; }) : [];
-  }
   return (est && est.serieMensual || []).map(function (s) { return { etiqueta: mesTexto(s.mes), titulo: mesTexto(s.mes), valor: s.valor }; });
 }
-// Cambiar la vista solo actualiza cifras y gráfica, no la lista de respuestas.
-function cambiarVista(v) { VISTA = v; pintarResumenInicio(); pintarEstadisticas(); }
+// Mes del que hablan las ayudas: el elegido en Estadísticas o el mes en curso.
+function mesDeAyuda() {
+  var est = DATOS && DATOS.estadisticas; if (!est || !est.meses) return null;
+  return datosMes(PANE === 'estadisticas' && MES_SEL ? MES_SEL : est.mesActual) || null;
+}
 
 /* ================================ inicio ================================ */
 
@@ -1372,15 +1401,15 @@ function pintarInicio() {
 
 // Cifras del mes en curso.
 function pintarResumenInicio() {
-  chips('inicio-vista', VISTAS, VISTA, cambiarVista);
   var est = DATOS.estadisticas, listo = est && est.meses;
-  var m = listo ? datosMes(est.mesActual) : null, a = m ? m.actual : null;
-  var cifra = function (k, clave, v) { return '<div><div class="k">' + k + ayuda(clave) + '</div><div class="kv">' + v + '</div></div>'; };
+  var m = listo ? datosMes(est.mesActual) : null, a = m ? m.actual : null, cr = listo ? est.criterios : {};
+  var cifra = function (k, clave, v, extra) { return '<div><div class="k">' + k + ayuda(clave) + '</div><div class="kv">' + v + '</div>' + (extra || '') + '</div>'; };
   $('inicio-cifras').innerHTML = !listo ? '<div class="sub">Cargando</div>' :
-    cifra('CONCORDANCIA', 'concordancia', a ? valor(a.concordancia, '%') : valor(null)) + cifra('RENDIMIENTO A LA PRIMERA', 'fpy', a ? valor(a.aprobacionDirecta, '%') : valor(null)) +
-    cifra('CUMPLIMIENTO', 'cumplimiento', a && a.controles ? a.realizados + '<small>/' + a.controles + '</small>' : valor(null)) + cifra('RECHAZADOS', 'rechazados', a && a.realizados ? a.noAprobados : valor(null));
-  $('inicio-graf-titulo').textContent = VISTA === 'diario' && listo ? 'CONCORDANCIA DIARIA, ' + mesTexto(est.mesActual, true).toUpperCase() : 'CONCORDANCIA MENSUAL';
-  $('inicio-grafica').innerHTML = listo ? grafica(serieGrafica(m), 120, 'i') : '';
+    cifra('CONCORDANCIA', 'concordancia', a ? valor(a.concordancia, '%') : valor(null), a ? criterio(m.evaluacion.concordancia, '≥ ' + cr.concordancia + '%') : '') +
+    cifra('FALSOS NEGATIVOS', 'fn', a && a.realizados ? a.errores.falsoNegativo : valor(null), a && a.realizados ? criterio(m.evaluacion.falsosNegativos, '≤ ' + cr.falsosNegativos) : '') +
+    cifra('RENDIMIENTO A LA PRIMERA', 'fpy', a ? valor(a.aprobacionDirecta, '%') : valor(null)) +
+    cifra('CUMPLIMIENTO', 'cumplimiento', a && a.controles ? a.realizados + '<small>/' + a.controles + '</small>' : valor(null));
+  $('inicio-grafica').innerHTML = listo ? grafica(serieGrafica(), 150, 'i') : '';
 }
 
 /* ======================== bitácora de respuestas ======================== */
@@ -1398,7 +1427,8 @@ function bitacora(filas, esSup) {
     if (!porFecha[r.fecha]) { porFecha[r.fecha] = []; dias.push(r.fecha); }
     porFecha[r.fecha].push(r);
   });
-  return dias.map(function (fecha, i) {
+  var cab = '<div class="cab-bit"><div class="int"><span>Intento</span><span>Hora</span><span class="u">Analista</span><span>Muestra 1</span><span>Muestra 2</span><span>Resultado</span></div></div>';
+  return cab + dias.map(function (fecha, i) {
     var regs = porFecha[fecha].slice().sort(function (a, b) { return Number(b.intento || 0) - Number(a.intento || 0); });
     var res = resultadoDia(regs);
     var pill = res === 'Aprobado' ? 'ok' : res === 'Rechazado' ? 'mal' : res === 'Sin respuesta' ? 'sin' : 'curso';
@@ -1409,9 +1439,9 @@ function bitacora(filas, esSup) {
     else {
       cuerpo = regs.map(function (r, j) {
         return '<div class="int' + (j > 0 ? ' viejo' : '') + '">' + numIntento(r.intento) + '<span class="h">' + esc(hora5(r.hora)) + '</span><span class="u">' + esc(r.usuario) + '</span>' +
-          '<span>' + esc(r.respuesta1 || '—') + '</span><span>' + esc(r.respuesta2 || '—') + '</span><span>' + badge(r.estado) + '</span></div>';
+          '<span>' + esc(r.respuesta1 || '—') + '</span><span>' + esc(r.respuesta2 || '—') + '</span><span>' + badgeIntento(r.estado) + '</span></div>';
       }).join('');
-      if (esSup && res === 'Rechazado' && regs[0].correcta1) cuerpo += '<div class="int esperado"><span>Esperado</span><span></span><span></span><span>' + esc(regs[0].correcta1) + '</span><span>' + esc(regs[0].correcta2) + '</span><span></span></div>';
+      if (esSup && res === 'Rechazado' && regs[0].correcta1) cuerpo += '<div class="int esperado"><span>Valor de referencia</span><span></span><span></span><span>' + esc(regs[0].correcta1) + '</span><span>' + esc(regs[0].correcta2) + '</span><span></span></div>';
     }
     return '<div class="dia" style="animation-delay:' + Math.min(i * 50, 300) + 'ms"><span class="nodo' + nodo + '"></span>' +
       '<div class="dia-top"><b>' + esc(mayuscula(titulo)) + '</b><span class="pill ' + pill + '">' + res + '</span></div>' + cuerpo + '</div>';
@@ -1447,11 +1477,15 @@ function pintarHistorial() {
 
 /* ============================== estadísticas ============================== */
 
-function delta(act, ant) {
+// Variación contra el mes anterior en gris; en rojo solo si queda bajo la meta.
+function delta(act, ant, meta) {
   if (act == null || ant == null) return '<div class="dl">sin comparación</div>';
-  var d = act - ant;
-  if (!d) return '<div class="dl">igual que el mes anterior</div>';
-  return '<div class="dl ' + (d > 0 ? 'up' : 'down') + '">' + (d > 0 ? '+' : '') + d + '% vs mes anterior</div>';
+  var d = act - ant, alerta = meta != null && act < meta;
+  if (!d) return '<div class="dl' + (alerta ? ' alerta' : '') + '">igual que el mes anterior</div>';
+  return '<div class="dl' + (alerta ? ' alerta' : '') + '">' + (d > 0 ? '+' : '') + d + '% vs mes anterior</div>';
+}
+function criterio(cumple, texto) {
+  return '<span class="criterio' + (cumple == null ? '' : cumple ? ' si' : ' no') + '">' + texto + (cumple == null ? '' : cumple ? ', cumple' : ', no cumple') + '</span>';
 }
 
 function filaBarra(nombre, texto, pctBarra, rojo) {
@@ -1459,30 +1493,20 @@ function filaBarra(nombre, texto, pctBarra, rojo) {
 }
 
 function pintarEstadisticas() {
-  chips('est-vista', VISTAS, VISTA, cambiarVista);
   var todo = DATOS.estadisticas;
   if (!todo || !todo.meses) { $('est-kpis').innerHTML = '<div class="sub">Cargando</div>'; return; }
   if (!todo.meses.length) { $('est-kpis').innerHTML = '<div class="sub">Todavía no hay controles registrados.</div>'; $('est-mes').innerHTML = ''; return; }
   if (!datosMes(MES_SEL)) MES_SEL = todo.meses[0].mes;
   $('est-mes').innerHTML = todo.meses.map(function (m) { return '<option value="' + m.mes + '"' + (m.mes === MES_SEL ? ' selected' : '') + '>' + mesTexto(m.mes, true) + '</option>'; }).join('');
-  var est = datosMes(MES_SEL);
-  var a = est.actual, b = est.anterior;
-  var kpi = function (k, clave, v, d) { return '<div class="kpi"><div class="k">' + k + ayuda(clave) + '</div><div class="kv">' + v + '</div>' + d + '</div>'; };
+  var est = datosMes(MES_SEL), a = est.actual, b = est.anterior, ev = est.evaluacion, cr = todo.criterios, ic = est.intervalo;
+  var kpi = function (tipo, k, clave, v, extra) { return '<div class="kpi' + (tipo === 'SEGUIMIENTO' ? ' seg' : '') + '"><div class="tipo-kpi">' + tipo + '</div><div class="k">' + k + ayuda(clave) + '</div><div class="kv">' + v + '</div>' + extra + '</div>'; };
   $('est-kpis').innerHTML =
-    kpi('CONCORDANCIA', 'concordancia', valor(a.concordancia, '%'), delta(a.concordancia, b.concordancia)) +
-    kpi('RENDIMIENTO A LA PRIMERA', 'fpy', valor(a.aprobacionDirecta, '%'), delta(a.aprobacionDirecta, b.aprobacionDirecta)) +
-    kpi('CUMPLIMIENTO', 'cumplimiento', valor(a.cumplimiento, '%'), '<div class="dl">' + a.realizados + ' de ' + a.controles + ' días</div>') +
-    kpi('APROBADOS', 'aprobados', a.realizados ? a.aprobados + '<small>/' + a.realizados + '</small>' : valor(null), '<div class="dl">de los controles realizados</div>') +
-    kpi('RECHAZADOS', 'rechazados', a.realizados ? a.noAprobados : valor(null), '<div class="dl">después de 3 intentos</div>');
-  $('est-graf-titulo').textContent = VISTA === 'diario' ? 'CONCORDANCIA DIARIA, ' + mesTexto(MES_SEL, true).toUpperCase() : 'CONCORDANCIA MENSUAL';
-  $('est-grafica').innerHTML = grafica(serieGrafica(est), 170, 'e');
-  $('est-diario').classList.toggle('oculto', VISTA !== 'diario');
-  if (VISTA === 'diario') {
-    $('est-dias').innerHTML = '<div class="tdia mono" style="font-size:9px;color:var(--mute)"><span>DÍA</span><span>CONCORDANCIA</span><span>RESULTADO</span><span>INTENTO</span><span>ANALISTA</span></div>' +
-      est.dias.slice().reverse().map(function (d) {
-        return '<div class="tdia"><span class="mono">' + d.dia + '</span><span class="mono">' + valor(d.concordancia, '%') + '</span><span>' + badge(d.resultado) + '</span><span>' + (d.intento ? numIntento(d.intento) : '—') + '</span><span class="mono" style="color:var(--sub)">' + esc(d.analista || '—') + '</span></div>';
-      }).join('');
-  }
+    kpi('EVALUABLE', 'CONCORDANCIA', 'concordancia', valor(a.concordancia, '%'), criterio(ev.concordancia, '≥ ' + cr.concordancia + '%') + delta(a.concordancia, b.concordancia, cr.concordancia)) +
+    kpi('EVALUABLE', 'FALSOS NEGATIVOS', 'fn', a.realizados ? a.errores.falsoNegativo : valor(null), criterio(ev.falsosNegativos, '≤ ' + cr.falsosNegativos) + '<div class="dl">de ' + a.positivas + ' muestras positivas</div>') +
+    kpi('EVALUABLE', 'IC 95 %, 12 MESES', 'ic', ic ? Math.round(ic.inferior) + '<small>%</small> <span style="color:var(--mute);font-weight:400">a</span> ' + Math.round(ic.superior) + '<small>%</small>' : valor(null), criterio(ev.intervalo, 'inferior ≥ ' + cr.intervalo + '%') + '<div class="dl">' + (ic ? 'n = ' + ic.n + ' muestras' : 'sin muestras') + '</div>') +
+    kpi('SEGUIMIENTO', 'RENDIMIENTO A LA PRIMERA', 'fpy', valor(a.aprobacionDirecta, '%'), delta(a.aprobacionDirecta, b.aprobacionDirecta)) +
+    kpi('SEGUIMIENTO', 'CUMPLIMIENTO', 'cumplimiento', valor(a.cumplimiento, '%'), '<div class="dl">' + a.realizados + ' de ' + a.controles + ' días</div>');
+  $('est-grafica').innerHTML = grafica(serieGrafica(), 250, 'e');
 
   var er = a.errores, maxErr = Math.max(1, er.falsoNegativo, er.falsoPositivo, er.especie);
   $('est-errores').innerHTML = filaBarra('Falso negativo', er.falsoNegativo, er.falsoNegativo * 100 / maxErr, true) +
@@ -1491,19 +1515,18 @@ function pintarEstadisticas() {
 
   var esSup = PERFIL.rol === 'supervisor';
   $('est-analistas').classList.toggle('oculto', !esSup);
-  $('est-abajo').style.gridTemplateColumns = esSup ? '' : 'minmax(0,1fr)';
   if (esSup) {
     var filas = est.porAnalista || [];
     $('est-tabla').innerHTML = filas.length
-      ? '<div class="tb mono" style="font-size:9px;color:var(--mute)"><span>USUARIO</span><span>CONTROLES</span><span>CONCORDANCIA</span><span>RENDIMIENTO 1.ª</span><span>RECHAZADOS</span></div>' +
+      ? '<div class="tb mono" style="font-size:9px;color:var(--mute)"><span>USUARIO</span><span>CONTROLES</span><span>CONCORDANCIA</span><span>RENDIMIENTO 1.ª</span><span>FALSOS NEG.</span></div>' +
         filas.map(function (f) {
-          return '<div class="tb"><span style="font-weight:600">' + esc(f.usuario) + '</span><span class="mono">' + f.controles + '</span><span style="display:flex;align-items:center;gap:8px"><span class="mono" style="width:34px">' + valor(f.concordancia, '%') + '</span><span class="bar" style="flex:1"><span style="width:' + (f.concordancia || 0) + '%"></span></span></span><span class="mono">' + valor(f.aprobacionDirecta, '%') + '</span><span class="mono"' + (f.noAprobados ? ' style="color:var(--fail)"' : '') + '>' + f.noAprobados + '</span></div>';
+          return '<div class="tb"><span style="font-weight:600">' + esc(f.usuario) + '</span><span class="mono">' + f.controles + '</span><span style="display:flex;align-items:center;gap:8px"><span class="mono" style="width:34px' + (f.concordancia != null && f.concordancia < cr.concordancia ? ';color:var(--fail)' : '') + '">' + valor(f.concordancia, '%') + '</span><span class="bar" style="flex:1"><span style="width:' + (f.concordancia || 0) + '%"></span></span></span><span class="mono">' + valor(f.aprobacionDirecta, '%') + '</span><span class="mono"' + (f.falsosNegativos ? ' style="color:var(--fail)"' : '') + '>' + (f.falsosNegativos || 0) + '</span></div>';
         }).join('')
-      : '<div class="sub" style="font-size:11px;padding:10px 0">Sin controles en este periodo.</div>';
+      : '<div class="sub" style="font-size:11px;padding:10px 0">Sin controles en este mes.</div>';
   }
   $('est-especies').innerHTML = est.especies.length
     ? est.especies.map(function (e) { return filaBarra(e.nombre, e.correctas + '/' + e.veces, e.correctas * 100 / e.veces); }).join('')
-    : '<div class="sub" style="font-size:11px">Sin muestras positivas en este periodo.</div>';
+    : '<div class="sub" style="font-size:11px">Sin muestras positivas en este mes.</div>';
 }
 
 // Descarga un Excel con el resultado final de cada día y la gráfica.
