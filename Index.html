@@ -1031,6 +1031,7 @@ function doLogin() {
       if (!r || !r.success) { $('login-err').textContent = (r && r.error) || 'No se pudo entrar'; return; }
       $('login-pass').value = '';
       TOKEN = r.token; guardar('cci_token', TOKEN);
+      guardar('cci_inicio', String(Date.now())); marcarActividad(true);
       arrancar(r.perfil, r.datos, true);
     })
     .withFailureHandler(function (e) { $('login-btn').disabled = false; $('login-err').textContent = e.message; })
@@ -1073,18 +1074,51 @@ function doCambiarPassword() {
 
 function salir() {
   TOKEN = ''; PERFIL = null; DATOS = null;
-  guardar('cci_token', null); guardar('cci_cache', null);
+  guardar('cci_token', null); guardar('cci_cache', null); guardar('cci_inicio', null); guardar('cci_actividad', null);
   $('ventana').classList.remove('on'); $('mini').classList.remove('on');
   VENTANA.fecha = null;
   mostrar('pantalla-login');
 }
 function cerrarSesionApp() { var t = TOKEN; salir(); if (t) google.script.run.cerrarSesion(t); }
 
+/* ======================= vigencia de la sesión ======================= */
+
+// La sesión se cierra tras MINUTOS_INACTIVIDAD sin uso, o al llegar a la vida
+// máxima del servidor. Así, al volver a abrir la página después de un rato,
+// se muestra directo el inicio de sesión en lugar de la app por un instante.
+var MINUTOS_INACTIVIDAD = 30;
+var VIDA_SESION_MS = (6 * 60 - 10) * 60 * 1000;   // un poco menos que las 6 h del servidor
+var ULTIMA_MARCA = 0;
+
+function marcarActividad(forzar) {
+  var ahora = Date.now();
+  if (!forzar && ahora - ULTIMA_MARCA < 30000) return;
+  ULTIMA_MARCA = ahora;
+  if (TOKEN) guardar('cci_actividad', String(ahora));
+}
+function sesionVigente() {
+  var inicio = Number(recuperar('cci_inicio')), actividad = Number(recuperar('cci_actividad')), ahora = Date.now();
+  return !!(inicio && actividad && ahora - inicio < VIDA_SESION_MS && ahora - actividad < MINUTOS_INACTIVIDAD * 60000);
+}
+function revisarVigencia() {
+  if (TOKEN && $('app').classList.contains('on') && !sesionVigente()) {
+    cerrarSesionApp();
+    toast('La sesión se cerró por inactividad. Vuelve a entrar.');
+  }
+}
+['click', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, function () { marcarActividad(); }, true); });
+document.addEventListener('mousemove', function () { marcarActividad(); }, { passive: true });
+document.addEventListener('visibilitychange', function () { if (!document.hidden) revisarVigencia(); });
+setInterval(revisarVigencia, 60000);
+
 window.onload = function () {
   document.querySelectorAll('[data-logo]').forEach(function (el, i) { el.innerHTML = logo(26, 'lg' + i) + '<span>Quality</span>'; });
   document.querySelectorAll('[data-flecha]').forEach(function (el) { el.innerHTML = FLECHA; });
   TOKEN = recuperar('cci_token');
   if (!TOKEN) { mostrar('pantalla-login'); return; }
+  // Sesión vencida: directo al inicio de sesión, sin mostrar la app guardada.
+  if (!sesionVigente()) { cerrarSesionApp(); return; }
+  marcarActividad(true);
   // Muestra al instante lo último que se vio y luego actualiza en segundo plano.
   var cache = null;
   try { cache = JSON.parse(recuperar('cci_cache') || 'null'); } catch (e) {}
