@@ -229,12 +229,13 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .int:hover{background:rgba(255,255,255,.035)}
 .int.viejo{opacity:.55}.int.viejo:hover{opacity:1}
 .int .h{font-family:var(--mono);color:var(--sub)}
-.muestras-dia{padding-top:2px;padding-bottom:4px}
-.muestras-dia:hover{background:none}
-.mini-muestra{position:relative;width:42px;height:42px;border-radius:50%;overflow:hidden;border:1px solid #34327a;background:var(--bg-2);cursor:zoom-in;padding:0;box-shadow:0 0 0 3px #0b0b22,0 0 0 4px #24225a;transition:transform .25s,box-shadow .25s}
-.mini-muestra:hover{transform:scale(1.08);box-shadow:0 0 0 3px #0b0b22,0 0 0 4px #6366f1}
+.celda-m{display:flex;align-items:center;gap:9px;min-width:0}
+.celda-m>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.mini-muestra{position:relative;flex-shrink:0;width:28px;height:28px;border-radius:50%;overflow:hidden;border:1px solid #34327a;background:var(--bg-2);cursor:zoom-in;padding:0;box-shadow:0 0 0 2px #0b0b22,0 0 0 3px #24225a;transition:transform .25s,box-shadow .25s}
+.mini-muestra:hover{transform:scale(1.15);box-shadow:0 0 0 2px #0b0b22,0 0 0 3px #6366f1}
 .mini-muestra img{width:100%;height:100%;object-fit:cover;display:block}
-.mini-muestra .play{width:20px;height:20px}
+.mini-muestra .play{width:16px;height:16px}
+.mini-muestra .play svg{width:8px;height:8px}
 .cab-bit{padding:10px 16px 8px 40px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.015)}
 .cab-bit .int{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--mute);text-transform:uppercase;padding-top:0;padding-bottom:0}
 .cab-bit .int:hover{background:none}
@@ -1505,16 +1506,16 @@ function bitacora(filas, esSup) {
     var nodo = fecha === hoy ? ' hoy' : res === 'Rechazado' ? ' mal' : '';
     var titulo = (fecha === hoy ? 'Hoy, ' : '') + fechaLarga(fecha);
     var cuerpo;
-    if (res === 'Sin respuesta') cuerpo = '<div class="sin-resp">Nadie respondió el control de este día.</div>';
+    if (res === 'Sin respuesta') cuerpo = '<div class="int"><span class="sin-resp" style="grid-column:1 / 4">Nadie respondió el control de este día.</span>' + celdaMuestra(regs[0].m1, '', 1) + celdaMuestra(regs[0].m2, '', 2) + '<span></span></div>';
     else {
       cuerpo = regs.map(function (r, j) {
         return '<div class="int' + (j > 0 ? ' viejo' : '') + '">' + numIntento(r.intento) + '<span class="h">' + esc(hora5(r.hora)) + '</span><span class="u">' + esc(r.usuario) + '</span>' +
-          '<span>' + esc(r.respuesta1 || '—') + '</span><span>' + esc(r.respuesta2 || '—') + '</span><span>' + badgeIntento(r.estado) + '</span></div>';
+          celdaMuestra(r.m1, r.respuesta1 || '—', 1) + celdaMuestra(r.m2, r.respuesta2 || '—', 2) + '<span>' + badgeIntento(r.estado) + '</span></div>';
       }).join('');
       if (esSup && res === 'Rechazado' && regs[0].correcta1) cuerpo += '<div class="int esperado"><span>Valor de referencia</span><span></span><span></span><span>' + esc(regs[0].correcta1) + '</span><span>' + esc(regs[0].correcta2) + '</span><span></span></div>';
     }
     return '<div class="dia" style="animation-delay:' + Math.min(i * 50, 300) + 'ms"><span class="nodo' + nodo + '"></span>' +
-      '<div class="dia-top"><b>' + esc(mayuscula(titulo)) + '</b><span class="pill ' + pill + '">' + res + '</span></div>' + miniaturasDia(regs[0]) + cuerpo + '</div>';
+      '<div class="dia-top"><b>' + esc(mayuscula(titulo)) + '</b><span class="pill ' + pill + '">' + res + '</span></div>' + cuerpo + '</div>';
   }).join('');
 }
 
@@ -1525,9 +1526,9 @@ function miniaturaMuestra(m, n) {
   var i = MEDIOS_HIST.push(m) - 1;
   return '<span><button type="button" class="mini-muestra" data-medio="' + i + '" title="Ver muestra ' + n + '"><img src="' + esc(m.url.replace(/sz=w\d+/, 'sz=w160')) + '" alt="Muestra ' + n + '" loading="lazy" onerror="this.remove()">' + (m.medio === 'video' ? PLAY : '') + '</button></span>';
 }
-function miniaturasDia(r) {
-  if (!r || (!r.m1 && !r.m2)) return '';
-  return '<div class="int muestras-dia"><span></span><span></span><span class="u"></span>' + miniaturaMuestra(r.m1, 1) + miniaturaMuestra(r.m2, 2) + '<span></span></div>';
+// Celda de una muestra: miniatura y, a su lado, la respuesta del intento.
+function celdaMuestra(m, texto, n) {
+  return '<span class="celda-m">' + (m ? miniaturaMuestra(m, n).replace(/^<span>|<\/span>$/g, '') : '') + '<span>' + esc(texto) + '</span></span>';
 }
 document.addEventListener('click', function (e) {
   var b = e.target.closest('.mini-muestra'); if (!b) return;
