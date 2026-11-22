@@ -565,8 +565,15 @@ function historial_(p) {
   var conRespuesta = {};
   registros.forEach(function (r) { conRespuesta[r.fecha] = true; });
 
+  // Imagen o video de cada muestra del día, para verlos desde el historial.
+  var medios = function (f) {
+    var dia = porFecha[f.fecha] || {};
+    if (dia.A) f.m1 = medio_(dia.A, 2400);
+    if (dia.B) f.m2 = medio_(dia.B, 2400);
+    return f;
+  };
   var filas = registros.map(function (r) {
-    var f = { fecha: r.fecha, usuario: r.usuario, hora: r.hora, respuesta1: r.respuesta1, respuesta2: r.respuesta2, intento: r.intento, estado: r.estado };
+    var f = medios({ fecha: r.fecha, usuario: r.usuario, hora: r.hora, respuesta1: r.respuesta1, respuesta2: r.respuesta2, intento: r.intento, estado: r.estado });
     if (esSup) {
       var dia = porFecha[r.fecha] || {};
       f.correcta1 = dia.A ? dia.A.parasito : '';
@@ -576,7 +583,7 @@ function historial_(p) {
   });
   Object.keys(porFecha).forEach(function (fecha) {
     if (fecha < hoy && !conRespuesta[fecha]) {
-      filas.push({ fecha: fecha, usuario: '—', hora: '', respuesta1: '', respuesta2: '', intento: '', estado: 'Sin respuesta' });
+      filas.push(medios({ fecha: fecha, usuario: '—', hora: '', respuesta1: '', respuesta2: '', intento: '', estado: 'Sin respuesta' }));
     }
   });
   filas.sort(function (a, b) {

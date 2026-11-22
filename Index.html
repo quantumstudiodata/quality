@@ -229,6 +229,12 @@ main{max-width:1120px;margin:0 auto;padding:26px 30px}
 .int:hover{background:rgba(255,255,255,.035)}
 .int.viejo{opacity:.55}.int.viejo:hover{opacity:1}
 .int .h{font-family:var(--mono);color:var(--sub)}
+.muestras-dia{padding-top:2px;padding-bottom:4px}
+.muestras-dia:hover{background:none}
+.mini-muestra{position:relative;width:42px;height:42px;border-radius:50%;overflow:hidden;border:1px solid #34327a;background:var(--bg-2);cursor:zoom-in;padding:0;box-shadow:0 0 0 3px #0b0b22,0 0 0 4px #24225a;transition:transform .25s,box-shadow .25s}
+.mini-muestra:hover{transform:scale(1.08);box-shadow:0 0 0 3px #0b0b22,0 0 0 4px #6366f1}
+.mini-muestra img{width:100%;height:100%;object-fit:cover;display:block}
+.mini-muestra .play{width:20px;height:20px}
 .cab-bit{padding:10px 16px 8px 40px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.015)}
 .cab-bit .int{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--mute);text-transform:uppercase;padding-top:0;padding-bottom:0}
 .cab-bit .int:hover{background:none}
@@ -1508,9 +1514,25 @@ function bitacora(filas, esSup) {
       if (esSup && res === 'Rechazado' && regs[0].correcta1) cuerpo += '<div class="int esperado"><span>Valor de referencia</span><span></span><span></span><span>' + esc(regs[0].correcta1) + '</span><span>' + esc(regs[0].correcta2) + '</span><span></span></div>';
     }
     return '<div class="dia" style="animation-delay:' + Math.min(i * 50, 300) + 'ms"><span class="nodo' + nodo + '"></span>' +
-      '<div class="dia-top"><b>' + esc(mayuscula(titulo)) + '</b><span class="pill ' + pill + '">' + res + '</span></div>' + cuerpo + '</div>';
+      '<div class="dia-top"><b>' + esc(mayuscula(titulo)) + '</b><span class="pill ' + pill + '">' + res + '</span></div>' + miniaturasDia(regs[0]) + cuerpo + '</div>';
   }).join('');
 }
+
+// Miniaturas de las dos muestras del día, alineadas con sus columnas; clic para verlas en grande.
+var MEDIOS_HIST = [];
+function miniaturaMuestra(m, n) {
+  if (!m) return '<span></span>';
+  var i = MEDIOS_HIST.push(m) - 1;
+  return '<span><button type="button" class="mini-muestra" data-medio="' + i + '" title="Ver muestra ' + n + '"><img src="' + esc(m.url.replace(/sz=w\d+/, 'sz=w160')) + '" alt="Muestra ' + n + '" loading="lazy" onerror="this.remove()">' + (m.medio === 'video' ? PLAY : '') + '</button></span>';
+}
+function miniaturasDia(r) {
+  if (!r || (!r.m1 && !r.m2)) return '';
+  return '<div class="int muestras-dia"><span></span><span></span><span class="u"></span>' + miniaturaMuestra(r.m1, 1) + miniaturaMuestra(r.m2, 2) + '<span></span></div>';
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('.mini-muestra'); if (!b) return;
+  abrirLightbox(MEDIOS_HIST[Number(b.dataset.medio)]);
+});
 
 /* ============================== historial ============================== */
 
